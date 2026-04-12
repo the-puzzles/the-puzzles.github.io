@@ -699,9 +699,12 @@ createApp({
       ghostX.value = t.clientX;
       ghostY.value = t.clientY;
       const el = findCellEl(t.clientX, t.clientY);
-      if (el) {
-        hoverRow.value = +el.dataset.row;
-        hoverCol.value = +el.dataset.col;
+      if (el && selectedShape.value) {
+        const cells = getShapeCells(selectedShape.value.type, rotation.value);
+        const avgDr = cells.reduce((s, [r]) => s + r, 0) / cells.length;
+        const avgDc = cells.reduce((s, [, c]) => s + c, 0) / cells.length;
+        hoverRow.value = +el.dataset.row - Math.round(avgDr);
+        hoverCol.value = +el.dataset.col - Math.round(avgDc);
       } else {
         hoverRow.value = null;
         hoverCol.value = null;
@@ -709,10 +712,9 @@ createApp({
     }
 
     function onDocTouchEnd(e) {
-      if (selectedShapeId.value && isDragging.value) {
-        const t = e.changedTouches[0];
-        const el = findCellEl(t.clientX, t.clientY);
-        if (el) onCellClick(+el.dataset.row, +el.dataset.col);
+      // hoverRow/hoverCol already hold the centroid-adjusted anchor from the last touchmove
+      if (selectedShapeId.value && isDragging.value && hoverRow.value != null) {
+        onCellClick(hoverRow.value, hoverCol.value);
       }
       isDragging.value = false;
       if (!selectedShapeId.value) { hoverRow.value = null; hoverCol.value = null; }
