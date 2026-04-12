@@ -16,12 +16,14 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 24px 16px;
+  padding: 20px 16px;
   user-select: none;
+  -webkit-user-select: none;
+  touch-action: pan-y; /* allow vertical scroll, but JS will override during drag */
 }
 
 h1 {
-  font-size: 2.4rem;
+  font-size: 2.2rem;
   font-weight: 800;
   letter-spacing: 0.08em;
   background: linear-gradient(135deg, #f7971e, #ffd200);
@@ -33,17 +35,18 @@ h1 {
 
 .tagline {
   color: #6e7681;
-  font-size: 0.88rem;
-  margin-bottom: 20px;
+  font-size: 0.82rem;
+  margin-bottom: 16px;
   text-align: center;
+  max-width: 340px;
 }
 
 .level-bar {
   display: flex;
-  gap: 20px;
+  gap: 16px;
   align-items: center;
-  margin-bottom: 20px;
-  font-size: 0.85rem;
+  margin-bottom: 16px;
+  font-size: 0.82rem;
   color: #8b949e;
   flex-wrap: wrap;
   justify-content: center;
@@ -53,29 +56,29 @@ h1 {
 .level-pills { display: flex; gap: 6px; }
 .level-pill {
   width: 28px; height: 8px;
-  border-radius: 4px;
-  background: #21262d;
-  cursor: pointer;
-  transition: background 0.2s;
+  border-radius: 4px; background: #21262d;
+  cursor: pointer; transition: background 0.2s;
 }
 .level-pill.active { background: #f7971e; }
 .level-pill.done   { background: #3fb950; }
 
-/* Game layout */
+/* ── Game layout ───────────────────────────────────────────────────── */
 .game-container {
   display: flex;
-  gap: 28px;
+  gap: 24px;
   align-items: flex-start;
   flex-wrap: wrap;
   justify-content: center;
+  width: 100%;
 }
 
-/* Board */
+/* ── Board ─────────────────────────────────────────────────────────── */
 .board-wrap {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  flex-shrink: 0;
 }
 
 .board {
@@ -85,11 +88,11 @@ h1 {
   overflow: hidden;
   background: #161b22;
   box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  touch-action: none; /* we handle all touch */
 }
 
 .cell {
-  width: 52px;
-  height: 52px;
+  /* width/height set inline via cellSize */
   border: 1px solid #21262d;
   display: flex;
   align-items: center;
@@ -98,10 +101,9 @@ h1 {
   transition: background-color 0.08s;
 }
 
-/* The colored dot (every cell has one) */
 .dot {
-  width: 30px;
-  height: 30px;
+  width: 58%;
+  height: 58%;
   border-radius: 50%;
   position: absolute;
   z-index: 2;
@@ -110,41 +112,21 @@ h1 {
   box-shadow: inset 0 1px 3px rgba(255,255,255,0.15);
   transition: opacity 0.2s, transform 0.2s;
 }
+.dot.covered { opacity: 0.4; transform: scale(0.6); }
 
-/* When covered by a placed shape, shrink the dot to show it's "captured" */
-.dot.covered {
-  opacity: 0.45;
-  transform: scale(0.65);
-}
-
-/* Checkmark shown when covered */
 .cell-check {
   position: absolute;
   z-index: 3;
-  font-size: 14px;
+  font-size: 13px;
   pointer-events: none;
-  opacity: 0.8;
-}
-
-/* Preview validity ring */
-.cell-outline {
-  position: absolute;
-  inset: 2px;
-  border-radius: 4px;
-  pointer-events: none;
-  z-index: 1;
-}
-
-.board-controls {
-  display: flex;
-  gap: 8px;
+  opacity: 0.75;
 }
 
 .progress-bar-wrap {
   width: 100%;
   background: #21262d;
   border-radius: 4px;
-  height: 6px;
+  height: 5px;
   overflow: hidden;
 }
 .progress-bar-fill {
@@ -155,22 +137,39 @@ h1 {
 }
 
 .error-msg {
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   color: #f85149;
-  min-height: 20px;
+  min-height: 18px;
   text-align: center;
 }
 
-/* Palette */
+.action-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.selected-hint {
+  font-size: 0.78rem;
+  color: #ffd200;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ── Palette ───────────────────────────────────────────────────────── */
 .palette-wrap {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  width: 190px;
+  gap: 8px;
+  width: 186px;
+  flex-shrink: 0;
 }
 
 .palette-title {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.12em;
   color: #6e7681;
@@ -181,12 +180,14 @@ h1 {
   border: 2px solid #30363d;
   border-radius: 10px;
   padding: 10px 12px;
-  cursor: pointer;
+  cursor: grab;
   transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  touch-action: none;
 }
+.shape-card:active { cursor: grabbing; }
 .shape-card:hover:not(.placed) {
   border-color: #f7971e;
   transform: translateX(3px);
@@ -194,82 +195,42 @@ h1 {
 .shape-card.selected {
   border-color: #ffd200;
   background: #1f1a0e;
-  box-shadow: 0 0 12px rgba(247,151,30,0.25);
+  box-shadow: 0 0 14px rgba(247,151,30,0.3);
 }
-.shape-card.placed {
-  opacity: 0.35;
-  cursor: default;
-}
+.shape-card.placed { opacity: 0.35; cursor: default; touch-action: auto; }
 
-.shape-mini {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  flex-shrink: 0;
-}
+.shape-mini { display: flex; flex-direction: column; gap: 2px; flex-shrink: 0; }
 .shape-mini-row { display: flex; gap: 2px; }
-.shape-mini-cell {
-  width: 14px;
-  height: 14px;
-  border-radius: 2px;
-}
+.shape-mini-cell { width: 14px; height: 14px; border-radius: 2px; }
 
 .shape-info { flex: 1; min-width: 0; }
-.shape-type {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: #c9d1d9;
-  letter-spacing: 0.05em;
-}
-.shape-color-name {
-  font-size: 0.7rem;
-  color: #6e7681;
-  text-transform: capitalize;
-}
+.shape-type { font-size: 0.74rem; font-weight: 700; letter-spacing: 0.04em; }
+.shape-color-name { font-size: 0.68rem; color: #6e7681; text-transform: capitalize; }
 .placed-badge { font-size: 0.65rem; color: #3fb950; font-weight: 600; }
 
-/* Instructions */
 .instructions {
   background: #161b22;
   border: 1px solid #30363d;
   border-radius: 10px;
-  padding: 12px;
-  font-size: 0.75rem;
+  padding: 10px 12px;
+  font-size: 0.72rem;
   color: #6e7681;
-  line-height: 2;
+  line-height: 1.9;
 }
 .instructions kbd {
-  background: #21262d;
-  border: 1px solid #444c56;
-  border-radius: 4px;
-  padding: 1px 5px;
-  font-family: monospace;
-  font-size: 0.7rem;
-  color: #c9d1d9;
+  background: #21262d; border: 1px solid #444c56;
+  border-radius: 3px; padding: 1px 4px;
+  font-family: monospace; font-size: 0.68rem; color: #c9d1d9;
 }
 
-/* Selected hint */
-.selected-hint {
-  font-size: 0.78rem;
-  color: #ffd200;
-  text-align: center;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
-/* Buttons */
+/* ── Buttons ───────────────────────────────────────────────────────── */
 .btn {
-  background: #21262d;
-  border: 1px solid #30363d;
-  color: #c9d1d9;
-  padding: 7px 14px;
-  border-radius: 7px;
-  cursor: pointer;
-  font-size: 0.82rem;
+  background: #21262d; border: 1px solid #30363d;
+  color: #c9d1d9; padding: 8px 16px;
+  border-radius: 8px; cursor: pointer;
+  font-size: 0.82rem; font-family: inherit;
   transition: background 0.15s, border-color 0.15s;
-  font-family: inherit;
+  min-height: 40px;
 }
 .btn:hover { background: #30363d; border-color: #444c56; }
 .btn:disabled { opacity: 0.4; cursor: default; }
@@ -277,37 +238,38 @@ h1 {
 .btn.accent:hover { background: #b87000; }
 
 .rotate-btn {
-  background: #21262d;
-  border: 1px solid #30363d;
-  color: #c9d1d9;
-  width: 28px; height: 28px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  background: #21262d; border: 1px solid #30363d;
+  color: #c9d1d9; width: 40px; height: 40px;
+  border-radius: 8px; cursor: pointer; font-size: 1.1rem;
+  display: flex; align-items: center; justify-content: center;
   transition: background 0.15s;
-  flex-shrink: 0;
 }
-.rotate-btn:hover { background: #30363d; }
+.rotate-btn:hover, .rotate-btn:active { background: #30363d; }
 
-/* Win overlay */
-.win-overlay {
+/* ── Drag ghost ────────────────────────────────────────────────────── */
+.drag-ghost {
   position: fixed;
-  inset: 0;
+  pointer-events: none;
+  z-index: 1000;
+  transform: translate(-50%, calc(-100% - 18px));
+  background: rgba(15, 20, 28, 0.96);
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  border-radius: 10px;
+  padding: 10px;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.6);
+}
+.drag-ghost .shape-mini-cell { width: 22px; height: 22px; border-radius: 4px; }
+
+/* ── Win overlay ───────────────────────────────────────────────────── */
+.win-overlay {
+  position: fixed; inset: 0;
   background: rgba(0,0,0,0.8);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
-  backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 100; backdrop-filter: blur(4px);
 }
 .win-box {
-  background: #161b22;
-  border: 2px solid #ffd200;
-  border-radius: 16px;
-  padding: 40px 48px;
+  background: #161b22; border: 2px solid #ffd200;
+  border-radius: 16px; padding: 36px 44px;
   text-align: center;
   box-shadow: 0 0 48px rgba(255,210,0,0.25);
   animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -316,19 +278,74 @@ h1 {
   from { transform: scale(0.7); opacity: 0; }
   to   { transform: scale(1);   opacity: 1; }
 }
-.win-icon { font-size: 3rem; margin-bottom: 12px; }
-.win-box h2 { font-size: 1.8rem; color: #ffd200; margin-bottom: 8px; }
-.win-box p  { color: #6e7681; margin-bottom: 24px; font-size: 0.9rem; }
-.win-btns  { display: flex; gap: 10px; justify-content: center; }
+.win-icon { font-size: 2.8rem; margin-bottom: 10px; }
+.win-box h2 { font-size: 1.7rem; color: #ffd200; margin-bottom: 8px; }
+.win-box p  { color: #6e7681; margin-bottom: 20px; font-size: 0.88rem; }
+.win-btns { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
 
-/* Fade transition */
 .fade-enter-active, .fade-leave-active { transition: opacity 0.2s; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
+
+/* ── Mobile layout ─────────────────────────────────────────────────── */
+@media (max-width: 599px) {
+  h1 { font-size: 1.8rem; }
+
+  .game-container {
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .palette-wrap {
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: visible;
+    width: 100%;
+    max-width: 100vw;
+    padding-bottom: 4px;
+    gap: 8px;
+  }
+
+  .palette-title { display: none; }
+
+  .shape-card {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 62px;
+    width: 62px;
+    padding: 8px 6px;
+    gap: 5px;
+    flex-shrink: 0;
+  }
+  .shape-card:hover:not(.placed) { transform: translateY(-2px); }
+
+  .shape-info { text-align: center; }
+  .shape-color-name { display: none; }
+
+  .instructions { display: none; }
+
+  .board-controls { gap: 8px; }
+}
 </style>
 </head>
 <body>
 <div id="app">
 
+  <!-- Drag ghost: follows finger, shown above touch point -->
+  <div v-if="isDragging && selectedShape" class="drag-ghost" :style="{ left: ghostX + 'px', top: ghostY + 'px' }">
+    <div class="shape-mini">
+      <div v-for="(row, ri) in getShapeGrid(selectedShape.type, rotation)" :key="ri" class="shape-mini-row">
+        <div
+          v-for="(filled, ci) in row" :key="ci"
+          class="shape-mini-cell"
+          :style="{ background: filled ? COLOR_HEX[selectedShape.color] : 'transparent' }"
+        ></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Win overlay -->
   <transition name="fade">
     <div v-if="won" class="win-overlay">
       <div class="win-box">
@@ -337,26 +354,21 @@ h1 {
         <p>Every tile placed perfectly.</p>
         <div class="win-btns">
           <button class="btn" @click="resetLevel">Play Again</button>
-          <button
-            v-if="currentLevelIdx < LEVELS.length - 1"
-            class="btn accent"
-            @click="nextLevel"
-          >Next Level →</button>
-          <span v-else style="color:#ffd200; font-size:0.9rem; padding:7px 4px;">All done! 🏆</span>
+          <button v-if="currentLevelIdx < LEVELS.length - 1" class="btn accent" @click="nextLevel">Next Level →</button>
+          <span v-else style="color:#ffd200; font-size:0.88rem; padding:8px 4px;">All done! 🏆</span>
         </div>
       </div>
     </div>
   </transition>
 
   <h1>TESSERA</h1>
-  <p class="tagline">Tile the entire board with shapes — a shape can't cover a dot of its own color</p>
+  <p class="tagline">Tile the entire board — a shape can't cover a dot of its own color</p>
 
   <div class="level-bar">
     <span><strong>Level {{ currentLevelIdx + 1 }}</strong>: {{ level.name }}</span>
     <div class="level-pills">
       <div
-        v-for="(l, i) in LEVELS"
-        :key="i"
+        v-for="(l, i) in LEVELS" :key="i"
         class="level-pill"
         :class="{ active: i === currentLevelIdx, done: completedLevels.has(i) }"
         @click="gotoLevel(i)"
@@ -370,34 +382,30 @@ h1 {
 
     <!-- Board -->
     <div class="board-wrap">
-
-      <!-- Progress bar -->
-      <div class="progress-bar-wrap" :style="{ width: (level.cols * 52 + 4) + 'px' }">
+      <div class="progress-bar-wrap" :style="{ width: boardPxWidth + 'px' }">
         <div class="progress-bar-fill" :style="{ width: progressPct + '%' }"></div>
       </div>
 
       <div
         class="board"
-        :style="{ gridTemplateColumns: `repeat(${level.cols}, 52px)` }"
-        @mouseleave="hoverRow = hoverCol = null"
+        :style="{ gridTemplateColumns: `repeat(${level.cols}, ${cellSize}px)` }"
+        @mouseleave="!isDragging && (hoverRow = hoverCol = null)"
         @contextmenu.prevent="selectedShapeId = null"
       >
         <template v-for="r in level.rows" :key="r">
           <div
-            v-for="c in level.cols"
-            :key="`${r}-${c}`"
+            v-for="c in level.cols" :key="`${r}-${c}`"
             class="cell"
-            :style="cellStyle(r-1, c-1)"
+            :data-row="r-1" :data-col="c-1"
+            :style="[{ width: cellSize + 'px', height: cellSize + 'px' }, cellBg(r-1, c-1)]"
             @mouseenter="hoverRow = r-1; hoverCol = c-1"
             @click="onCellClick(r-1, c-1)"
           >
-            <!-- Always-visible dot -->
             <div
               class="dot"
               :class="{ covered: board[r-1][c-1].shapeColor }"
               :style="{ background: COLOR_HEX[level.dots[r-1][c-1]] }"
             ></div>
-            <!-- Checkmark when covered -->
             <span v-if="board[r-1][c-1].shapeColor" class="cell-check">✓</span>
           </div>
         </template>
@@ -405,13 +413,13 @@ h1 {
 
       <div class="error-msg">{{ errorMsg }}</div>
 
-      <div v-if="selectedShape" class="selected-hint">
-        <span>Placing: <strong :style="{ color: COLOR_HEX[selectedShape.color] }">{{ selectedShape.color }} {{ selectedShape.type }}</strong></span>
-        <button class="rotate-btn" @click="rotateShape" title="Rotate (R)">↻</button>
-      </div>
-      <div v-else style="min-height: 28px;"></div>
-
-      <div class="board-controls">
+      <div class="action-bar">
+        <template v-if="selectedShape">
+          <div class="selected-hint">
+            <span>Placing: <strong :style="{ color: COLOR_HEX[selectedShape.color] }">{{ selectedShape.color }} {{ selectedShape.type }}</strong></span>
+          </div>
+          <button class="rotate-btn" @click="rotateShape" title="Rotate (R)">↻</button>
+        </template>
         <button class="btn" @click="undo" :disabled="history.length === 0">↩ Undo</button>
         <button class="btn" @click="resetLevel">↺ Reset</button>
       </div>
@@ -422,24 +430,16 @@ h1 {
       <div class="palette-title">Shapes</div>
 
       <div
-        v-for="shape in level.shapes"
-        :key="shape.id"
+        v-for="shape in level.shapes" :key="shape.id"
         class="shape-card"
-        :class="{
-          selected: selectedShapeId === shape.id,
-          placed: placedIds.has(shape.id)
-        }"
+        :class="{ selected: selectedShapeId === shape.id, placed: placedIds.has(shape.id) }"
         @click="selectShape(shape.id)"
+        @touchstart.passive="onShapeTouchStart(shape.id, $event)"
       >
         <div class="shape-mini">
-          <div
-            v-for="(row, ri) in getShapeGrid(shape.type, selectedShapeId === shape.id ? rotation : 0)"
-            :key="ri"
-            class="shape-mini-row"
-          >
+          <div v-for="(row, ri) in getShapeGrid(shape.type, selectedShapeId === shape.id ? rotation : 0)" :key="ri" class="shape-mini-row">
             <div
-              v-for="(filled, ci) in row"
-              :key="ci"
+              v-for="(filled, ci) in row" :key="ci"
               class="shape-mini-cell"
               :style="{ background: filled ? COLOR_HEX[shape.color] : 'transparent' }"
             ></div>
@@ -453,7 +453,7 @@ h1 {
       </div>
 
       <div class="instructions">
-        Click shape → hover board → click<br>
+        Tap or drag a shape to the board<br>
         <kbd>R</kbd> rotate &nbsp; <kbd>Esc</kbd> cancel<br>
         <kbd>Ctrl+Z</kbd> undo
       </div>
@@ -508,46 +508,15 @@ function getShapeGrid(type, rot) {
   return grid;
 }
 
-// ─── Levels ──────────────────────────────────────────────────────────────────
-//
-// Every cell has a dot.  The shapes must tile the board completely.
-// Dot color ≠ covering shape color (constraint).
-//
-// Verified solutions (use these as hints if stuck):
-//
-// Level 1 (4×4):
-//   Red I  horiz row 0 : (0,0)(0,1)(0,2)(0,3)
-//   Blue L          : anchor(1,0) → (1,0)(2,0)(3,0)(3,1)
-//   Green J         : anchor(1,2) → (1,3)(2,3)(3,2)(3,3)  [J rot 90° CW]
-//   Yellow O        : (1,1)(1,2)(2,1)(2,2)
-//
-// Level 2 (4×6):
-//   Red I  horiz row 0 cols 0-3 : (0,0)(0,1)(0,2)(0,3)
-//   Blue L  rot 180°: (0,4)(0,5)(1,5)(2,5)
-//   Green O        : (1,0)(1,1)(2,0)(2,1)
-//   Yellow J rot270: (1,2)(1,3)(1,4)(2,4)
-//   Orange L rot270: anchor(2,0) offset(0,2)(1,0)(1,1)(1,2) → (2,2)(3,0)(3,1)(3,2)
-//   Purple J rot90 : anchor(2,3) → (2,3)(3,3)(3,4)(3,5)
-//
-// Level 3 (4×8) = Level 1 left half + right half with I/O pieces:
-//   Red I  horiz row 0 cols 0-3
-//   Blue L        cols 0 left
-//   Green J       cols 3 right inner
-//   Yellow O      middle inner
-//   Orange I vert col 4
-//   Purple I vert col 7
-//   Cyan O        cols 5-6 rows 0-1
-//   Pink O        cols 5-6 rows 2-3
-
 const LEVELS = [
   {
     name: 'Quadrant',
     rows: 4, cols: 4,
     dots: [
-      ['blue',   'green',  'yellow', 'blue'  ],
-      ['red',    'blue',   'green',  'red'   ],
-      ['green',  'red',    'blue',   'yellow'],
-      ['green',  'red',    'blue',   'red'   ],
+      ['blue',  'green',  'yellow', 'blue'  ],
+      ['red',   'blue',   'green',  'red'   ],
+      ['green', 'red',    'blue',   'yellow'],
+      ['green', 'red',    'blue',   'red'   ],
     ],
     shapes: [
       { id:1, type:'I', color:'red'    },
@@ -560,10 +529,10 @@ const LEVELS = [
     name: 'Hexagon',
     rows: 4, cols: 6,
     dots: [
-      ['blue',   'green',  'yellow', 'green', 'green', 'red'   ],
-      ['blue',   'yellow', 'red',    'green', 'blue',  'red'   ],
-      ['red',    'blue',   'red',    'red',   'red',   'yellow'],
-      ['green',  'red',    'blue',   'green', 'blue',  'red'   ],
+      ['blue',  'green',  'yellow', 'green', 'green', 'red'   ],
+      ['blue',  'yellow', 'red',    'green', 'blue',  'red'   ],
+      ['red',   'blue',   'red',    'red',   'red',   'yellow'],
+      ['green', 'red',    'blue',   'green', 'blue',  'red'   ],
     ],
     shapes: [
       { id:1, type:'I', color:'red'    },
@@ -596,30 +565,43 @@ const LEVELS = [
   },
 ];
 
-// ─── App ─────────────────────────────────────────────────────────────────────
 createApp({
   setup() {
-    const currentLevelIdx  = ref(0);
-    const selectedShapeId  = ref(null);
-    const rotation         = ref(0);
-    const hoverRow         = ref(null);
-    const hoverCol         = ref(null);
-    const history          = ref([]);   // { shapeId, row, col, rotation }
-    const won              = ref(false);
-    const errorMsg         = ref('');
-    const completedLevels  = ref(new Set());
+    const currentLevelIdx = ref(0);
+    const selectedShapeId = ref(null);
+    const rotation        = ref(0);
+    const hoverRow        = ref(null);
+    const hoverCol        = ref(null);
+    const history         = ref([]);
+    const won             = ref(false);
+    const errorMsg        = ref('');
+    const completedLevels = ref(new Set());
+
+    // Touch drag state
+    const isDragging = ref(false);
+    const ghostX     = ref(0);
+    const ghostY     = ref(0);
+    let touchStartX  = 0;
+    let touchStartY  = 0;
+
+    // Responsive cell size
+    const windowWidth = ref(window.innerWidth);
+    function onResize() { windowWidth.value = window.innerWidth; }
 
     const level = computed(() => LEVELS[currentLevelIdx.value]);
 
-    // board[r][c] = { dot: colorStr, shapeColor: colorStr|null, shapeId: id|null }
+    const cellSize = computed(() => {
+      if (windowWidth.value >= 600) return 52;
+      return Math.min(52, Math.floor((windowWidth.value - 32) / level.value.cols));
+    });
+
+    const boardPxWidth = computed(() => level.value.cols * cellSize.value + 4);
+
+    // board[r][c] = { dot, shapeColor, shapeId }
     const board = computed(() => {
       const { rows, cols, dots, shapes } = level.value;
       const grid = Array.from({ length: rows }, (_, r) =>
-        Array.from({ length: cols }, (_, c) => ({
-          dot: dots[r][c],
-          shapeColor: null,
-          shapeId: null,
-        }))
+        Array.from({ length: cols }, (_, c) => ({ dot: dots[r][c], shapeColor: null, shapeId: null }))
       );
       history.value.forEach(p => {
         const sh = shapes.find(s => s.id === p.shapeId);
@@ -643,16 +625,15 @@ createApp({
         : null
     );
 
-    // Preview cells for hover
     const preview = computed(() => {
       if (!selectedShape.value || hoverRow.value == null) return [];
       const { rows, cols } = level.value;
       const color = selectedShape.value.color;
       return getShapeCells(selectedShape.value.type, rotation.value).map(([dr, dc]) => {
         const r = hoverRow.value + dr, c = hoverCol.value + dc;
-        const inBounds  = r >= 0 && r < rows && c >= 0 && c < cols;
-        const occupied  = inBounds && board.value[r][c].shapeColor != null;
-        const sameDot   = inBounds && board.value[r][c].dot === color;
+        const inBounds = r >= 0 && r < rows && c >= 0 && c < cols;
+        const occupied = inBounds && board.value[r][c].shapeColor != null;
+        const sameDot  = inBounds && board.value[r][c].dot === color;
         return { r, c, valid: inBounds && !occupied && !sameDot };
       });
     });
@@ -662,8 +643,8 @@ createApp({
     );
 
     const coveredCount = computed(() => {
-      const b = board.value;
       let n = 0;
+      const b = board.value;
       for (let r = 0; r < level.value.rows; r++)
         for (let c = 0; c < level.value.cols; c++)
           if (b[r][c].shapeColor) n++;
@@ -674,26 +655,19 @@ createApp({
       Math.round(coveredCount.value / (level.value.rows * level.value.cols) * 100)
     );
 
-    // ── Cell style ──────────────────────────────────────────────────────────
-    function cellStyle(row, col) {
+    function cellBg(row, col) {
       const cell = board.value[row][col];
       const prev = preview.value.find(p => p.r === row && p.c === col);
-
-      let bg = '';
-      const cursor = selectedShapeId.value ? 'crosshair' : 'default';
-
       if (prev) {
-        bg = prev.valid
-          ? COLOR_HEX[selectedShape.value.color] + '60'   // valid preview — translucent
-          : 'rgba(248,81,73,0.30)';                        // invalid — red tint
-      } else if (cell.shapeColor) {
-        bg = COLOR_HEX[cell.shapeColor] + 'b0';           // placed shape
+        return { background: prev.valid
+          ? COLOR_HEX[selectedShape.value.color] + '60'
+          : 'rgba(248,81,73,0.28)' };
       }
-
-      return { background: bg || undefined, cursor };
+      if (cell.shapeColor) return { background: COLOR_HEX[cell.shapeColor] + 'b0' };
+      return {};
     }
 
-    // ── Actions ─────────────────────────────────────────────────────────────
+    // ── Actions ──────────────────────────────────────────────────────
     function selectShape(id) {
       if (placedIds.value.has(id)) return;
       selectedShapeId.value = selectedShapeId.value === id ? null : id;
@@ -705,30 +679,23 @@ createApp({
     function onCellClick(row, col) {
       if (!selectedShape.value) return;
       if (!previewValid.value) {
-        const prev = preview.value;
-        const cell = board.value;
         const color = selectedShape.value.color;
-        const hasConflict = prev.some(p =>
+        const hasConflict = preview.value.some(p =>
           p.r >= 0 && p.r < level.value.rows &&
           p.c >= 0 && p.c < level.value.cols &&
-          cell[p.r][p.c].dot === color
+          board.value[p.r][p.c].dot === color
         );
         errorMsg.value = hasConflict
           ? `A ${color} shape can't cover ${color} dots!`
-          : 'Out of bounds or overlapping another shape.';
-        setTimeout(() => { errorMsg.value = ''; }, 2500);
+          : 'Out of bounds or overlapping.';
+        setTimeout(() => { errorMsg.value = ''; }, 2200);
         return;
       }
-
-      history.value.push({
-        shapeId: selectedShapeId.value,
-        row, col,
-        rotation: rotation.value,
-      });
+      history.value.push({ shapeId: selectedShapeId.value, row, col, rotation: rotation.value });
       selectedShapeId.value = null;
       rotation.value = 0;
-
-      // Check win: board fully covered
+      hoverRow.value = null;
+      hoverCol.value = null;
       if (coveredCount.value === level.value.rows * level.value.cols) {
         completedLevels.value = new Set([...completedLevels.value, currentLevelIdx.value]);
         setTimeout(() => { won.value = true; }, 200);
@@ -745,35 +712,91 @@ createApp({
       rotation.value = 0;
       won.value = false;
       errorMsg.value = '';
+      hoverRow.value = null;
+      hoverCol.value = null;
     }
 
     function nextLevel() {
-      if (currentLevelIdx.value < LEVELS.length - 1) {
-        currentLevelIdx.value++;
-        resetLevel();
-      }
+      if (currentLevelIdx.value < LEVELS.length - 1) { currentLevelIdx.value++; resetLevel(); }
     }
 
     function gotoLevel(i) { currentLevelIdx.value = i; resetLevel(); }
 
+    // ── Touch drag ───────────────────────────────────────────────────
+    function findCellEl(x, y) {
+      let el = document.elementFromPoint(x, y);
+      while (el && el.dataset.row === undefined) el = el.parentElement;
+      return (el && el.dataset.row !== undefined) ? el : null;
+    }
+
+    function onShapeTouchStart(shapeId, e) {
+      const t = e.touches[0];
+      touchStartX = t.clientX;
+      touchStartY = t.clientY;
+      isDragging.value = false;
+      selectShape(shapeId);
+    }
+
+    function onDocTouchMove(e) {
+      if (!selectedShapeId.value) return;
+      const t = e.touches[0];
+      const dist = Math.hypot(t.clientX - touchStartX, t.clientY - touchStartY);
+      if (!isDragging.value && dist > 8) isDragging.value = true;
+      if (!isDragging.value) return;
+      e.preventDefault();
+      ghostX.value = t.clientX;
+      ghostY.value = t.clientY;
+      const el = findCellEl(t.clientX, t.clientY);
+      if (el) {
+        hoverRow.value = +el.dataset.row;
+        hoverCol.value = +el.dataset.col;
+      } else {
+        hoverRow.value = null;
+        hoverCol.value = null;
+      }
+    }
+
+    function onDocTouchEnd(e) {
+      if (selectedShapeId.value && isDragging.value) {
+        const t = e.changedTouches[0];
+        const el = findCellEl(t.clientX, t.clientY);
+        if (el) onCellClick(+el.dataset.row, +el.dataset.col);
+      }
+      isDragging.value = false;
+      if (!selectedShapeId.value) { hoverRow.value = null; hoverCol.value = null; }
+    }
+
+    // ── Keyboard ─────────────────────────────────────────────────────
     function handleKey(e) {
       if      (e.key === 'r' || e.key === 'R') rotateShape();
       else if (e.key === 'Escape')              selectedShapeId.value = null;
       else if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); undo(); }
     }
 
-    onMounted(() => window.addEventListener('keydown', handleKey));
-    onUnmounted(() => window.removeEventListener('keydown', handleKey));
+    onMounted(() => {
+      window.addEventListener('keydown', handleKey);
+      window.addEventListener('resize', onResize);
+      document.addEventListener('touchmove', onDocTouchMove, { passive: false });
+      document.addEventListener('touchend',  onDocTouchEnd);
+    });
+    onUnmounted(() => {
+      window.removeEventListener('keydown', handleKey);
+      window.removeEventListener('resize', onResize);
+      document.removeEventListener('touchmove', onDocTouchMove);
+      document.removeEventListener('touchend',  onDocTouchEnd);
+    });
 
     return {
       currentLevelIdx, selectedShapeId, rotation,
       hoverRow, hoverCol, history, won, errorMsg, completedLevels,
+      isDragging, ghostX, ghostY,
       level, board, placedIds, selectedShape, preview, previewValid,
-      coveredCount, progressPct,
+      coveredCount, progressPct, cellSize, boardPxWidth,
       COLOR_HEX, LEVELS,
       getShapeGrid,
-      cellStyle, selectShape, rotateShape, onCellClick,
+      cellBg, selectShape, rotateShape, onCellClick,
       undo, resetLevel, nextLevel, gotoLevel,
+      onShapeTouchStart,
     };
   }
 }).mount('#app');

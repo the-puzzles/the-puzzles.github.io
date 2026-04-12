@@ -16,12 +16,14 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 24px 16px;
+  padding: 20px 16px;
   user-select: none;
+  -webkit-user-select: none;
+  touch-action: pan-y;
 }
 
 h1 {
-  font-size: 2.4rem;
+  font-size: 2.2rem;
   font-weight: 800;
   letter-spacing: 0.08em;
   background: linear-gradient(135deg, #58a6ff, #79c0ff, #a5d6ff);
@@ -33,56 +35,50 @@ h1 {
 
 .tagline {
   color: #6e7681;
-  font-size: 0.88rem;
-  margin-bottom: 20px;
+  font-size: 0.82rem;
+  margin-bottom: 16px;
   text-align: center;
+  max-width: 340px;
 }
 
 .level-bar {
   display: flex;
-  gap: 24px;
+  gap: 16px;
   align-items: center;
-  margin-bottom: 20px;
-  font-size: 0.85rem;
+  margin-bottom: 16px;
+  font-size: 0.82rem;
   color: #8b949e;
   flex-wrap: wrap;
   justify-content: center;
 }
-
 .level-bar strong { color: #c9d1d9; }
 
-.level-pills {
-  display: flex;
-  gap: 6px;
-}
-
+.level-pills { display: flex; gap: 6px; }
 .level-pill {
-  width: 28px;
-  height: 8px;
-  border-radius: 4px;
-  background: #21262d;
-  cursor: pointer;
-  transition: background 0.2s;
+  width: 28px; height: 8px;
+  border-radius: 4px; background: #21262d;
+  cursor: pointer; transition: background 0.2s;
 }
-
 .level-pill.active { background: #58a6ff; }
-.level-pill.done { background: #3fb950; }
+.level-pill.done   { background: #3fb950; }
 
-/* Game layout */
+/* ── Game layout ───────────────────────────────────────────────────── */
 .game-container {
   display: flex;
-  gap: 28px;
+  gap: 24px;
   align-items: flex-start;
   flex-wrap: wrap;
   justify-content: center;
+  width: 100%;
 }
 
-/* Board */
+/* ── Board ─────────────────────────────────────────────────────────── */
 .board-wrap {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  flex-shrink: 0;
 }
 
 .board {
@@ -92,11 +88,11 @@ h1 {
   overflow: hidden;
   background: #161b22;
   box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  touch-action: none;
 }
 
 .cell {
-  width: 54px;
-  height: 54px;
+  /* width/height set inline via cellSize */
   border: 1px solid #21262d;
   display: flex;
   align-items: center;
@@ -106,52 +102,51 @@ h1 {
 }
 
 .dot {
-  width: 20px;
-  height: 20px;
+  width: 38%;
+  height: 38%;
   border-radius: 50%;
   position: absolute;
   z-index: 3;
   pointer-events: none;
   border: 2px solid rgba(255,255,255,0.35);
-  box-shadow: 0 0 8px rgba(255,255,255,0.15), inset 0 1px 2px rgba(255,255,255,0.2);
+  box-shadow: 0 0 8px rgba(255,255,255,0.12), inset 0 1px 2px rgba(255,255,255,0.2);
   transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.dot.just-covered {
-  transform: scale(1.3);
-  box-shadow: 0 0 16px rgba(255,255,255,0.4);
-}
-
-.cell-ring {
-  position: absolute;
-  inset: 3px;
-  border-radius: 4px;
-  pointer-events: none;
-  z-index: 1;
-}
-
-.board-controls {
-  display: flex;
-  gap: 8px;
-}
-
 .error-msg {
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   color: #f85149;
-  min-height: 20px;
+  min-height: 18px;
   text-align: center;
 }
 
-/* Palette */
+.action-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.selected-hint {
+  font-size: 0.78rem;
+  color: #58a6ff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ── Palette ───────────────────────────────────────────────────────── */
 .palette-wrap {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  width: 190px;
+  gap: 8px;
+  width: 186px;
+  flex-shrink: 0;
 }
 
 .palette-title {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.12em;
   color: #6e7681;
@@ -162,185 +157,168 @@ h1 {
   border: 2px solid #30363d;
   border-radius: 10px;
   padding: 10px 12px;
-  cursor: pointer;
+  cursor: grab;
   transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  touch-action: none;
 }
-
+.shape-card:active { cursor: grabbing; }
 .shape-card:hover:not(.placed) {
   border-color: #58a6ff;
   transform: translateX(3px);
 }
-
 .shape-card.selected {
   border-color: #58a6ff;
   background: #1c2a3e;
-  box-shadow: 0 0 12px rgba(88,166,255,0.2);
+  box-shadow: 0 0 14px rgba(88,166,255,0.25);
 }
+.shape-card.placed { opacity: 0.35; cursor: default; touch-action: auto; }
 
-.shape-card.placed {
-  opacity: 0.35;
-  cursor: default;
-}
+.shape-mini { display: flex; flex-direction: column; gap: 2px; flex-shrink: 0; }
+.shape-mini-row { display: flex; gap: 2px; }
+.shape-mini-cell { width: 14px; height: 14px; border-radius: 2px; }
 
-.shape-mini {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  flex-shrink: 0;
-}
+.shape-info { flex: 1; min-width: 0; }
+.shape-type { font-size: 0.74rem; font-weight: 700; letter-spacing: 0.04em; }
+.shape-color-name { font-size: 0.68rem; color: #6e7681; text-transform: capitalize; }
+.placed-badge { font-size: 0.65rem; color: #3fb950; font-weight: 600; }
 
-.shape-mini-row {
-  display: flex;
-  gap: 2px;
-}
-
-.shape-mini-cell {
-  width: 14px;
-  height: 14px;
-  border-radius: 2px;
-}
-
-.shape-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.shape-type {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: #c9d1d9;
-  letter-spacing: 0.05em;
-}
-
-.shape-color-name {
-  font-size: 0.7rem;
-  color: #6e7681;
-  text-transform: capitalize;
-}
-
-.placed-badge {
-  font-size: 0.65rem;
-  color: #3fb950;
-  font-weight: 600;
-}
-
-/* Instructions panel */
 .instructions {
   background: #161b22;
   border: 1px solid #30363d;
   border-radius: 10px;
-  padding: 12px;
-  font-size: 0.75rem;
+  padding: 10px 12px;
+  font-size: 0.72rem;
   color: #6e7681;
-  line-height: 2;
+  line-height: 1.9;
 }
-
 .instructions kbd {
-  background: #21262d;
-  border: 1px solid #444c56;
-  border-radius: 4px;
-  padding: 1px 5px;
-  font-family: monospace;
-  font-size: 0.7rem;
-  color: #c9d1d9;
+  background: #21262d; border: 1px solid #444c56;
+  border-radius: 3px; padding: 1px 4px;
+  font-family: monospace; font-size: 0.68rem; color: #c9d1d9;
 }
 
-/* Buttons */
+/* ── Buttons ───────────────────────────────────────────────────────── */
 .btn {
-  background: #21262d;
-  border: 1px solid #30363d;
-  color: #c9d1d9;
-  padding: 7px 14px;
-  border-radius: 7px;
-  cursor: pointer;
-  font-size: 0.82rem;
+  background: #21262d; border: 1px solid #30363d;
+  color: #c9d1d9; padding: 8px 16px;
+  border-radius: 8px; cursor: pointer;
+  font-size: 0.82rem; font-family: inherit;
   transition: background 0.15s, border-color 0.15s;
-  font-family: inherit;
+  min-height: 40px;
 }
-
 .btn:hover { background: #30363d; border-color: #444c56; }
 .btn:disabled { opacity: 0.4; cursor: default; }
-
-.btn.accent {
-  background: #1f6feb;
-  border-color: #388bfd;
-  color: #fff;
-}
+.btn.accent { background: #1f6feb; border-color: #388bfd; color: #fff; }
 .btn.accent:hover { background: #388bfd; }
 
-/* Win overlay */
-.win-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.75);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
-  backdrop-filter: blur(4px);
+.rotate-btn {
+  background: #21262d; border: 1px solid #30363d;
+  color: #c9d1d9; width: 40px; height: 40px;
+  border-radius: 8px; cursor: pointer; font-size: 1.1rem;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s;
 }
+.rotate-btn:hover, .rotate-btn:active { background: #30363d; }
 
+/* ── Drag ghost ────────────────────────────────────────────────────── */
+.drag-ghost {
+  position: fixed;
+  pointer-events: none;
+  z-index: 1000;
+  transform: translate(-50%, calc(-100% - 18px));
+  background: rgba(15, 20, 28, 0.96);
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  border-radius: 10px;
+  padding: 10px;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.6);
+}
+.drag-ghost .shape-mini-cell { width: 22px; height: 22px; border-radius: 4px; }
+
+/* ── Win overlay ───────────────────────────────────────────────────── */
+.win-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.78);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 100; backdrop-filter: blur(4px);
+}
 .win-box {
-  background: #161b22;
-  border: 2px solid #3fb950;
-  border-radius: 16px;
-  padding: 40px 48px;
+  background: #161b22; border: 2px solid #3fb950;
+  border-radius: 16px; padding: 36px 44px;
   text-align: center;
   box-shadow: 0 0 48px rgba(63,185,80,0.25);
   animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-
 @keyframes popIn {
   from { transform: scale(0.7); opacity: 0; }
   to   { transform: scale(1);   opacity: 1; }
 }
+.win-icon { font-size: 2.8rem; margin-bottom: 10px; }
+.win-box h2 { font-size: 1.7rem; color: #3fb950; margin-bottom: 8px; }
+.win-box p  { color: #6e7681; margin-bottom: 20px; font-size: 0.88rem; }
+.win-btns { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
 
-.win-icon { font-size: 3rem; margin-bottom: 12px; }
+.fade-enter-active, .fade-leave-active { transition: opacity 0.2s; }
+.fade-enter-from, .fade-leave-to { opacity: 0; }
 
-.win-box h2 {
-  font-size: 1.8rem;
-  color: #3fb950;
-  margin-bottom: 8px;
-}
+/* ── Mobile layout ─────────────────────────────────────────────────── */
+@media (max-width: 599px) {
+  h1 { font-size: 1.8rem; }
 
-.win-box p {
-  color: #6e7681;
-  margin-bottom: 24px;
-  font-size: 0.9rem;
-}
+  .game-container {
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
 
-.win-btns { display: flex; gap: 10px; justify-content: center; }
+  .palette-wrap {
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: visible;
+    width: 100%;
+    max-width: 100vw;
+    padding-bottom: 4px;
+    gap: 8px;
+  }
 
-/* Rotate button */
-.rotate-btn {
-  background: #21262d;
-  border: 1px solid #30363d;
-  color: #c9d1d9;
-  width: 32px;
-  height: 32px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.15s;
-  flex-shrink: 0;
-}
-.rotate-btn:hover { background: #30363d; }
+  .palette-title { display: none; }
 
-.selected-hint {
-  font-size: 0.75rem;
-  color: #58a6ff;
-  text-align: center;
+  .shape-card {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 62px;
+    width: 62px;
+    padding: 8px 6px;
+    gap: 5px;
+    flex-shrink: 0;
+  }
+  .shape-card:hover:not(.placed) { transform: translateY(-2px); }
+
+  .shape-info { text-align: center; }
+  .shape-color-name { display: none; }
+
+  .instructions { display: none; }
 }
 </style>
 </head>
 <body>
 <div id="app">
+
+  <!-- Drag ghost -->
+  <div v-if="isDragging && selectedShape" class="drag-ghost" :style="{ left: ghostX + 'px', top: ghostY + 'px' }">
+    <div class="shape-mini">
+      <div v-for="(row, ri) in getShapeGrid(selectedShape.type, rotation)" :key="ri" class="shape-mini-row">
+        <div
+          v-for="(filled, ci) in row" :key="ci"
+          class="shape-mini-cell"
+          :style="{ background: filled ? COLOR_HEX[selectedShape.color] : 'transparent' }"
+        ></div>
+      </div>
+    </div>
+  </div>
 
   <!-- Win overlay -->
   <transition name="fade">
@@ -351,26 +329,21 @@ h1 {
         <p>All {{ level.dots.length }} dots covered!</p>
         <div class="win-btns">
           <button class="btn" @click="resetLevel">Play Again</button>
-          <button
-            v-if="currentLevelIdx < LEVELS.length - 1"
-            class="btn accent"
-            @click="nextLevel"
-          >Next Level →</button>
-          <span v-else style="color:#3fb950; font-size:0.9rem; padding: 7px 4px;">All levels complete! 🏆</span>
+          <button v-if="currentLevelIdx < LEVELS.length - 1" class="btn accent" @click="nextLevel">Next Level →</button>
+          <span v-else style="color:#3fb950; font-size:0.88rem; padding:8px 4px;">All levels complete! 🏆</span>
         </div>
       </div>
     </div>
   </transition>
 
   <h1>CHROMINO</h1>
-  <p class="tagline">Place shapes to cover all dots — but a shape can't cover a dot of its own color</p>
+  <p class="tagline">Cover all dots — a shape can't cover a dot of its own color</p>
 
   <div class="level-bar">
     <span><strong>Level {{ currentLevelIdx + 1 }}</strong>: {{ level.name }}</span>
     <div class="level-pills">
       <div
-        v-for="(l, i) in LEVELS"
-        :key="i"
+        v-for="(l, i) in LEVELS" :key="i"
         class="level-pill"
         :class="{ active: i === currentLevelIdx, done: completedLevels.has(i) }"
         @click="gotoLevel(i)"
@@ -386,16 +359,16 @@ h1 {
     <div class="board-wrap">
       <div
         class="board"
-        :style="{ gridTemplateColumns: `repeat(${level.cols}, 54px)` }"
-        @mouseleave="hoverRow = hoverCol = null"
+        :style="{ gridTemplateColumns: `repeat(${level.cols}, ${cellSize}px)` }"
+        @mouseleave="!isDragging && (hoverRow = hoverCol = null)"
         @contextmenu.prevent="selectedShapeId = null"
       >
         <template v-for="r in level.rows" :key="r">
           <div
-            v-for="c in level.cols"
-            :key="`${r}-${c}`"
+            v-for="c in level.cols" :key="`${r}-${c}`"
             class="cell"
-            :style="cellStyle(r-1, c-1)"
+            :data-row="r-1" :data-col="c-1"
+            :style="[{ width: cellSize + 'px', height: cellSize + 'px' }, cellBg(r-1, c-1)]"
             @mouseenter="hoverRow = r-1; hoverCol = c-1"
             @click="onCellClick(r-1, c-1)"
           >
@@ -410,58 +383,47 @@ h1 {
 
       <div class="error-msg">{{ errorMsg }}</div>
 
-      <div v-if="selectedShape" class="selected-hint">
-        Placing: <strong :style="{ color: COLOR_HEX[selectedShape.color] }">{{ selectedShape.color }} {{ selectedShape.type }}</strong>
-        &nbsp;
-        <button class="rotate-btn" @click="rotateShape" title="Rotate (R)">↻</button>
-      </div>
-
-      <div class="board-controls">
+      <div class="action-bar">
+        <template v-if="selectedShape">
+          <div class="selected-hint">
+            <span>Placing: <strong :style="{ color: COLOR_HEX[selectedShape.color] }">{{ selectedShape.color }} {{ selectedShape.type }}</strong></span>
+          </div>
+          <button class="rotate-btn" @click="rotateShape" title="Rotate (R)">↻</button>
+        </template>
         <button class="btn" @click="undo" :disabled="history.length === 0">↩ Undo</button>
         <button class="btn" @click="resetLevel">↺ Reset</button>
       </div>
     </div>
 
-    <!-- Palette + Instructions -->
+    <!-- Palette -->
     <div class="palette-wrap">
       <div class="palette-title">Shapes</div>
 
       <div
-        v-for="shape in level.shapes"
-        :key="shape.id"
+        v-for="shape in level.shapes" :key="shape.id"
         class="shape-card"
-        :class="{
-          selected: selectedShapeId === shape.id,
-          placed: placedIds.has(shape.id)
-        }"
+        :class="{ selected: selectedShapeId === shape.id, placed: placedIds.has(shape.id) }"
         @click="selectShape(shape.id)"
+        @touchstart.passive="onShapeTouchStart(shape.id, $event)"
       >
-        <!-- Mini preview grid -->
         <div class="shape-mini">
-          <div
-            v-for="(row, ri) in getShapeGrid(shape.type, selectedShapeId === shape.id ? rotation : 0)"
-            :key="ri"
-            class="shape-mini-row"
-          >
+          <div v-for="(row, ri) in getShapeGrid(shape.type, selectedShapeId === shape.id ? rotation : 0)" :key="ri" class="shape-mini-row">
             <div
-              v-for="(filled, ci) in row"
-              :key="ci"
+              v-for="(filled, ci) in row" :key="ci"
               class="shape-mini-cell"
               :style="{ background: filled ? COLOR_HEX[shape.color] : 'transparent' }"
             ></div>
           </div>
         </div>
-
         <div class="shape-info">
           <div class="shape-type" :style="{ color: COLOR_HEX[shape.color] }">{{ shape.type }}-piece</div>
           <div class="shape-color-name">{{ shape.color }}</div>
         </div>
-
         <div v-if="placedIds.has(shape.id)" class="placed-badge">✓</div>
       </div>
 
       <div class="instructions">
-        Click shape → hover board → click to place<br>
+        Tap or drag a shape to the board<br>
         <kbd>R</kbd> rotate &nbsp; <kbd>Esc</kbd> cancel<br>
         <kbd>Ctrl+Z</kbd> undo &nbsp; Right-click cancel
       </div>
@@ -497,7 +459,7 @@ const SHAPE_BASES = {
 function rotateCW(cells) {
   const r2 = cells.map(([r, c]) => [c, -r]);
   const minR = Math.min(...r2.map(([r]) => r));
-  const minC = Math.min(...r2.map(([,c]) => c));
+  const minC = Math.min(...r2.map(([, c]) => c));
   return r2.map(([r, c]) => [r - minR, c - minC]);
 }
 
@@ -510,32 +472,11 @@ function getShapeCells(type, rot) {
 function getShapeGrid(type, rot) {
   const cells = getShapeCells(type, rot);
   const maxR = Math.max(...cells.map(([r]) => r));
-  const maxC = Math.max(...cells.map(([,c]) => c));
-  const grid = Array.from({length: maxR+1}, () => Array(maxC+1).fill(false));
+  const maxC = Math.max(...cells.map(([, c]) => c));
+  const grid = Array.from({ length: maxR + 1 }, () => Array(maxC + 1).fill(false));
   cells.forEach(([r, c]) => { grid[r][c] = true; });
   return grid;
 }
-
-// Level 1 solution:
-//   Red T  at (0,0): covers (0,1)(1,0)(1,1)(1,2)  → blue dot at (1,1) OK (red≠blue)
-//   Blue L at (0,3): covers (0,3)(1,3)(2,3)(2,4)  → red dot at (2,3) OK (blue≠red)
-//   Green I at (4,0): covers (4,0)(4,1)(4,2)(4,3) → blue dot at (4,2) OK (green≠blue)
-
-// Level 2 solution:
-//   Red T  (0,0): (0,1)(1,0)(1,1)(1,2)   → blue dot (0,1) ok
-//   Blue L (0,3): (0,3)(1,3)(2,3)(2,4)   → red dot (1,3) ok
-//   Green S (2,0): (2,1)(2,2)(3,0)(3,1)  → yellow dot (3,0) ok
-//   Yellow I vertical (0,5): (0,5)(1,5)(2,5)(3,5) → green dot (2,5) ok
-//   Orange O (4,0): (4,0)(4,1)(5,0)(5,1) → red dot (4,1) ok
-
-// Level 3 solution:
-//   Red T  (0,0): (0,1)(1,0)(1,1)(1,2)         → blue dot (0,1) ok
-//   Blue L (0,3): (0,3)(1,3)(2,3)(2,4)          → red dot (1,3) ok
-//   Green I vert (0,6): (0,6)(1,6)(2,6)(3,6)    → yellow dot (2,6) ok
-//   Yellow S (2,0): (2,1)(2,2)(3,0)(3,1)        → green dot (2,2) ok
-//   Purple Z (3,4): (3,4)(3,5)(4,5)(4,6)        → orange dot (3,5) ok
-//   Orange O (4,0): (4,0)(4,1)(5,0)(5,1)        → purple dot (4,1) ok
-//   Cyan J (4,2): (4,3)(5,3)(6,2)(6,3)          → red dot (5,3) ok
 
 const LEVELS = [
   {
@@ -598,21 +539,36 @@ createApp({
   setup() {
     const currentLevelIdx = ref(0);
     const selectedShapeId = ref(null);
-    const rotation = ref(0);
-    const hoverRow = ref(null);
-    const hoverCol = ref(null);
-    const history = ref([]);
-    const won = ref(false);
-    const errorMsg = ref('');
+    const rotation        = ref(0);
+    const hoverRow        = ref(null);
+    const hoverCol        = ref(null);
+    const history         = ref([]);
+    const won             = ref(false);
+    const errorMsg        = ref('');
     const completedLevels = ref(new Set());
+
+    // Touch drag state
+    const isDragging = ref(false);
+    const ghostX     = ref(0);
+    const ghostY     = ref(0);
+    let touchStartX  = 0;
+    let touchStartY  = 0;
+
+    // Responsive cell size
+    const windowWidth = ref(window.innerWidth);
+    function onResize() { windowWidth.value = window.innerWidth; }
 
     const level = computed(() => LEVELS[currentLevelIdx.value]);
 
-    // Board: 2D grid of { dot, shapeColor, shapeId }
+    const cellSize = computed(() => {
+      if (windowWidth.value >= 600) return 54;
+      return Math.min(54, Math.floor((windowWidth.value - 32) / level.value.cols));
+    });
+
     const board = computed(() => {
       const { rows, cols, dots, shapes } = level.value;
-      const grid = Array.from({length: rows}, () =>
-        Array.from({length: cols}, () => ({ dot: null, shapeColor: null, shapeId: null }))
+      const grid = Array.from({ length: rows }, () =>
+        Array.from({ length: cols }, () => ({ dot: null, shapeColor: null, shapeId: null }))
       );
       dots.forEach(d => { grid[d.row][d.col].dot = d.color; });
       history.value.forEach(p => {
@@ -637,7 +593,6 @@ createApp({
         : null
     );
 
-    // Cells the hovered shape would cover
     const preview = computed(() => {
       if (!selectedShape.value || hoverRow.value == null) return [];
       const { rows, cols } = level.value;
@@ -660,34 +615,26 @@ createApp({
       return level.value.dots.filter(d => !b[d.row][d.col].shapeColor).length;
     });
 
-    // Style for each board cell
-    function cellStyle(row, col) {
+    function cellBg(row, col) {
       const cell = board.value[row][col];
       const prev = preview.value.find(p => p.r === row && p.c === col);
-
-      let bg = '';
-      let cursor = selectedShapeId.value ? 'crosshair' : 'default';
-
       if (prev) {
-        bg = prev.valid
+        return { background: prev.valid
           ? COLOR_HEX[selectedShape.value.color] + '55'
-          : 'rgba(248,81,73,0.28)';
-      } else if (cell.shapeColor) {
-        bg = COLOR_HEX[cell.shapeColor] + 'aa';
+          : 'rgba(248,81,73,0.28)' };
       }
-
-      return { background: bg || undefined, cursor };
+      if (cell.shapeColor) return { background: COLOR_HEX[cell.shapeColor] + 'aa' };
+      return {};
     }
 
+    // ── Actions ──────────────────────────────────────────────────────
     function selectShape(id) {
       if (placedIds.value.has(id)) return;
       selectedShapeId.value = selectedShapeId.value === id ? null : id;
       if (selectedShapeId.value !== null) rotation.value = 0;
     }
 
-    function rotateShape() {
-      rotation.value = (rotation.value + 1) % 4;
-    }
+    function rotateShape() { rotation.value = (rotation.value + 1) % 4; }
 
     function onCellClick(row, col) {
       if (!selectedShape.value) return;
@@ -699,6 +646,8 @@ createApp({
       history.value.push({ shapeId: selectedShapeId.value, row, col, rotation: rotation.value });
       selectedShapeId.value = null;
       rotation.value = 0;
+      hoverRow.value = null;
+      hoverCol.value = null;
       if (dotsRemaining.value === 0) {
         completedLevels.value = new Set([...completedLevels.value, currentLevelIdx.value]);
         setTimeout(() => { won.value = true; }, 150);
@@ -706,10 +655,7 @@ createApp({
     }
 
     function undo() {
-      if (history.value.length) {
-        history.value.pop();
-        won.value = false;
-      }
+      if (history.value.length) { history.value.pop(); won.value = false; }
     }
 
     function resetLevel() {
@@ -718,37 +664,91 @@ createApp({
       rotation.value = 0;
       won.value = false;
       errorMsg.value = '';
+      hoverRow.value = null;
+      hoverCol.value = null;
     }
 
     function nextLevel() {
-      if (currentLevelIdx.value < LEVELS.length - 1) {
-        currentLevelIdx.value++;
-        resetLevel();
+      if (currentLevelIdx.value < LEVELS.length - 1) { currentLevelIdx.value++; resetLevel(); }
+    }
+
+    function gotoLevel(i) { currentLevelIdx.value = i; resetLevel(); }
+
+    // ── Touch drag ───────────────────────────────────────────────────
+    function findCellEl(x, y) {
+      let el = document.elementFromPoint(x, y);
+      while (el && el.dataset.row === undefined) el = el.parentElement;
+      return (el && el.dataset.row !== undefined) ? el : null;
+    }
+
+    function onShapeTouchStart(shapeId, e) {
+      const t = e.touches[0];
+      touchStartX = t.clientX;
+      touchStartY = t.clientY;
+      isDragging.value = false;
+      selectShape(shapeId);
+    }
+
+    function onDocTouchMove(e) {
+      if (!selectedShapeId.value) return;
+      const t = e.touches[0];
+      const dist = Math.hypot(t.clientX - touchStartX, t.clientY - touchStartY);
+      if (!isDragging.value && dist > 8) isDragging.value = true;
+      if (!isDragging.value) return;
+      e.preventDefault();
+      ghostX.value = t.clientX;
+      ghostY.value = t.clientY;
+      const el = findCellEl(t.clientX, t.clientY);
+      if (el) {
+        hoverRow.value = +el.dataset.row;
+        hoverCol.value = +el.dataset.col;
+      } else {
+        hoverRow.value = null;
+        hoverCol.value = null;
       }
     }
 
-    function gotoLevel(i) {
-      currentLevelIdx.value = i;
-      resetLevel();
+    function onDocTouchEnd(e) {
+      if (selectedShapeId.value && isDragging.value) {
+        const t = e.changedTouches[0];
+        const el = findCellEl(t.clientX, t.clientY);
+        if (el) onCellClick(+el.dataset.row, +el.dataset.col);
+      }
+      isDragging.value = false;
+      if (!selectedShapeId.value) { hoverRow.value = null; hoverCol.value = null; }
     }
 
+    // ── Keyboard ─────────────────────────────────────────────────────
     function handleKey(e) {
-      if (e.key === 'r' || e.key === 'R') rotateShape();
-      else if (e.key === 'Escape') selectedShapeId.value = null;
+      if      (e.key === 'r' || e.key === 'R') rotateShape();
+      else if (e.key === 'Escape')              selectedShapeId.value = null;
       else if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); undo(); }
     }
 
-    onMounted(() => window.addEventListener('keydown', handleKey));
-    onUnmounted(() => window.removeEventListener('keydown', handleKey));
+    onMounted(() => {
+      window.addEventListener('keydown', handleKey);
+      window.addEventListener('resize', onResize);
+      document.addEventListener('touchmove', onDocTouchMove, { passive: false });
+      document.addEventListener('touchend',  onDocTouchEnd);
+    });
+    onUnmounted(() => {
+      window.removeEventListener('keydown', handleKey);
+      window.removeEventListener('resize', onResize);
+      document.removeEventListener('touchmove', onDocTouchMove);
+      document.removeEventListener('touchend',  onDocTouchEnd);
+    });
 
     return {
       currentLevelIdx, selectedShapeId, rotation,
       hoverRow, hoverCol, history, won, errorMsg, completedLevels,
+      isDragging, ghostX, ghostY,
       level, board, placedIds, selectedShape, preview, previewValid, dotsRemaining,
+      cellSize,
       COLOR_HEX, LEVELS,
       getShapeGrid,
-      cellStyle, selectShape, rotateShape, onCellClick,
+      cellBg, selectShape, rotateShape, onCellClick,
       undo, resetLevel, nextLevel, gotoLevel,
+      onShapeTouchStart,
     };
   }
 }).mount('#app');
