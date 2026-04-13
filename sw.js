@@ -1,7 +1,8 @@
-const CACHE = 'puzzles-v1';
+const CACHE = 'puzzles-v2';
 const ASSETS = [
   '/',
   '/index.html',
+  '/how-to-play.html',
   '/chromino.html',
   '/tessera.html',
   '/colorku.html',

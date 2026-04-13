@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How to Play — Puzzle Games</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0d1117">
+<link rel="apple-touch-icon" href="icon.svg">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: #0d1117;
+  color: #c9d1d9;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 32px 20px 64px;
+}
+
+.back {
+  align-self: flex-start;
+  font-size: 0.78rem;
+  color: #6e7681;
+  text-decoration: none;
+  margin-bottom: 24px;
+  transition: color 0.15s;
+}
+.back:hover { color: #c9d1d9; }
+
+header {
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+h1 {
+  font-size: 2.4rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  color: #e6edf3;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  color: #6e7681;
+  font-size: 0.95rem;
+}
+
+/* ── Sections ─────────────────────────────────────────────────────── */
+.sections {
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+  width: 100%;
+  max-width: 720px;
+}
+
+.section {
+  background: #161b22;
+  border: 2px solid #30363d;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid #21262d;
+}
+
+.section-icon {
+  font-size: 1.6rem;
+  flex-shrink: 0;
+}
+
+.section-title {
+  font-size: 1.3rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+
+.chromino .section-title {
+  background: linear-gradient(135deg, #58a6ff, #a5d6ff);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.tessera .section-title {
+  background: linear-gradient(135deg, #f7971e, #ffd200);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.colorku .section-title {
+  background: linear-gradient(135deg, #c084fc, #f472b6);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.controls .section-title { color: #e6edf3; }
+
+.section-body {
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.tagline {
+  color: #8b949e;
+  font-size: 0.9rem;
+  line-height: 1.7;
+}
+
+/* ── Steps ────────────────────────────────────────────────────────── */
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.step {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.step-num {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  font-size: 0.72rem;
+  font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.chromino .step-num { background: #1c2a3e; color: #58a6ff; }
+.tessera  .step-num { background: #1f1a0e; color: #f7971e; }
+.colorku  .step-num { background: #21103a; color: #c084fc; }
+
+.step-text {
+  font-size: 0.88rem;
+  color: #c9d1d9;
+  line-height: 1.65;
+}
+.step-text em { color: #e6edf3; font-style: normal; font-weight: 600; }
+
+/* ── Rule block ───────────────────────────────────────────────────── */
+.rule-block {
+  background: #0d1117;
+  border: 1px solid #21262d;
+  border-radius: 10px;
+  padding: 14px 16px;
+  font-size: 0.82rem;
+  color: #6e7681;
+  line-height: 1.8;
+}
+.rule-block strong { color: #e6edf3; }
+
+/* ── Visual demo (mini board) ─────────────────────────────────────── */
+.demo {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.demo-board {
+  display: inline-grid;
+  border: 2px solid #21262d;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #0d1117;
+  flex-shrink: 0;
+}
+
+.dc {
+  width: 34px; height: 34px;
+  border: 1px solid #21262d;
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+}
+
+.dot {
+  width: 40%; height: 40%;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255,255,255,0.3);
+}
+
+.demo-caption {
+  font-size: 0.8rem;
+  color: #6e7681;
+  line-height: 1.7;
+  padding-top: 4px;
+}
+.demo-caption strong { color: #c9d1d9; }
+
+/* ── Sudoku demo ──────────────────────────────────────────────────── */
+.sudoku-demo {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.su-board {
+  display: inline-grid;
+  gap: 1px;
+  background: #30363d;
+  border: 2px solid #30363d;
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.su-cell {
+  width: 34px; height: 34px;
+  background: #161b22;
+  display: flex; align-items: center; justify-content: center;
+}
+.su-cell.shade { background: #191f2a; }
+
+.su-circle {
+  width: 60%; height: 60%;
+  border-radius: 50%;
+}
+.su-circle.given {
+  border-radius: 4px;
+  border: 1.5px solid rgba(255,255,255,0.3);
+}
+
+/* ── Controls table ───────────────────────────────────────────────── */
+.controls-grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px 20px;
+  font-size: 0.85rem;
+}
+
+.ctrl-label {
+  color: #6e7681;
+  white-space: nowrap;
+  padding-top: 1px;
+}
+
+.ctrl-desc { color: #c9d1d9; line-height: 1.5; }
+
+kbd {
+  background: #21262d;
+  border: 1px solid #444c56;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-family: monospace;
+  font-size: 0.78rem;
+  color: #c9d1d9;
+}
+
+.divider {
+  height: 1px;
+  background: #21262d;
+  grid-column: 1 / -1;
+}
+
+/* ── Play links ───────────────────────────────────────────────────── */
+.play-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 18px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  transition: opacity 0.15s, transform 0.1s;
+  align-self: flex-start;
+}
+.play-link:hover { opacity: 0.85; transform: translateY(-1px); }
+.chromino .play-link { background: #1f6feb; color: #fff; }
+.tessera  .play-link { background: #9a5c00; color: #ffd200; border: 1px solid #f7971e; }
+.colorku  .play-link { background: #5b21b6; color: #e9d5ff; border: 1px solid #c084fc; }
+
+/* ── Mobile ───────────────────────────────────────────────────────── */
+@media (max-width: 540px) {
+  h1 { font-size: 1.8rem; }
+  .section-body { padding: 16px; }
+  .section-header { padding: 16px 16px 14px; }
+  .controls-grid { grid-template-columns: 1fr; gap: 8px; }
+  .ctrl-label { color: #8b949e; font-size: 0.78rem; }
+}
+</style>
+</head>
+<body>
+
+<a class="back" href="index.html">← All Games</a>
+
+<header>
+  <h1>How to Play</h1>
+  <p class="subtitle">Rules and controls for all three puzzle games</p>
+</header>
+
+<div class="sections">
+
+  <!-- ── CHROMINO ───────────────────────────────────────────────── -->
+  <div class="section chromino">
+    <div class="section-header">
+      <div class="section-icon">🎯</div>
+      <div class="section-title">CHROMINO</div>
+    </div>
+    <div class="section-body">
+      <p class="tagline">A sparse board is scattered with colored dots. Your job is to cover every dot using tetromino shapes — but a shape cannot land on a dot of its own color.</p>
+
+      <div class="demo">
+        <!-- 5×5 board: blue T-shape covers red dot, blue dot still uncovered -->
+        <div class="demo-board" style="grid-template-columns: repeat(5, 34px)">
+          <div class="dc"></div>
+          <div class="dc" style="background:#3498db33"></div>
+          <div class="dc" style="background:#3498db33"></div>
+          <div class="dc" style="background:#3498db33"></div>
+          <div class="dc"></div>
+          <div class="dc" style="background:#3498db33"></div>
+          <div class="dc" style="background:#3498db33"><div class="dot" style="background:#e74c3c"></div></div>
+          <div class="dc" style="background:#3498db33"></div>
+          <div class="dc"></div>
+          <div class="dc"></div>
+          <div class="dc"></div>
+          <div class="dc"></div>
+          <div class="dc"></div>
+          <div class="dc"><div class="dot" style="background:#e74c3c"></div></div>
+          <div class="dc"></div>
+          <div class="dc"></div>
+          <div class="dc"></div>
+          <div class="dc"></div>
+          <div class="dc"></div>
+          <div class="dc"></div>
+          <div class="dc"></div>
+          <div class="dc"></div>
+          <div class="dc"><div class="dot" style="background:#3498db"></div></div>
+          <div class="dc"></div>
+          <div class="dc"></div>
+        </div>
+        <div class="demo-caption">
+          A <strong style="color:#3498db">blue</strong> T-shape covers a <strong style="color:#e74c3c">red</strong> dot — valid!<br>
+          A blue shape <em>cannot</em> land on a <strong style="color:#3498db">blue</strong> dot.
+        </div>
+      </div>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-text">Select a shape from the panel on the right (or below on mobile). It highlights when selected.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-text"><em>Rotate</em> the shape using the ↻ button or press <kbd>R</kbd>. Hover over the board to preview placement.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-text"><em>Click</em> (or drag) the shape onto the board. The preview turns red if placement is invalid.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-text">Cover <em>all</em> dots to complete the level. Shapes can overlap empty cells — only the dot rule matters.</div>
+        </div>
+      </div>
+
+      <div class="rule-block">
+        <strong>The one rule:</strong> a shape may not cover a dot of the same color. It can cover dots of any other color freely.
+      </div>
+
+      <a class="play-link" href="chromino.html">Play Chromino →</a>
+    </div>
+  </div>
+
+  <!-- ── TESSERA ────────────────────────────────────────────────── -->
+  <div class="section tessera">
+    <div class="section-header">
+      <div class="section-icon">🧩</div>
+      <div class="section-title">TESSERA</div>
+    </div>
+    <div class="section-body">
+      <p class="tagline">Every cell on the board is filled with a colored dot. Tile the entire board with tetromino shapes leaving no gaps — but a shape cannot sit on a dot of its own color.</p>
+
+      <div class="demo">
+        <div class="demo-board" style="grid-template-columns: repeat(4, 34px)">
+          <!-- Row 0: red I-piece covers blue, green, yellow, blue dots -->
+          <div class="dc" style="background:#e74c3caa"><div class="dot" style="background:#3498db;opacity:0.5"></div></div>
+          <div class="dc" style="background:#e74c3caa"><div class="dot" style="background:#2ecc71;opacity:0.5"></div></div>
+          <div class="dc" style="background:#e74c3caa"><div class="dot" style="background:#e9c46a;opacity:0.5"></div></div>
+          <div class="dc" style="background:#e74c3caa"><div class="dot" style="background:#3498db;opacity:0.5"></div></div>
+          <!-- Row 1 -->
+          <div class="dc" style="background:#3498dbaa"><div class="dot" style="background:#e74c3c;opacity:0.5"></div></div>
+          <div class="dc" style="background:#e9c46aaa"><div class="dot" style="background:#3498db;opacity:0.5"></div></div>
+          <div class="dc" style="background:#e9c46aaa"><div class="dot" style="background:#2ecc71;opacity:0.5"></div></div>
+          <div class="dc" style="background:#2ecc71aa"><div class="dot" style="background:#e74c3c;opacity:0.5"></div></div>
+          <!-- Row 2 -->
+          <div class="dc" style="background:#3498dbaa"><div class="dot" style="background:#2ecc71;opacity:0.5"></div></div>
+          <div class="dc" style="background:#e9c46aaa"><div class="dot" style="background:#e74c3c;opacity:0.5"></div></div>
+          <div class="dc" style="background:#e9c46aaa"><div class="dot" style="background:#3498db;opacity:0.5"></div></div>
+          <div class="dc" style="background:#2ecc71aa"><div class="dot" style="background:#e9c46a;opacity:0.5"></div></div>
+          <!-- Row 3 -->
+          <div class="dc" style="background:#3498dbaa"><div class="dot" style="background:#2ecc71;opacity:0.5"></div></div>
+          <div class="dc" style="background:#3498dbaa"><div class="dot" style="background:#e74c3c;opacity:0.5"></div></div>
+          <div class="dc" style="background:#2ecc71aa"><div class="dot" style="background:#3498db;opacity:0.5"></div></div>
+          <div class="dc" style="background:#2ecc71aa"><div class="dot" style="background:#e74c3c;opacity:0.5"></div></div>
+        </div>
+        <div class="demo-caption">
+          The board is fully tiled. Each shape covers dots of <em>other</em> colors.<br>
+          Notice no cell is left empty and no shape sits on its own color.
+        </div>
+      </div>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-text">Select a shape and rotate it with ↻ or <kbd>R</kbd> to find an orientation that fits.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-text">Place it on the board. It must cover only dots of <em>different</em> colors. No cell can be left uncovered.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-text">Place all shapes to tile the board completely with no gaps or overlaps.</div>
+        </div>
+      </div>
+
+      <div class="rule-block">
+        <strong>Key difference from Chromino:</strong> in Tessera the board must be completely tiled — every cell covered. In Chromino, shapes can hang over empty space as long as all dots are covered.
+      </div>
+
+      <a class="play-link" href="tessera.html">Play Tessera →</a>
+    </div>
+  </div>
+
+  <!-- ── COLORKU ────────────────────────────────────────────────── -->
+  <div class="section colorku">
+    <div class="section-header">
+      <div class="section-icon">🎨</div>
+      <div class="section-title">COLORKU</div>
+    </div>
+    <div class="section-body">
+      <p class="tagline">A colorful take on Sudoku. Fill every cell of the grid so that each color appears exactly once in every row and column. Larger grids also add box constraints.</p>
+
+      <div class="sudoku-demo">
+        <!-- 3×3 solved grid -->
+        <div>
+          <div class="su-board" style="grid-template-columns: repeat(3, 34px)">
+            <div class="su-cell"><div class="su-circle given" style="background:#e74c3c;width:65%;height:65%"></div></div>
+            <div class="su-cell"><div class="su-circle" style="background:#3498db"></div></div>
+            <div class="su-cell"><div class="su-circle given" style="background:#2ecc71;width:65%;height:65%"></div></div>
+            <div class="su-cell"><div class="su-circle" style="background:#2ecc71"></div></div>
+            <div class="su-cell"><div class="su-circle given" style="background:#e74c3c;width:65%;height:65%"></div></div>
+            <div class="su-cell"><div class="su-circle" style="background:#3498db"></div></div>
+            <div class="su-cell"><div class="su-circle given" style="background:#3498db;width:65%;height:65%"></div></div>
+            <div class="su-cell"><div class="su-circle" style="background:#2ecc71"></div></div>
+            <div class="su-cell"><div class="su-circle given" style="background:#e74c3c;width:65%;height:65%"></div></div>
+          </div>
+          <div style="font-size:0.72rem;color:#6e7681;margin-top:8px;text-align:center">Solved 3×3</div>
+        </div>
+        <!-- 4×4 partial -->
+        <div>
+          <div class="su-board" style="grid-template-columns: repeat(4, 34px)">
+            <div class="su-cell"><div class="su-circle given" style="background:#e74c3c;width:65%;height:65%"></div></div>
+            <div class="su-cell"><div class="su-circle given" style="background:#3498db;width:65%;height:65%"></div></div>
+            <div class="su-cell shade"></div>
+            <div class="su-cell shade"><div class="su-circle given" style="background:#e9c46a;width:65%;height:65%"></div></div>
+            <div class="su-cell"></div>
+            <div class="su-cell"><div class="su-circle given" style="background:#e9c46a;width:65%;height:65%"></div></div>
+            <div class="su-cell shade"><div class="su-circle given" style="background:#e74c3c;width:65%;height:65%"></div></div>
+            <div class="su-cell shade"></div>
+            <div class="su-cell"><div class="su-circle given" style="background:#3498db;width:65%;height:65%"></div></div>
+            <div class="su-cell"></div>
+            <div class="su-cell shade"></div>
+            <div class="su-cell shade"><div class="su-circle given" style="background:#2ecc71;width:65%;height:65%"></div></div>
+            <div class="su-cell"><div class="su-circle given" style="background:#e9c46a;width:65%;height:65%"></div></div>
+            <div class="su-cell"></div>
+            <div class="su-cell shade"><div class="su-circle given" style="background:#3498db;width:65%;height:65%"></div></div>
+            <div class="su-cell shade"><div class="su-circle given" style="background:#e74c3c;width:65%;height:65%"></div></div>
+          </div>
+          <div style="font-size:0.72rem;color:#6e7681;margin-top:8px;text-align:center">4×4 in progress</div>
+        </div>
+        <div class="demo-caption">
+          <strong>Square cells</strong> = given clues (fixed).<br>
+          <strong>Round cells</strong> = your answers.<br>
+          Shading shows the 2×2 boxes.<br>
+          Conflicts glow red automatically.
+        </div>
+      </div>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-text">Tap a <em>color swatch</em> at the bottom to select it. It gets a white ring when active.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-text">Tap any empty cell to fill it with the selected color. Tap the same cell again to clear it.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-text">Conflicts — duplicate colors in a row, column or box — highlight in <em style="color:#f85149">red</em> instantly.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-text">Fill every cell with no conflicts to solve the puzzle.</div>
+        </div>
+      </div>
+
+      <div class="rule-block">
+        <strong>Levels 1–2:</strong> 3×3 grid, 3 colors, rows &amp; columns only.<br>
+        <strong>Levels 3–4:</strong> 4×4 grid, 4 colors, plus 2×2 boxes.<br>
+        <strong>Levels 5–6:</strong> 6×6 grid, 6 colors, plus 2×3 boxes.
+      </div>
+
+      <a class="play-link" href="colorku.html">Play Colorku →</a>
+    </div>
+  </div>
+
+  <!-- ── CONTROLS ────────────────────────────────────────────────── -->
+  <div class="section controls">
+    <div class="section-header">
+      <div class="section-icon">⌨️</div>
+      <div class="section-title">Controls</div>
+    </div>
+    <div class="section-body">
+
+      <div style="font-size:0.8rem;color:#6e7681;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px">Chromino &amp; Tessera</div>
+      <div class="controls-grid">
+        <div class="ctrl-label">Click shape → click board</div>
+        <div class="ctrl-desc">Select then place a shape</div>
+        <div class="ctrl-label">Drag shape to board</div>
+        <div class="ctrl-desc">Drag and drop to place</div>
+        <div class="ctrl-label"><kbd>R</kbd></div>
+        <div class="ctrl-desc">Rotate selected shape 90°</div>
+        <div class="ctrl-label"><kbd>Ctrl</kbd> <kbd>Z</kbd></div>
+        <div class="ctrl-desc">Undo last placement</div>
+        <div class="ctrl-label"><kbd>Esc</kbd></div>
+        <div class="ctrl-desc">Deselect shape</div>
+        <div class="ctrl-label">Right-click board</div>
+        <div class="ctrl-desc">Deselect shape</div>
+      </div>
+
+      <div class="divider" style="height:1px;background:#21262d"></div>
+
+      <div style="font-size:0.8rem;color:#6e7681;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px">Colorku</div>
+      <div class="controls-grid">
+        <div class="ctrl-label">Click color swatch</div>
+        <div class="ctrl-desc">Select a color to paint with</div>
+        <div class="ctrl-label">Click empty cell</div>
+        <div class="ctrl-desc">Fill cell with selected color</div>
+        <div class="ctrl-label">Click filled cell</div>
+        <div class="ctrl-desc">Clear the cell (if same color) or change it</div>
+        <div class="ctrl-label">Right-click cell</div>
+        <div class="ctrl-desc">Erase the cell</div>
+        <div class="ctrl-label">✕ Eraser swatch</div>
+        <div class="ctrl-desc">Toggle eraser mode</div>
+        <div class="ctrl-label"><kbd>Ctrl</kbd> <kbd>Z</kbd></div>
+        <div class="ctrl-desc">Undo last move</div>
+        <div class="ctrl-label"><kbd>Esc</kbd></div>
+        <div class="ctrl-desc">Deselect color</div>
+      </div>
+
+      <div class="divider" style="height:1px;background:#21262d"></div>
+
+      <div style="font-size:0.8rem;color:#6e7681;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px">Mobile</div>
+      <div class="controls-grid">
+        <div class="ctrl-label">Tap to select</div>
+        <div class="ctrl-desc">Tap a shape or color, then tap the board</div>
+        <div class="ctrl-label">Drag (Chromino / Tessera)</div>
+        <div class="ctrl-desc">Drag a shape directly onto the board</div>
+        <div class="ctrl-label">Swipe on shape</div>
+        <div class="ctrl-desc">Drag triggers rotation preview mid-air</div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
+</script>
+</body>
+</html>
