@@ -290,6 +290,18 @@ h1 {
 .fade-enter-from, .fade-leave-to { opacity: 0; }
 
 /* ── Random / reset controls ───────────────────────────────────────── */
+.rand-bar {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.rand-label {
+  font-size: 0.72rem;
+  color: #6e7681;
+  margin-inline-end: 2px;
+}
 .rand-btn {
   background: #21262d; border: 1px solid #30363d;
   color: #6e7681; padding: 3px 9px; border-radius: 5px; cursor: pointer;
@@ -402,9 +414,12 @@ h1 {
     </div>
     <span>Moves: <strong>{{ history.length }}</strong></span>
     <span>Covered: <strong>{{ coveredCount }} / {{ level.rows * level.cols }}</strong></span>
-    <span style="color:#444c56;margin:0 2px">|</span>
+  </div>
+
+  <div class="rand-bar">
+    <span class="rand-label">Random:</span>
     <button v-for="d in ['easy','medium','hard']" :key="d" class="rand-btn" :class="{ active: mode === 'random' && difficulty === d }" @click="generateAndPlay(d)">{{ d }}</button>
-    <button class="btn-reset-prog" @click="resetAllProgress">reset</button>
+    <button class="btn-reset-prog" @click="resetAllProgress">reset progress</button>
   </div>
 
   <div class="game-container">
