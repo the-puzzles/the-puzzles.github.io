@@ -71,6 +71,7 @@ header {
 
 .card.chromino:hover { border-color: #58a6ff; box-shadow: 0 12px 40px rgba(88,166,255,0.15); }
 .card.tessera:hover  { border-color: #f7971e; box-shadow: 0 12px 40px rgba(247,151,30,0.15); }
+.card.colorku:hover  { border-color: #c084fc; box-shadow: 0 12px 40px rgba(192,132,252,0.15); }
 
 /* ── Card header ─────────────────────────────────────────────────────── */
 .card-header { display: flex; align-items: center; gap: 14px; }
@@ -84,6 +85,7 @@ header {
 }
 .chromino .card-icon { background: #1c2a3e; }
 .tessera  .card-icon { background: #1f1a0e; }
+.colorku  .card-icon { background: #21103a; }
 
 .card-title {
   font-size: 1.5rem;
@@ -98,6 +100,12 @@ header {
 }
 .tessera .card-title {
   background: linear-gradient(135deg, #f7971e, #ffd200);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.colorku .card-title {
+  background: linear-gradient(135deg, #c084fc, #f472b6);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -156,6 +164,7 @@ header {
 }
 .chromino .rule-dot { background: #58a6ff; }
 .tessera  .rule-dot { background: #f7971e; }
+.colorku  .rule-dot { background: #c084fc; }
 
 /* ── Play button ─────────────────────────────────────────────────────── */
 .play-btn {
@@ -179,6 +188,7 @@ header {
 
 .chromino .play-btn { background: #1f6feb; color: #fff; }
 .tessera  .play-btn { background: #9a5c00; color: #ffd200; border: 1px solid #f7971e; }
+.colorku  .play-btn { background: #5b21b6; color: #e9d5ff; border: 1px solid #c084fc; }
 
 .play-arrow { font-size: 1rem; transition: transform 0.15s; }
 .play-btn:hover .play-arrow { transform: translateX(3px); }
@@ -302,6 +312,38 @@ footer {
     </div>
 
     <div class="play-btn">Play Tessera <span class="play-arrow">→</span></div>
+  </a>
+
+  <!-- ── Colorku ───────────────────────────────────────────────── -->
+  <a class="card colorku" href="colorku.html">
+    <div class="card-header">
+      <div class="card-icon">🎨</div>
+      <div class="card-title">COLORKU</div>
+    </div>
+
+    <!-- Mini preview: 3×3 grid with colored circles -->
+    <div class="preview" style="grid-template-columns: repeat(3, 36px);">
+      <div class="preview-cell" style="background:#191f2a"><div class="preview-dot" style="background:#e74c3c"></div></div>
+      <div class="preview-cell"><div class="preview-dot" style="background:#3498db"></div></div>
+      <div class="preview-cell" style="background:#191f2a"><div class="preview-dot" style="background:#2ecc71"></div></div>
+      <div class="preview-cell"><div class="preview-dot" style="background:#2ecc71"></div></div>
+      <div class="preview-cell" style="background:#191f2a"><div class="preview-dot" style="background:#e74c3c"></div></div>
+      <div class="preview-cell"><div class="preview-dot" style="background:#3498db"></div></div>
+      <div class="preview-cell" style="background:#191f2a"><div class="preview-dot" style="background:#3498db"></div></div>
+      <div class="preview-cell"><div class="preview-dot" style="background:#2ecc71"></div></div>
+      <div class="preview-cell" style="background:#191f2a"><div class="preview-dot" style="background:#e74c3c"></div></div>
+    </div>
+
+    <p class="card-tagline">A colorful spin on Sudoku. Fill the grid so every color appears exactly once in each row, column, and box.</p>
+
+    <div class="card-rules">
+      <div class="rule"><div class="rule-dot"></div><span>Each color appears once per row and column</span></div>
+      <div class="rule"><div class="rule-dot"></div><span>In larger grids, each box must also have all colors</span></div>
+      <div class="rule"><div class="rule-dot"></div><span>Conflicts highlight in red as you fill</span></div>
+      <div class="rule"><div class="rule-dot"></div><span>6 levels · 3×3 up to 6×6</span></div>
+    </div>
+
+    <div class="play-btn">Play Colorku <span class="play-arrow">→</span></div>
   </a>
 
 </div>

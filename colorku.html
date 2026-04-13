@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Colorku — Color Sudoku</title>
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: #0d1117;
+  color: #c9d1d9;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 16px 48px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  background: linear-gradient(135deg, #c084fc, #f472b6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 4px;
+}
+
+.tagline {
+  color: #6e7681;
+  font-size: 0.82rem;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.level-bar {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 16px;
+  font-size: 0.82rem;
+  color: #8b949e;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.level-bar strong { color: #c9d1d9; }
+
+.level-pills { display: flex; gap: 6px; }
+.level-pill {
+  width: 28px; height: 8px;
+  border-radius: 4px; background: #21262d;
+  cursor: pointer; transition: background 0.2s;
+}
+.level-pill.active { background: #c084fc; }
+.level-pill.done   { background: #3fb950; }
+
+/* Board */
+.board-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.board {
+  display: inline-grid;
+  gap: 1px;
+  background: #30363d;
+  border: 2px solid #30363d;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+}
+
+.cell {
+  background: #161b22;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.08s;
+}
+.cell:hover:not(.given) { background: #1c2230; }
+.cell.given { cursor: default; }
+
+/* Alternating box shading */
+.cell.box-shade { background: #191f2a; }
+.cell.box-shade:hover:not(.given) { background: #1e2535; }
+
+.cell-inner {
+  width: 68%;
+  height: 68%;
+  border-radius: 50%;
+  transition: transform 0.12s;
+}
+.cell.given .cell-inner {
+  border-radius: 5px;
+  border: 2px solid rgba(255,255,255,0.28);
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.4);
+}
+
+/* Conflict */
+.cell.conflict { background: rgba(248,81,73,0.18) !important; }
+.cell.conflict .cell-inner {
+  box-shadow: 0 0 0 2px #f85149;
+  border-color: rgba(248,81,73,0.6);
+}
+
+/* Palette */
+.palette {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  padding: 12px 16px;
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 10px;
+}
+
+.swatch {
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 3px solid transparent;
+  transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.swatch:hover { transform: scale(1.12); }
+.swatch.active {
+  border-color: #fff !important;
+  box-shadow: 0 0 14px rgba(255,255,255,0.35);
+  transform: scale(1.12);
+}
+.swatch.eraser {
+  background: #21262d;
+  border: 3px solid #444c56;
+  color: #8b949e;
+  font-size: 1rem;
+}
+.swatch.eraser.active { border-color: #fff; color: #c9d1d9; }
+
+/* Action bar */
+.action-bar {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn {
+  background: #21262d; border: 1px solid #30363d;
+  color: #c9d1d9; padding: 8px 16px;
+  border-radius: 8px; cursor: pointer;
+  font-size: 0.82rem; font-family: inherit;
+  transition: background 0.15s, border-color 0.15s;
+  min-height: 36px;
+}
+.btn:hover { background: #30363d; border-color: #444c56; }
+.btn:disabled { opacity: 0.4; cursor: default; }
+.btn-accent { background: #1f6feb; border-color: #388bfd; color: #fff; }
+.btn-accent:hover { background: #388bfd; }
+
+.error-msg {
+  font-size: 0.78rem;
+  color: #f85149;
+  min-height: 18px;
+  text-align: center;
+}
+
+/* Win overlay */
+.win-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.78);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 100; backdrop-filter: blur(4px);
+}
+.win-box {
+  background: #161b22; border: 2px solid #3fb950;
+  border-radius: 16px; padding: 36px 44px;
+  text-align: center;
+  box-shadow: 0 0 48px rgba(63,185,80,0.25);
+  animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes popIn {
+  from { transform: scale(0.7); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+.win-icon { font-size: 2.8rem; margin-bottom: 10px; }
+.win-box h2 { font-size: 1.7rem; color: #3fb950; margin-bottom: 8px; }
+.win-box p  { color: #6e7681; margin-bottom: 20px; font-size: 0.88rem; }
+.win-btns { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+
+.fade-enter-active, .fade-leave-active { transition: opacity 0.2s; }
+.fade-enter-from, .fade-leave-to { opacity: 0; }
+
+@media (max-width: 480px) {
+  h1 { font-size: 1.8rem; }
+  .swatch { width: 36px; height: 36px; }
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <transition name="fade">
+    <div v-if="showWin" class="win-overlay">
+      <div class="win-box">
+        <div class="win-icon">🎉</div>
+        <h2>Puzzle Solved!</h2>
+        <p>{{ level.name }} completed in {{ history.length }} moves!</p>
+        <div class="win-btns">
+          <button class="btn" @click="resetLevel">Play Again</button>
+          <button v-if="currentLevelIdx < LEVELS.length - 1" class="btn btn-accent" @click="nextLevel">Next Level →</button>
+          <span v-else style="color:#3fb950;font-size:0.88rem;padding:8px 4px">All levels complete! 🏆</span>
+        </div>
+      </div>
+    </div>
+  </transition>
+
+  <h1>COLORKU</h1>
+  <p class="tagline">Fill each row{{ level.boxRows ? ', column and box' : ' and column' }} with every color exactly once</p>
+
+  <div class="level-bar">
+    <span><strong>Level {{ currentLevelIdx + 1 }}</strong>: {{ level.name }}</span>
+    <div class="level-pills">
+      <div
+        v-for="(l, i) in LEVELS" :key="i"
+        class="level-pill"
+        :class="{ active: i === currentLevelIdx, done: completedLevels.has(i) }"
+        @click="gotoLevel(i)"
+        :title="`Level ${i+1}: ${l.name}`"
+      ></div>
+    </div>
+    <span>Moves: <strong>{{ history.length }}</strong></span>
+    <span>Empty: <strong>{{ emptyCells }}</strong></span>
+  </div>
+
+  <div class="board-wrap">
+    <div
+      class="board"
+      :style="{ gridTemplateColumns: `repeat(${level.size}, ${cellSize}px)` }"
+    >
+      <template v-for="r in level.size" :key="r">
+        <div
+          v-for="c in level.size" :key="`${r}-${c}`"
+          class="cell"
+          :class="{
+            given:     isGiven(r-1, c-1),
+            conflict:  conflictSet.has(`${r-1},${c-1}`),
+            'box-shade': isBoxShade(r-1, c-1),
+          }"
+          :style="{ width: cellSize + 'px', height: cellSize + 'px' }"
+          @click="onCellClick(r-1, c-1)"
+          @contextmenu.prevent="clearCell(r-1, c-1)"
+        >
+          <div
+            class="cell-inner"
+            :style="{ background: getCellColor(r-1, c-1) ? COLOR_HEX[getCellColor(r-1, c-1)] : 'transparent' }"
+          ></div>
+        </div>
+      </template>
+    </div>
+
+    <div class="error-msg">{{ errorMsg }}</div>
+
+    <div class="palette">
+      <div
+        class="swatch eraser"
+        :class="{ active: eraserMode }"
+        @click="toggleEraser"
+        title="Erase (right-click a cell too)"
+      >✕</div>
+      <div
+        v-for="color in level.colors" :key="color"
+        class="swatch"
+        :class="{ active: selectedColor === color }"
+        :style="{ background: COLOR_HEX[color] }"
+        @click="selectColor(color)"
+        :title="color"
+      ></div>
+    </div>
+
+    <div class="action-bar">
+      <button class="btn" @click="undo" :disabled="history.length === 0">↩ Undo</button>
+      <button class="btn" @click="resetLevel">↺ Reset</button>
+    </div>
+  </div>
+
+</div>
+<script>
+const { createApp, ref, computed, watch, onMounted, onUnmounted } = Vue;
+
+const COLOR_HEX = {
+  red:    '#e74c3c',
+  blue:   '#3498db',
+  green:  '#2ecc71',
+  yellow: '#e9c46a',
+  orange: '#e67e22',
+  purple: '#9b59b6',
+};
+
+const LEVELS = [
+  // ── Level 1: 3×3, 3 colors, easy ────────────────────────────────────
+  {
+    name: 'First Steps',
+    size: 3, boxRows: 0, boxCols: 0,
+    colors: ['red', 'blue', 'green'],
+    solution: [
+      ['red',   'blue',  'green'],
+      ['green', 'red',   'blue' ],
+      ['blue',  'green', 'red'  ],
+    ],
+    given: [[0,0],[0,1],[1,1],[1,2],[2,0],[2,2]],
+  },
+  // ── Level 2: 3×3, 3 colors, medium ──────────────────────────────────
+  {
+    name: 'Three by Three',
+    size: 3, boxRows: 0, boxCols: 0,
+    colors: ['red', 'blue', 'green'],
+    solution: [
+      ['red',   'blue',  'green'],
+      ['green', 'red',   'blue' ],
+      ['blue',  'green', 'red'  ],
+    ],
+    given: [[0,0],[0,2],[1,1],[2,2]],
+  },
+  // ── Level 3: 4×4, 4 colors, easy ────────────────────────────────────
+  {
+    name: 'Four Colors',
+    size: 4, boxRows: 2, boxCols: 2,
+    colors: ['red', 'blue', 'green', 'yellow'],
+    solution: [
+      ['red',    'blue',   'green',  'yellow'],
+      ['green',  'yellow', 'red',    'blue'  ],
+      ['blue',   'red',    'yellow', 'green' ],
+      ['yellow', 'green',  'blue',   'red'   ],
+    ],
+    given: [[0,0],[0,1],[0,3],[1,0],[1,2],[2,1],[2,3],[3,0],[3,2],[3,3]],
+  },
+  // ── Level 4: 4×4, 4 colors, harder ──────────────────────────────────
+  {
+    name: 'Four Squared',
+    size: 4, boxRows: 2, boxCols: 2,
+    colors: ['red', 'blue', 'green', 'yellow'],
+    solution: [
+      ['red',    'blue',   'green',  'yellow'],
+      ['green',  'yellow', 'red',    'blue'  ],
+      ['blue',   'red',    'yellow', 'green' ],
+      ['yellow', 'green',  'blue',   'red'   ],
+    ],
+    given: [[0,0],[0,1],[0,3],[1,1],[1,2],[2,1],[2,2],[3,0],[3,3]],
+  },
+  // ── Level 5: 6×6, 6 colors, medium ──────────────────────────────────
+  {
+    name: 'Six Hues',
+    size: 6, boxRows: 2, boxCols: 3,
+    colors: ['red', 'blue', 'green', 'yellow', 'orange', 'purple'],
+    solution: [
+      ['red',    'blue',   'green',  'yellow', 'orange', 'purple'],
+      ['yellow', 'orange', 'purple', 'red',    'blue',   'green' ],
+      ['blue',   'green',  'red',    'purple', 'yellow', 'orange'],
+      ['orange', 'purple', 'yellow', 'green',  'red',    'blue'  ],
+      ['green',  'yellow', 'orange', 'blue',   'purple', 'red'   ],
+      ['purple', 'red',    'blue',   'orange', 'green',  'yellow'],
+    ],
+    given: [
+      [0,0],[0,1],[0,2],[0,3],[0,4],[0,5],
+      [1,0],[1,3],[1,5],
+      [2,1],[2,2],[2,4],
+      [3,0],[3,3],[3,5],
+      [4,1],[4,2],[4,4],
+      [5,0],[5,1],[5,2],[5,3],[5,4],[5,5],
+    ],
+  },
+  // ── Level 6: 6×6, 6 colors, hard ────────────────────────────────────
+  {
+    name: 'Spectrum',
+    size: 6, boxRows: 2, boxCols: 3,
+    colors: ['red', 'blue', 'green', 'yellow', 'orange', 'purple'],
+    solution: [
+      ['red',    'blue',   'green',  'yellow', 'orange', 'purple'],
+      ['yellow', 'orange', 'purple', 'red',    'blue',   'green' ],
+      ['blue',   'green',  'red',    'purple', 'yellow', 'orange'],
+      ['orange', 'purple', 'yellow', 'green',  'red',    'blue'  ],
+      ['green',  'yellow', 'orange', 'blue',   'purple', 'red'   ],
+      ['purple', 'red',    'blue',   'orange', 'green',  'yellow'],
+    ],
+    given: [
+      [0,0],[0,2],[0,5],
+      [1,1],[1,3],[1,4],
+      [2,0],[2,3],
+      [3,2],[3,5],
+      [4,3],[4,4],
+      [5,1],[5,2],[5,3],[5,5],
+    ],
+  },
+];
+
+createApp({
+  setup() {
+    const currentLevelIdx = ref(0);
+    const selectedColor   = ref(null);
+    const eraserMode      = ref(false);
+    const history         = ref([]);
+    const completedLevels = ref(new Set());
+    const showWin         = ref(false);
+    const errorMsg        = ref('');
+
+    const windowWidth = ref(window.innerWidth);
+    function onResize() { windowWidth.value = window.innerWidth; }
+
+    const level = computed(() => LEVELS[currentLevelIdx.value]);
+
+    const cellSize = computed(() => {
+      const max = windowWidth.value >= 600 ? 56 : Math.floor((windowWidth.value - 48) / level.value.size);
+      return Math.min(56, Math.max(38, max));
+    });
+
+    function makeEmptyGrid(size) {
+      return Array.from({ length: size }, () => Array(size).fill(null));
+    }
+
+    const userGrid = ref(makeEmptyGrid(LEVELS[0].size));
+
+    const givenSet = computed(() =>
+      new Set(level.value.given.map(([r, c]) => `${r},${c}`))
+    );
+
+    function isGiven(r, c) { return givenSet.value.has(`${r},${c}`); }
+
+    function getCellColor(r, c) {
+      return isGiven(r, c) ? level.value.solution[r][c] : userGrid.value[r][c];
+    }
+
+    const fullGrid = computed(() => {
+      const { size } = level.value;
+      return Array.from({ length: size }, (_, r) =>
+        Array.from({ length: size }, (_, c) => getCellColor(r, c))
+      );
+    });
+
+    const conflictSet = computed(() => {
+      const { size, boxRows, boxCols } = level.value;
+      const grid = fullGrid.value;
+      const bad = new Set();
+      for (let r = 0; r < size; r++) {
+        for (let c = 0; c < size; c++) {
+          const color = grid[r][c];
+          if (!color) continue;
+          // row
+          for (let cc = 0; cc < size; cc++)
+            if (cc !== c && grid[r][cc] === color) { bad.add(`${r},${c}`); bad.add(`${r},${cc}`); }
+          // col
+          for (let rr = 0; rr < size; rr++)
+            if (rr !== r && grid[rr][c] === color) { bad.add(`${r},${c}`); bad.add(`${rr},${c}`); }
+          // box
+          if (boxRows) {
+            const br = Math.floor(r / boxRows) * boxRows;
+            const bc = Math.floor(c / boxCols) * boxCols;
+            for (let rr = br; rr < br + boxRows; rr++)
+              for (let cc = bc; cc < bc + boxCols; cc++)
+                if ((rr !== r || cc !== c) && grid[rr][cc] === color) {
+                  bad.add(`${r},${c}`); bad.add(`${rr},${cc}`);
+                }
+          }
+        }
+      }
+      return bad;
+    });
+
+    const emptyCells = computed(() => {
+      let n = 0;
+      fullGrid.value.forEach(row => row.forEach(v => { if (!v) n++; }));
+      return n;
+    });
+
+    const isSolved = computed(() =>
+      emptyCells.value === 0 && conflictSet.value.size === 0
+    );
+
+    watch(isSolved, (val) => {
+      if (val) {
+        completedLevels.value = new Set([...completedLevels.value, currentLevelIdx.value]);
+        setTimeout(() => { showWin.value = true; }, 150);
+      }
+    });
+
+    function isBoxShade(r, c) {
+      const { boxRows, boxCols } = level.value;
+      if (!boxRows) return false;
+      return (Math.floor(r / boxRows) + Math.floor(c / boxCols)) % 2 === 1;
+    }
+
+    function selectColor(color) {
+      eraserMode.value = false;
+      selectedColor.value = selectedColor.value === color ? null : color;
+    }
+
+    function toggleEraser() {
+      eraserMode.value = !eraserMode.value;
+      if (eraserMode.value) selectedColor.value = null;
+    }
+
+    function onCellClick(r, c) {
+      if (isGiven(r, c)) return;
+      const prev = userGrid.value[r][c];
+
+      if (eraserMode.value) {
+        if (!prev) return;
+        userGrid.value[r][c] = null;
+        history.value.push({ r, c, prev, next: null });
+        return;
+      }
+      if (!selectedColor.value) return;
+
+      const next = prev === selectedColor.value ? null : selectedColor.value;
+      userGrid.value[r][c] = next;
+      history.value.push({ r, c, prev, next });
+    }
+
+    function clearCell(r, c) {
+      if (isGiven(r, c)) return;
+      const prev = userGrid.value[r][c];
+      if (!prev) return;
+      userGrid.value[r][c] = null;
+      history.value.push({ r, c, prev, next: null });
+    }
+
+    function undo() {
+      const last = history.value.pop();
+      if (last) userGrid.value[last.r][last.c] = last.prev;
+    }
+
+    function resetLevel() {
+      userGrid.value = makeEmptyGrid(level.value.size);
+      history.value = [];
+      showWin.value = false;
+      errorMsg.value = '';
+      selectedColor.value = null;
+      eraserMode.value = false;
+    }
+
+    function gotoLevel(i) {
+      currentLevelIdx.value = i;
+      resetLevel();
+    }
+
+    function nextLevel() {
+      if (currentLevelIdx.value < LEVELS.length - 1) gotoLevel(currentLevelIdx.value + 1);
+    }
+
+    function handleKey(e) {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); undo(); }
+      if (e.key === 'Escape') { selectedColor.value = null; eraserMode.value = false; }
+    }
+
+    onMounted(() => {
+      window.addEventListener('keydown', handleKey);
+      window.addEventListener('resize', onResize);
+    });
+    onUnmounted(() => {
+      window.removeEventListener('keydown', handleKey);
+      window.removeEventListener('resize', onResize);
+    });
+
+    return {
+      currentLevelIdx, selectedColor, eraserMode,
+      history, completedLevels, showWin, errorMsg,
+      level, cellSize, userGrid, fullGrid, conflictSet,
+      emptyCells, isSolved,
+      COLOR_HEX, LEVELS,
+      isGiven, getCellColor, isBoxShade,
+      selectColor, toggleEraser, onCellClick, clearCell,
+      undo, resetLevel, gotoLevel, nextLevel,
+    };
+  }
+}).mount('#app');
+</script>
+</body>
+</html>
