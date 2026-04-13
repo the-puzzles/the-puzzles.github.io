@@ -44,6 +44,45 @@ h1 {
   text-align: center;
 }
 
+/* ── Top bar (back link + lang toggle) ────────────────────────────── */
+.top-bar {
+  display: flex;
+  width: 100%;
+  max-width: 560px;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.back-link {
+  font-size: 0.78rem;
+  color: #6e7681;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.back-link:hover { color: #c9d1d9; }
+
+.lang-toggle {
+  display: flex;
+  gap: 4px;
+}
+.lang-btn {
+  background: #21262d;
+  border: 1px solid #30363d;
+  color: #6e7681;
+  padding: 5px 11px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-family: inherit;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.lang-btn.active {
+  background: #0d3d2a;
+  border-color: #34d399;
+  color: #34d399;
+}
+
 /* ── Progress bar ─────────────────────────────────────────────────── */
 .progress-bar {
   display: flex;
@@ -57,10 +96,7 @@ h1 {
 }
 .progress-bar strong { color: #c9d1d9; }
 
-.progress-dots {
-  display: flex;
-  gap: 5px;
-}
+.progress-dots { display: flex; gap: 5px; }
 .progress-dot {
   width: 10px; height: 10px;
   border-radius: 50%;
@@ -86,17 +122,9 @@ h1 {
   min-height: 220px;
 }
 
-.country-svg {
-  width: 100%;
-  height: auto;
-  display: block;
-}
+.country-svg { width: 100%; height: auto; display: block; }
 
-.loading-msg {
-  position: absolute;
-  color: #6e7681;
-  font-size: 0.85rem;
-}
+.loading-msg { position: absolute; color: #6e7681; font-size: 0.85rem; }
 
 /* ── Letter blanks ────────────────────────────────────────────────── */
 .blanks {
@@ -109,6 +137,9 @@ h1 {
   max-width: 560px;
   align-items: flex-end;
 }
+
+/* RTL blanks: flex items read right-to-left */
+.blanks[dir="rtl"] { direction: rtl; }
 
 .letter-cell {
   display: flex;
@@ -131,14 +162,12 @@ h1 {
 .letter-char.space-char { min-width: 10px; }
 
 .letter-underline {
-  width: 22px;
-  height: 2px;
-  background: #444c56;
-  border-radius: 2px;
+  width: 22px; height: 2px;
+  background: #444c56; border-radius: 2px;
 }
-.letter-cell.hint-cell .letter-underline  { background: #a78bfa; }
+.letter-cell.hint-cell   .letter-underline { background: #a78bfa; }
 .letter-cell.solved-cell .letter-underline { background: #3fb950; }
-.letter-cell.space-cell .letter-underline { display: none; }
+.letter-cell.space-cell  .letter-underline { display: none; }
 
 /* ── Input row ────────────────────────────────────────────────────── */
 .input-row {
@@ -163,8 +192,9 @@ h1 {
   user-select: text;
   -webkit-user-select: text;
 }
-.guess-input:focus { border-color: #34d399; }
-.guess-input.shake { animation: shake 0.35s ease; }
+.guess-input:focus  { border-color: #34d399; }
+.guess-input.shake  { animation: shake 0.35s ease; }
+.guess-input[dir="rtl"] { text-align: right; }
 
 @keyframes shake {
   0%,100% { transform: translateX(0); }
@@ -175,19 +205,14 @@ h1 {
 }
 
 .btn-submit {
-  background: #0d3d2a;
-  border: 2px solid #34d399;
-  color: #34d399;
-  padding: 10px 18px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 0.88rem;
-  font-weight: 700;
-  font-family: inherit;
-  transition: background 0.15s;
+  background: #0d3d2a; border: 2px solid #34d399;
+  color: #34d399; padding: 10px 18px;
+  border-radius: 8px; cursor: pointer;
+  font-size: 0.88rem; font-weight: 700;
+  font-family: inherit; transition: background 0.15s;
   white-space: nowrap;
 }
-.btn-submit:hover { background: #0f4d34; }
+.btn-submit:hover    { background: #0f4d34; }
 .btn-submit:disabled { opacity: 0.4; cursor: default; }
 
 /* ── Feedback ─────────────────────────────────────────────────────── */
@@ -196,6 +221,7 @@ h1 {
   min-height: 20px;
   text-align: center;
   margin-bottom: 8px;
+  direction: inherit;
 }
 .feedback.correct { color: #3fb950; font-weight: 600; }
 .feedback.wrong   { color: #f85149; }
@@ -211,131 +237,86 @@ h1 {
 }
 
 .btn-hint {
-  background: #21262d;
-  border: 1px solid #30363d;
-  color: #a78bfa;
-  padding: 8px 16px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 0.82rem;
-  font-family: inherit;
-  display: flex;
-  align-items: center;
-  gap: 6px;
+  background: #21262d; border: 1px solid #30363d;
+  color: #a78bfa; padding: 8px 16px;
+  border-radius: 8px; cursor: pointer;
+  font-size: 0.82rem; font-family: inherit;
+  display: flex; align-items: center; gap: 6px;
   transition: background 0.15s, border-color 0.15s;
 }
 .btn-hint:hover:not(:disabled) { background: #2d2040; border-color: #a78bfa; }
 .btn-hint:disabled { opacity: 0.35; cursor: default; }
 
-.hint-pips {
-  display: flex;
-  gap: 3px;
-}
-.hint-pip {
-  width: 7px; height: 7px;
-  border-radius: 50%;
-  background: #444c56;
-}
+.hint-pips { display: flex; gap: 3px; }
+.hint-pip  { width: 7px; height: 7px; border-radius: 50%; background: #444c56; }
 .hint-pip.used { background: #a78bfa; }
 
 .btn-skip {
-  background: #21262d;
-  border: 1px solid #30363d;
-  color: #8b949e;
-  padding: 8px 16px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 0.82rem;
-  font-family: inherit;
+  background: #21262d; border: 1px solid #30363d;
+  color: #8b949e; padding: 8px 16px;
+  border-radius: 8px; cursor: pointer;
+  font-size: 0.82rem; font-family: inherit;
   transition: background 0.15s;
 }
 .btn-skip:hover { background: #30363d; }
 
 .btn-next {
-  background: #0d3d2a;
-  border: 2px solid #34d399;
-  color: #34d399;
-  padding: 8px 20px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 0.88rem;
-  font-weight: 700;
-  font-family: inherit;
-  transition: background 0.15s;
+  background: #0d3d2a; border: 2px solid #34d399;
+  color: #34d399; padding: 8px 20px;
+  border-radius: 8px; cursor: pointer;
+  font-size: 0.88rem; font-weight: 700;
+  font-family: inherit; transition: background 0.15s;
 }
 .btn-next:hover { background: #0f4d34; }
 
 /* ── Results screen ───────────────────────────────────────────────── */
-.results {
-  text-align: center;
-  max-width: 440px;
-  width: 100%;
-}
+.results { text-align: center; max-width: 440px; width: 100%; }
 .results-icon { font-size: 3rem; margin-bottom: 10px; }
 .results h2   { font-size: 1.7rem; color: #e6edf3; margin-bottom: 6px; }
 .results-score {
-  font-size: 3rem;
-  font-weight: 900;
+  font-size: 3rem; font-weight: 900;
   background: linear-gradient(135deg, #34d399, #06b6d4);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
   margin: 10px 0;
 }
 .results-sub { color: #6e7681; font-size: 0.88rem; margin-bottom: 24px; }
 
 .results-list {
-  background: #161b22;
-  border: 1px solid #30363d;
-  border-radius: 10px;
-  overflow: hidden;
-  margin-bottom: 24px;
-  text-align: left;
+  background: #161b22; border: 1px solid #30363d;
+  border-radius: 10px; overflow: hidden;
+  margin-bottom: 24px; text-align: left;
 }
 .result-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 9px 14px;
-  font-size: 0.82rem;
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 14px; font-size: 0.82rem;
   border-bottom: 1px solid #21262d;
 }
 .result-row:last-child { border-bottom: none; }
 .result-flag { font-size: 1rem; flex-shrink: 0; }
 .result-name { flex: 1; color: #c9d1d9; }
 .result-pts  { font-weight: 700; font-size: 0.8rem; }
-.pts-3 { color: #3fb950; }
+.pts-4,.pts-3 { color: #3fb950; }
 .pts-2 { color: #58a6ff; }
 .pts-1 { color: #e9c46a; }
 .pts-0 { color: #6e7681; }
 
 .btn-play-again {
-  background: #0d3d2a;
-  border: 2px solid #34d399;
-  color: #34d399;
-  padding: 12px 32px;
-  border-radius: 10px;
-  cursor: pointer;
-  font-size: 0.95rem;
-  font-weight: 700;
-  font-family: inherit;
-  transition: background 0.15s;
+  background: #0d3d2a; border: 2px solid #34d399;
+  color: #34d399; padding: 12px 32px;
+  border-radius: 10px; cursor: pointer;
+  font-size: 0.95rem; font-weight: 700;
+  font-family: inherit; transition: background 0.15s;
 }
 .btn-play-again:hover { background: #0f4d34; }
 
-/* ── Win flash overlay ────────────────────────────────────────────── */
+/* ── Correct flash ────────────────────────────────────────────────── */
 .correct-flash {
-  position: absolute;
-  inset: 0;
-  background: rgba(63,185,80,0.12);
-  border-radius: 12px;
+  position: absolute; inset: 0;
+  background: rgba(63,185,80,0.12); border-radius: 12px;
   pointer-events: none;
   animation: flashIn 0.5s ease forwards;
 }
-@keyframes flashIn {
-  0%   { opacity: 1; }
-  100% { opacity: 0; }
-}
+@keyframes flashIn { 0% { opacity:1; } 100% { opacity:0; } }
 
 /* ── Mobile ───────────────────────────────────────────────────────── */
 @media (max-width: 480px) {
@@ -347,31 +328,38 @@ h1 {
 </style>
 </head>
 <body>
-<div id="app">
+<div id="app" :dir="isRTL ? 'rtl' : 'ltr'">
 
-  <a href="index.html" style="font-size:0.78rem;color:#6e7681;text-decoration:none;margin-bottom:8px;display:inline-block;transition:color 0.15s;align-self:flex-start" onmouseover="this.style.color='#c9d1d9'" onmouseout="this.style.color='#6e7681'">← All Games</a>
+  <!-- Top bar: back link + language toggle -->
+  <div class="top-bar">
+    <a href="index.html" class="back-link">{{ isRTL ? 'כל המשחקים ←' : '← All Games' }}</a>
+    <div class="lang-toggle">
+      <button class="lang-btn" :class="{ active: lang === 'en' }" @click="setLang('en')">EN</button>
+      <button class="lang-btn" :class="{ active: lang === 'he' }" @click="setLang('he')">עב</button>
+    </div>
+  </div>
 
   <h1>OUTLINES</h1>
-  <p class="tagline">Name the country from its shape — use hints if you're stuck</p>
+  <p class="tagline">{{ isRTL ? 'נחש את שם המדינה לפי צורתה — השתמש ברמזים אם תקוע' : 'Name the country from its shape — use hints if you\'re stuck' }}</p>
 
   <!-- ── Results screen ──────────────────────────────────────────── -->
   <div v-if="gameOver" class="results">
     <div class="results-icon">🌍</div>
-    <h2>Round Complete!</h2>
+    <h2>{{ isRTL ? '!הסיבוב הסתיים' : 'Round Complete!' }}</h2>
     <div class="results-score">{{ totalScore }} / {{ maxScore }}</div>
     <p class="results-sub">{{ resultMessage }}</p>
 
     <div class="results-list">
-      <div v-for="(r, i) in roundResults" :key="i" class="result-row">
+      <div v-for="(r, i) in roundResults" :key="i" class="result-row" :dir="isRTL ? 'rtl' : 'ltr'">
         <span class="result-flag">{{ r.solved ? '✓' : '✗' }}</span>
         <span class="result-name">{{ r.name }}</span>
         <span class="result-pts" :class="`pts-${r.pts}`">
-          {{ r.solved ? `+${r.pts} pt${r.pts !== 1 ? 's' : ''}` : 'skipped' }}
+          {{ r.solved ? `+${r.pts}` : (isRTL ? 'דילגת' : 'skipped') }}
         </span>
       </div>
     </div>
 
-    <button class="btn-play-again" @click="startRound">Play Again ↺</button>
+    <button class="btn-play-again" @click="startRound">{{ isRTL ? 'שחק שוב ↺' : 'Play Again ↺' }}</button>
   </div>
 
   <!-- ── Load error ─────────────────────────────────────────────── -->
@@ -379,13 +367,13 @@ h1 {
     <div style="font-size:2rem;margin-bottom:12px">🌐</div>
     <p style="color:#f85149;font-size:0.88rem;margin-bottom:16px">{{ loadError }}</p>
     <button @click="loadData" style="background:#0d3d2a;border:2px solid #34d399;color:#34d399;padding:10px 24px;border-radius:8px;cursor:pointer;font-size:0.88rem;font-family:inherit;font-weight:700">
-      Retry ↺
+      {{ isRTL ? 'נסה שוב ↺' : 'Retry ↺' }}
     </button>
   </div>
 
   <!-- ── Loading ─────────────────────────────────────────────────── -->
   <div v-else-if="loading" style="color:#6e7681;font-size:0.88rem;margin-top:40px">
-    Loading map data…
+    {{ isRTL ? '…טוען נתוני מפה' : 'Loading map data…' }}
   </div>
 
   <!-- ── Game ────────────────────────────────────────────────────── -->
@@ -403,17 +391,13 @@ h1 {
           }"
         ></div>
       </div>
-      <span>Score: <strong>{{ totalScore }}</strong></span>
+      <span>{{ isRTL ? 'ניקוד' : 'Score' }}: <strong>{{ totalScore }}</strong></span>
     </div>
 
     <!-- Country shape -->
     <div class="svg-wrap">
       <div v-if="showCorrectFlash" class="correct-flash"></div>
-      <svg
-        class="country-svg"
-        viewBox="0 0 560 300"
-        xmlns="http://www.w3.org/2000/svg"
-      >
+      <svg class="country-svg" viewBox="0 0 560 300" xmlns="http://www.w3.org/2000/svg">
         <path
           v-if="svgPathData"
           :d="svgPathData"
@@ -423,11 +407,11 @@ h1 {
           stroke-linejoin="round"
         />
       </svg>
-      <span v-if="!svgPathData" class="loading-msg">{{ renderError || 'Rendering…' }}</span>
+      <span v-if="!svgPathData" class="loading-msg">{{ renderError || (isRTL ? '…מרנדר' : 'Rendering…') }}</span>
     </div>
 
-    <!-- Letter blanks -->
-    <div class="blanks">
+    <!-- Letter blanks (dir flips flex layout for RTL) -->
+    <div class="blanks" :dir="isRTL ? 'rtl' : 'ltr'">
       <div
         v-for="(cell, i) in displayLetters"
         :key="i"
@@ -457,8 +441,9 @@ h1 {
         v-model="guess"
         class="guess-input"
         :class="{ shake: shakeInput }"
+        :dir="isRTL ? 'rtl' : 'ltr'"
         type="text"
-        placeholder="Type country name…"
+        :placeholder="isRTL ? '…הקלד שם מדינה' : 'Type country name…'"
         autocomplete="off"
         autocorrect="off"
         autocapitalize="off"
@@ -466,13 +451,15 @@ h1 {
         @keydown.enter="submitGuess"
         @input="clearFeedback"
       />
-      <button class="btn-submit" @click="submitGuess" :disabled="!guess.trim()">Go →</button>
+      <button class="btn-submit" @click="submitGuess" :disabled="!guess.trim()">
+        {{ isRTL ? 'קדימה ←' : 'Go →' }}
+      </button>
     </div>
 
     <!-- Feedback -->
     <div class="feedback" :class="feedbackType">{{ feedbackMsg }}</div>
 
-    <!-- Hint / Skip -->
+    <!-- Hint / Skip / Next -->
     <div class="action-row">
       <button
         v-if="!revealedAnswer"
@@ -480,18 +467,20 @@ h1 {
         :disabled="hintsUsed >= MAX_HINTS || solved"
         @click="useHint"
       >
-        💡 Hint
+        💡 {{ isRTL ? 'רמז' : 'Hint' }}
         <div class="hint-pips">
           <div v-for="n in MAX_HINTS" :key="n" class="hint-pip" :class="{ used: n <= hintsUsed }"></div>
         </div>
       </button>
 
       <button v-if="!solved && !revealedAnswer" class="btn-skip" @click="skipCountry">
-        Skip ↷
+        {{ isRTL ? 'דלג ↷' : 'Skip ↷' }}
       </button>
 
       <button v-if="solved || revealedAnswer" class="btn-next" @click="nextCountry">
-        {{ currentIdx + 1 < ROUND_SIZE ? 'Next →' : 'Finish' }}
+        {{ isRTL
+          ? (currentIdx + 1 < ROUND_SIZE ? 'הבא ←' : 'סיום')
+          : (currentIdx + 1 < ROUND_SIZE ? 'Next →' : 'Finish') }}
       </button>
     </div>
   </template>
@@ -504,46 +493,49 @@ const ROUND_SIZE = 10;
 const MAX_HINTS  = 3;
 const SVG_W = 560, SVG_H = 300, PAD = 28;
 
+// Unicode letter regex — matches Hebrew, Latin, and all other scripts
+const LETTER_RE = /\p{L}/u;
+
 const COUNTRIES = [
-  { id: '32',  name: 'Argentina' },
-  { id: '36',  name: 'Australia' },
-  { id: '76',  name: 'Brazil' },
-  { id: '124', name: 'Canada' },
-  { id: '152', name: 'Chile' },
-  { id: '156', name: 'China',          aliases: ['prc'] },
-  { id: '170', name: 'Colombia' },
-  { id: '818', name: 'Egypt' },
-  { id: '246', name: 'Finland' },
-  { id: '250', name: 'France' },
-  { id: '276', name: 'Germany' },
-  { id: '300', name: 'Greece' },
-  { id: '356', name: 'India' },
-  { id: '360', name: 'Indonesia' },
-  { id: '364', name: 'Iran' },
-  { id: '380', name: 'Italy' },
-  { id: '392', name: 'Japan' },
-  { id: '404', name: 'Kenya' },
-  { id: '484', name: 'Mexico' },
-  { id: '504', name: 'Morocco' },
-  { id: '554', name: 'New Zealand' },
-  { id: '566', name: 'Nigeria' },
-  { id: '578', name: 'Norway' },
-  { id: '604', name: 'Peru' },
-  { id: '616', name: 'Poland' },
-  { id: '620', name: 'Portugal' },
-  { id: '643', name: 'Russia',          aliases: ['russian federation'] },
-  { id: '682', name: 'Saudi Arabia' },
-  { id: '710', name: 'South Africa' },
-  { id: '410', name: 'South Korea',     aliases: ['korea'] },
-  { id: '724', name: 'Spain' },
-  { id: '752', name: 'Sweden' },
-  { id: '756', name: 'Switzerland' },
-  { id: '764', name: 'Thailand' },
-  { id: '792', name: 'Turkey',          aliases: ['türkiye', 'turkiye'] },
-  { id: '804', name: 'Ukraine' },
-  { id: '826', name: 'United Kingdom',  aliases: ['uk', 'great britain', 'britain'] },
-  { id: '840', name: 'United States',   aliases: ['usa', 'us', 'america', 'united states of america'] },
-  { id: '704', name: 'Vietnam',         aliases: ['viet nam'] },
+  { id: '32',  name: 'Argentina',      he: 'ארגנטינה' },
+  { id: '36',  name: 'Australia',      he: 'אוסטרליה' },
+  { id: '76',  name: 'Brazil',         he: 'ברזיל' },
+  { id: '124', name: 'Canada',         he: 'קנדה' },
+  { id: '152', name: 'Chile',          he: "צ'ילה" },
+  { id: '156', name: 'China',          he: 'סין',            aliases: ['prc'] },
+  { id: '170', name: 'Colombia',       he: 'קולומביה' },
+  { id: '818', name: 'Egypt',          he: 'מצרים' },
+  { id: '246', name: 'Finland',        he: 'פינלנד' },
+  { id: '250', name: 'France',         he: 'צרפת' },
+  { id: '276', name: 'Germany',        he: 'גרמניה' },
+  { id: '300', name: 'Greece',         he: 'יוון' },
+  { id: '356', name: 'India',          he: 'הודו' },
+  { id: '360', name: 'Indonesia',      he: 'אינדונזיה' },
+  { id: '364', name: 'Iran',           he: 'איראן' },
+  { id: '380', name: 'Italy',          he: 'איטליה' },
+  { id: '392', name: 'Japan',          he: 'יפן' },
+  { id: '404', name: 'Kenya',          he: 'קניה' },
+  { id: '484', name: 'Mexico',         he: 'מקסיקו' },
+  { id: '504', name: 'Morocco',        he: 'מרוקו' },
+  { id: '554', name: 'New Zealand',    he: 'ניו זילנד' },
+  { id: '566', name: 'Nigeria',        he: 'ניגריה' },
+  { id: '578', name: 'Norway',         he: 'נורווגיה' },
+  { id: '604', name: 'Peru',           he: 'פרו' },
+  { id: '616', name: 'Poland',         he: 'פולין' },
+  { id: '620', name: 'Portugal',       he: 'פורטוגל' },
+  { id: '643', name: 'Russia',         he: 'רוסיה',          aliases: ['russian federation'] },
+  { id: '682', name: 'Saudi Arabia',   he: 'ערב הסעודית' },
+  { id: '710', name: 'South Africa',   he: 'דרום אפריקה' },
+  { id: '410', name: 'South Korea',    he: 'דרום קוריאה',    aliases: ['korea'] },
+  { id: '724', name: 'Spain',          he: 'ספרד' },
+  { id: '752', name: 'Sweden',         he: 'שוודיה' },
+  { id: '756', name: 'Switzerland',    he: 'שוויץ' },
+  { id: '764', name: 'Thailand',       he: 'תאילנד' },
+  { id: '792', name: 'Turkey',         he: 'טורקיה',         aliases: ['türkiye', 'turkiye'] },
+  { id: '804', name: 'Ukraine',        he: 'אוקראינה' },
+  { id: '826', name: 'United Kingdom', he: 'הממלכה המאוחדת', aliases: ['uk', 'great britain', 'britain'], heAliases: ['בריטניה', 'אנגליה'] },
+  { id: '840', name: 'United States',  he: 'ארצות הברית',   aliases: ['usa', 'us', 'america', 'united states of america'], heAliases: ['ארהב', 'אמריקה'] },
+  { id: '704', name: 'Vietnam',        he: 'וייטנאם',        aliases: ['viet nam'] },
 ];
 
 function shuffle(arr) {
@@ -555,9 +547,10 @@ function shuffle(arr) {
   return a;
 }
 
+// Works for any script: finds positions of Unicode letters
 function getHintPositions(name) {
   const idxs = [];
-  for (let i = 0; i < name.length; i++) if (/[a-zA-Z]/.test(name[i])) idxs.push(i);
+  for (let i = 0; i < name.length; i++) if (LETTER_RE.test(name[i])) idxs.push(i);
   if (!idxs.length) return [];
   const picks = new Set([
     idxs[0],
@@ -569,10 +562,11 @@ function getHintPositions(name) {
 
 createApp({
   setup() {
+    const lang             = ref('en');
     const loading          = ref(true);
     const loadError        = ref('');
     const worldData        = ref(null);
-    const queue            = ref([]);     // countries for this round
+    const queue            = ref([]);
     const currentIdx       = ref(0);
     const hintsUsed        = ref(0);
     const guess            = ref('');
@@ -586,6 +580,15 @@ createApp({
     const showCorrectFlash = ref(false);
     const shakeInput       = ref(false);
     const inputEl          = ref(null);
+
+    const isRTL = computed(() => lang.value === 'he');
+
+    function setLang(l) {
+      if (lang.value === l) return;
+      lang.value = l;
+      // Reset current turn so hints/guesses don't bleed across languages
+      resetTurn();
+    }
 
     // ── Data loading ────────────────────────────────────────────────
     const DATA_URLS = [
@@ -618,21 +621,21 @@ createApp({
 
     // ── Round management ─────────────────────────────────────────────
     function startRound() {
-      queue.value      = shuffle(COUNTRIES).slice(0, ROUND_SIZE);
-      currentIdx.value = 0;
-      totalScore.value = 0;
+      queue.value        = shuffle(COUNTRIES).slice(0, ROUND_SIZE);
+      currentIdx.value   = 0;
+      totalScore.value   = 0;
       roundResults.value = [];
-      gameOver.value   = false;
+      gameOver.value     = false;
       resetTurn();
     }
 
     function resetTurn() {
-      hintsUsed.value      = 0;
-      guess.value          = '';
-      feedbackMsg.value    = '';
-      feedbackType.value   = '';
-      solved.value         = false;
-      revealedAnswer.value = false;
+      hintsUsed.value        = 0;
+      guess.value            = '';
+      feedbackMsg.value      = '';
+      feedbackType.value     = '';
+      solved.value           = false;
+      revealedAnswer.value   = false;
       showCorrectFlash.value = false;
       nextTick(() => inputEl.value?.focus());
     }
@@ -646,23 +649,43 @@ createApp({
       }
     }
 
-    // ── Current state ────────────────────────────────────────────────
+    // ── Current country helpers ──────────────────────────────────────
     const current = computed(() => queue.value[currentIdx.value]);
 
-    const hintPositions = computed(() =>
-      current.value ? getHintPositions(current.value.name) : []
-    );
+    // Name in active language
+    const currentName = computed(() => {
+      if (!current.value) return '';
+      return lang.value === 'he' ? (current.value.he || current.value.name) : current.value.name;
+    });
+
+    // Valid answers in active language
+    const currentAnswers = computed(() => {
+      if (!current.value) return [];
+      if (lang.value === 'he') {
+        return [
+          current.value.he || current.value.name,
+          ...(current.value.heAliases || []),
+        ].map(s => s.trim());
+      }
+      return [
+        current.value.name,
+        ...(current.value.aliases || []),
+      ].map(s => s.toLowerCase());
+    });
+
+    const hintPositions = computed(() => getHintPositions(currentName.value));
 
     const displayLetters = computed(() => {
-      if (!current.value) return [];
-      const name = current.value.name;
+      const name = currentName.value;
+      if (!name) return [];
       const revealed = new Set(hintPositions.value.slice(0, hintsUsed.value));
       const isFinished = solved.value || revealedAnswer.value;
 
       return name.split('').map((ch, i) => {
-        if (ch === ' ') return { ch: '\u00A0', type: 'space' };
-        if (isFinished)  return { ch, type: 'solved' };
-        if (revealed.has(i)) return { ch, type: 'hint' };
+        // Non-letters (spaces, apostrophes, hyphens) always shown
+        if (!LETTER_RE.test(ch)) return { ch: ch === ' ' ? '\u00A0' : ch, type: 'space' };
+        if (isFinished)          return { ch, type: 'solved' };
+        if (revealed.has(i))     return { ch, type: 'hint' };
         return { ch: '_', type: 'blank' };
       });
     });
@@ -678,15 +701,12 @@ createApp({
           worldData.value,
           worldData.value.objects.countries
         ).features;
-        // Compare as numbers — world-atlas stores IDs as integers
         const feat = features.find(f => +f.id === +current.value.id);
         if (!feat) {
-          renderError.value = `Shape not found for ${current.value.name}`;
+          renderError.value = `Shape not found: ${current.value.name}`;
           return null;
         }
         renderError.value = '';
-        // geoNaturalEarth1 handles antimeridian-spanning countries (e.g. Russia) robustly;
-        // fall back to geoMercator if unavailable (older d3-geo builds)
         const projFn = d3.geoNaturalEarth1 || d3.geoMercator;
         const proj = projFn().fitExtent([[PAD, PAD], [SVG_W - PAD, SVG_H - PAD]], feat);
         return d3.geoPath().projection(proj)(feat);
@@ -707,27 +727,28 @@ createApp({
 
     function submitGuess() {
       if (!guess.value.trim() || solved.value || revealedAnswer.value) return;
-      const input = guess.value.trim().toLowerCase();
-      const country = current.value;
-      const valid = [
-        country.name.toLowerCase(),
-        ...(country.aliases || []).map(a => a.toLowerCase()),
-      ];
+      const input   = guess.value.trim();
+      const isHe    = lang.value === 'he';
+      // Hebrew is case-insensitive trivially; English needs toLowerCase
+      const normalize = s => isHe ? s.trim() : s.trim().toLowerCase();
+      const valid = currentAnswers.value.map(normalize);
 
-      if (valid.includes(input)) {
+      if (valid.includes(normalize(input))) {
         const pts = Math.max(1, MAX_HINTS + 1 - hintsUsed.value);
         totalScore.value += pts;
-        roundResults.value.push({ name: country.name, solved: true, pts });
+        roundResults.value.push({ name: currentName.value, solved: true, pts });
         solved.value = true;
-        feedbackMsg.value  = hintsUsed.value === 0 ? '✓ Correct! +' + pts + ' pts' : '✓ Correct! +' + pts + ' pt' + (pts === 1 ? '' : 's');
+        feedbackMsg.value  = isHe
+          ? `!נכון +${pts}`
+          : `✓ Correct! +${pts} pt${pts !== 1 ? 's' : ''}`;
         feedbackType.value = 'correct';
         showCorrectFlash.value = true;
         setTimeout(() => { showCorrectFlash.value = false; }, 600);
         guess.value = '';
       } else {
-        feedbackMsg.value  = 'Not quite — try again!';
+        feedbackMsg.value  = isHe ? '!לא נכון — נסה שוב' : 'Not quite — try again!';
         feedbackType.value = 'wrong';
-        shakeInput.value = true;
+        shakeInput.value   = true;
         setTimeout(() => { shakeInput.value = false; }, 400);
         guess.value = '';
       }
@@ -742,23 +763,24 @@ createApp({
     }
 
     function skipCountry() {
-      const country = current.value;
-      roundResults.value.push({ name: country.name, solved: false, pts: 0 });
+      const name = currentName.value;
+      roundResults.value.push({ name, solved: false, pts: 0 });
       revealedAnswer.value = true;
-      feedbackMsg.value  = `The answer was: ${country.name}`;
+      feedbackMsg.value  = lang.value === 'he' ? `התשובה: ${name}` : `The answer was: ${name}`;
       feedbackType.value = 'skipped';
       guess.value = '';
     }
 
-    // ── Results text ─────────────────────────────────────────────────
+    // ── Results ──────────────────────────────────────────────────────
     const maxScore = computed(() => ROUND_SIZE * (MAX_HINTS + 1));
 
     const resultMessage = computed(() => {
-      const pct = totalScore.value / maxScore.value;
-      if (pct >= 0.9) return 'Outstanding! You really know your maps. 🗺️';
-      if (pct >= 0.7) return 'Great work! A few more to master.';
-      if (pct >= 0.5) return 'Decent! Keep exploring the world.';
-      return 'Keep playing — the shapes will start to stick!';
+      const pct  = totalScore.value / maxScore.value;
+      const isHe = lang.value === 'he';
+      if (pct >= 0.9) return isHe ? 'מדהים! אתה ממש מכיר את המפות 🗺️' : 'Outstanding! You really know your maps. 🗺️';
+      if (pct >= 0.7) return isHe ? 'כל הכבוד! עוד קצת ותשלים את כולן.' : 'Great work! A few more to master.';
+      if (pct >= 0.5) return isHe ? 'לא רע! המשך לחקור את העולם.' : 'Decent! Keep exploring the world.';
+      return isHe ? 'תמשיך לשחק — הצורות יתחילו להידבק!' : 'Keep playing — the shapes will start to stick!';
     });
 
     // ── Keyboard ─────────────────────────────────────────────────────
@@ -771,11 +793,12 @@ createApp({
     onUnmounted(() => window.removeEventListener('keydown', handleKey));
 
     return {
+      lang, isRTL, setLang,
       loading, loadError, loadData, worldData, queue, currentIdx, hintsUsed,
       guess, feedbackMsg, feedbackType, solved, revealedAnswer,
       roundResults, totalScore, maxScore, gameOver,
       showCorrectFlash, shakeInput, inputEl,
-      current, hintPositions, displayLetters, svgPathData, renderError,
+      current, currentName, displayLetters, svgPathData, renderError,
       ROUND_SIZE, MAX_HINTS,
       startRound, nextCountry, clearFeedback,
       submitGuess, useHint, skipCountry,
