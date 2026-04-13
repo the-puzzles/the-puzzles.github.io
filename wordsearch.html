@@ -489,13 +489,14 @@ function tryPlaceWord(grid, word, retries = 40) {
 }
 
 function generatePuzzle(lang, category) {
-  let wordList = shuffle(WORD_BANK[category][lang] || WORD_BANK[category].en).slice(0, 8);
-  if (lang === 'he') wordList = wordList.map(normalizeHebrew);
+  const wordList = shuffle(WORD_BANK[category][lang] || WORD_BANK[category].en).slice(0, 8);
   const grid = emptyGrid();
   const placed = [];
   for (const word of wordList) {
-    const result = tryPlaceWord(grid, word, 60);
-    if (result) placed.push({ word, cells: result.cells });
+    // Normalize Hebrew final forms for the grid only; keep original for the word list
+    const gridWord = lang === 'he' ? normalizeHebrew(word) : word;
+    const result = tryPlaceWord(grid, gridWord, 60);
+    if (result) placed.push({ word, cells: result.cells }); // word = display form
   }
   fillNoise(grid, lang);
   const mysteryIdx = placed.length > 0 ? Math.floor(Math.random() * placed.length) : -1;
