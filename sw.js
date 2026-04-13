@@ -1,4 +1,4 @@
-const CACHE = 'puzzles-v3';
+const CACHE = 'puzzles-v4';
 const ASSETS = [
   '/',
   '/index.html',
@@ -10,8 +10,8 @@ const ASSETS = [
   '/manifest.json',
   '/icon.svg',
   'https://unpkg.com/vue@3/dist/vue.global.js',
-  'https://cdn.jsdelivr.net/npm/d3-geo@3/dist/d3-geo.min.js',
-  'https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js',
+  'https://unpkg.com/d3@7/dist/d3.min.js',
+  'https://unpkg.com/topojson-client@3/dist/topojson-client.min.js',
   'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json',
 ];
 
