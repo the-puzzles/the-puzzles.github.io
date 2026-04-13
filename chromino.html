@@ -266,6 +266,21 @@ h1 {
 .fade-enter-active, .fade-leave-active { transition: opacity 0.2s; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
 
+/* ── Random / reset controls ───────────────────────────────────────── */
+.rand-btn {
+  background: #21262d; border: 1px solid #30363d;
+  color: #6e7681; padding: 3px 9px; border-radius: 5px; cursor: pointer;
+  font-size: 0.72rem; font-family: inherit; text-transform: capitalize;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.rand-btn:hover { background: #30363d; color: #c9d1d9; }
+.rand-btn.active { background: #1c2a3e; border-color: #58a6ff; color: #58a6ff; }
+.btn-reset-prog {
+  background: none; border: none; color: #484f58; font-size: 0.68rem;
+  cursor: pointer; padding: 0 2px; font-family: inherit; text-decoration: underline;
+}
+.btn-reset-prog:hover { color: #8b949e; }
+
 /* ── Mobile layout ─────────────────────────────────────────────────── */
 @media (max-width: 599px) {
   h1 { font-size: 1.8rem; }
@@ -332,8 +347,13 @@ h1 {
         <p>All {{ level.dots.length }} dots covered!</p>
         <div class="win-btns">
           <button class="btn" @click="resetLevel">Play Again</button>
-          <button v-if="currentLevelIdx < LEVELS.length - 1" class="btn accent" @click="nextLevel">Next Level →</button>
-          <span v-else style="color:#3fb950; font-size:0.88rem; padding:8px 4px;">All levels complete! 🏆</span>
+          <template v-if="mode === 'random'">
+            <button class="btn accent" @click="generateAndPlay(difficulty)">New Random →</button>
+          </template>
+          <template v-else>
+            <button v-if="currentLevelIdx < LEVELS.length - 1" class="btn accent" @click="nextLevel">Next Level →</button>
+            <span v-else style="color:#3fb950; font-size:0.88rem; padding:8px 4px;">All levels complete! 🏆</span>
+          </template>
         </div>
       </div>
     </div>
@@ -344,18 +364,22 @@ h1 {
   <p class="tagline">Cover all dots — a shape can't cover a dot of its own color</p>
 
   <div class="level-bar">
-    <span><strong>Level {{ currentLevelIdx + 1 }}</strong>: {{ level.name }}</span>
+    <span v-if="mode === 'campaign'"><strong>Level {{ currentLevelIdx + 1 }}</strong>: {{ level.name }}</span>
+    <span v-else><strong>Random</strong> · {{ difficulty }}</span>
     <div class="level-pills">
       <div
         v-for="(l, i) in LEVELS" :key="i"
         class="level-pill"
-        :class="{ active: i === currentLevelIdx, done: completedLevels.has(i) }"
+        :class="{ active: mode === 'campaign' && i === currentLevelIdx, done: completedLevels.has(i) }"
         @click="gotoLevel(i)"
         :title="`Level ${i+1}: ${l.name}`"
       ></div>
     </div>
     <span>Moves: <strong>{{ history.length }}</strong></span>
     <span>Dots left: <strong>{{ dotsRemaining }}</strong></span>
+    <span style="color:#444c56;margin:0 2px">|</span>
+    <button v-for="d in ['easy','medium','hard']" :key="d" class="rand-btn" :class="{ active: mode === 'random' && difficulty === d }" @click="generateAndPlay(d)">{{ d }}</button>
+    <button class="btn-reset-prog" @click="resetAllProgress">reset</button>
   </div>
 
   <div class="game-container">
@@ -438,7 +462,7 @@ h1 {
 </div>
 
 <script>
-const { createApp, ref, computed, onMounted, onUnmounted } = Vue;
+const { createApp, ref, computed, watch, onMounted, onUnmounted } = Vue;
 
 const COLOR_HEX = {
   red:    '#e74c3c',
@@ -624,6 +648,62 @@ const LEVELS = [
   },
 ];
 
+// ── Shuffle ──────────────────────────────────────────────────────────
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// ── Random level generator ────────────────────────────────────────────
+const RAND_CONFIGS_CH = {
+  easy:   { rows: 5, cols: 5, n: 3 },
+  medium: { rows: 7, cols: 7, n: 5 },
+  hard:   { rows: 9, cols: 9, n: 8 },
+};
+
+function generateChromino(diff) {
+  const { rows, cols, n } = RAND_CONFIGS_CH[diff] ?? RAND_CONFIGS_CH.medium;
+  const TYPES  = ['I','O','T','L','J','S','Z'];
+  const COLORS = Object.keys(COLOR_HEX);
+  const occupied = new Set();
+  const placed   = [];
+
+  for (let attempt = 0; attempt < 600 && placed.length < n; attempt++) {
+    const type  = TYPES[Math.floor(Math.random() * TYPES.length)];
+    const rot   = Math.floor(Math.random() * 4);
+    const cells = getShapeCells(type, rot);
+    const maxR  = Math.max(...cells.map(([r]) => r));
+    const maxC  = Math.max(...cells.map(([,c]) => c));
+    if (maxR >= rows || maxC >= cols) continue;
+    const row = Math.floor(Math.random() * (rows - maxR));
+    const col = Math.floor(Math.random() * (cols - maxC));
+    const abs  = cells.map(([dr, dc]) => [row + dr, col + dc]);
+    const keys = abs.map(([r, c]) => `${r},${c}`);
+    if (keys.some(k => occupied.has(k))) continue;
+    const color = COLORS[Math.floor(Math.random() * COLORS.length)];
+    keys.forEach(k => occupied.add(k));
+    placed.push({ id: placed.length + 1, type, color, abs });
+  }
+
+  if (placed.length < n) return generateChromino(diff); // rare: retry
+
+  const dots = placed.map(p => {
+    const cell  = p.abs[Math.floor(Math.random() * p.abs.length)];
+    const other = COLORS.filter(c => c !== p.color);
+    return { row: cell[0], col: cell[1], color: other[Math.floor(Math.random() * other.length)] };
+  });
+
+  return {
+    name: `Random · ${diff}`,
+    rows, cols, dots,
+    shapes: placed.map(p => ({ id: p.id, type: p.type, color: p.color })),
+  };
+}
+
 createApp({
   setup() {
     const currentLevelIdx = ref(0);
@@ -635,6 +715,46 @@ createApp({
     const won             = ref(false);
     const errorMsg        = ref('');
     const completedLevels = ref(new Set());
+    const mode            = ref('campaign');
+    const randomLevel     = ref(null);
+    const difficulty      = ref('medium');
+
+    // ── Persistence ──────────────────────────────────────────────────
+    const SAVE_KEY = 'chromino-v1';
+    let saveTimer  = null;
+
+    function saveState() {
+      if (mode.value === 'random') return;
+      try {
+        localStorage.setItem(SAVE_KEY, JSON.stringify({
+          currentLevelIdx: currentLevelIdx.value,
+          completedLevels: [...completedLevels.value],
+          history: history.value,
+        }));
+      } catch {}
+    }
+
+    function loadState() {
+      try {
+        const s = JSON.parse(localStorage.getItem(SAVE_KEY));
+        if (!s) return;
+        if (typeof s.currentLevelIdx === 'number' && s.currentLevelIdx < LEVELS.length)
+          currentLevelIdx.value = s.currentLevelIdx;
+        if (Array.isArray(s.completedLevels)) completedLevels.value = new Set(s.completedLevels);
+        if (Array.isArray(s.history)) history.value = s.history;
+      } catch {}
+    }
+
+    function resetAllProgress() {
+      if (!confirm('Clear all saved progress?')) return;
+      localStorage.removeItem(SAVE_KEY);
+      completedLevels.value = new Set();
+      currentLevelIdx.value = 0;
+      mode.value = 'campaign';
+      resetLevel();
+    }
+
+    loadState();
 
     // Touch drag state
     const isDragging = ref(false);
@@ -647,7 +767,9 @@ createApp({
     const windowWidth = ref(window.innerWidth);
     function onResize() { windowWidth.value = window.innerWidth; }
 
-    const level = computed(() => LEVELS[currentLevelIdx.value]);
+    const level = computed(() =>
+      mode.value === 'random' ? randomLevel.value : LEVELS[currentLevelIdx.value]
+    );
 
     const cellSize = computed(() => {
       if (windowWidth.value >= 600) return 54;
@@ -761,7 +883,16 @@ createApp({
       if (currentLevelIdx.value < LEVELS.length - 1) { currentLevelIdx.value++; resetLevel(); }
     }
 
-    function gotoLevel(i) { currentLevelIdx.value = i; resetLevel(); }
+    function generateAndPlay(diff) {
+      difficulty.value = diff;
+      const lv = generateChromino(diff);
+      if (!lv) return;
+      randomLevel.value = lv;
+      mode.value = 'random';
+      resetLevel();
+    }
+
+    function gotoLevel(i) { mode.value = 'campaign'; currentLevelIdx.value = i; resetLevel(); }
 
     // ── Touch drag ───────────────────────────────────────────────────
     function findCellEl(x, y) {
@@ -816,6 +947,11 @@ createApp({
       else if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); undo(); }
     }
 
+    watch([currentLevelIdx, history, completedLevels], () => {
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(saveState, 400);
+    }, { deep: true });
+
     onMounted(() => {
       window.addEventListener('keydown', handleKey);
       window.addEventListener('resize', onResize);
@@ -823,6 +959,7 @@ createApp({
       document.addEventListener('touchend',  onDocTouchEnd);
     });
     onUnmounted(() => {
+      clearTimeout(saveTimer);
       window.removeEventListener('keydown', handleKey);
       window.removeEventListener('resize', onResize);
       document.removeEventListener('touchmove', onDocTouchMove);
@@ -832,6 +969,7 @@ createApp({
     return {
       currentLevelIdx, selectedShapeId, rotation,
       hoverRow, hoverCol, history, won, errorMsg, completedLevels,
+      mode, randomLevel, difficulty,
       isDragging, ghostX, ghostY,
       level, board, placedIds, selectedShape, preview, previewValid, dotsRemaining,
       cellSize,
@@ -839,6 +977,7 @@ createApp({
       getShapeGrid,
       cellBg, selectShape, rotateShape, onCellClick,
       undo, resetLevel, nextLevel, gotoLevel,
+      generateAndPlay, resetAllProgress,
       onShapeTouchStart,
     };
   }

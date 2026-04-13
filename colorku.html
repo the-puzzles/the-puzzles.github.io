@@ -206,6 +206,21 @@ h1 {
 .fade-enter-active, .fade-leave-active { transition: opacity 0.2s; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
 
+/* ── Random / reset controls ───────────────────────────────────────── */
+.rand-btn {
+  background: #21262d; border: 1px solid #30363d;
+  color: #6e7681; padding: 3px 9px; border-radius: 5px; cursor: pointer;
+  font-size: 0.72rem; font-family: inherit; text-transform: capitalize;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.rand-btn:hover { background: #30363d; color: #c9d1d9; }
+.rand-btn.active { background: #0d2a1a; border-color: #3fb950; color: #3fb950; }
+.btn-reset-prog {
+  background: none; border: none; color: #484f58; font-size: 0.68rem;
+  cursor: pointer; padding: 0 2px; font-family: inherit; text-decoration: underline;
+}
+.btn-reset-prog:hover { color: #8b949e; }
+
 @media (max-width: 480px) {
   h1 { font-size: 1.8rem; }
   .swatch { width: 36px; height: 36px; }
@@ -223,8 +238,13 @@ h1 {
         <p>{{ level.name }} completed in {{ history.length }} moves!</p>
         <div class="win-btns">
           <button class="btn" @click="resetLevel">Play Again</button>
-          <button v-if="currentLevelIdx < LEVELS.length - 1" class="btn btn-accent" @click="nextLevel">Next Level →</button>
-          <span v-else style="color:#3fb950;font-size:0.88rem;padding:8px 4px">All levels complete! 🏆</span>
+          <template v-if="mode === 'random'">
+            <button class="btn btn-accent" @click="generateAndPlay(difficulty)">New Random →</button>
+          </template>
+          <template v-else>
+            <button v-if="currentLevelIdx < LEVELS.length - 1" class="btn btn-accent" @click="nextLevel">Next Level →</button>
+            <span v-else style="color:#3fb950;font-size:0.88rem;padding:8px 4px">All levels complete! 🏆</span>
+          </template>
         </div>
       </div>
     </div>
@@ -235,18 +255,22 @@ h1 {
   <p class="tagline">Fill each row{{ level.boxRows ? ', column and box' : ' and column' }} with every color exactly once</p>
 
   <div class="level-bar">
-    <span><strong>Level {{ currentLevelIdx + 1 }}</strong>: {{ level.name }}</span>
+    <span v-if="mode === 'campaign'"><strong>Level {{ currentLevelIdx + 1 }}</strong>: {{ level.name }}</span>
+    <span v-else><strong>Random</strong> · {{ difficulty }} {{ level.size }}×{{ level.size }}</span>
     <div class="level-pills">
       <div
         v-for="(l, i) in LEVELS" :key="i"
         class="level-pill"
-        :class="{ active: i === currentLevelIdx, done: completedLevels.has(i) }"
+        :class="{ active: mode === 'campaign' && i === currentLevelIdx, done: completedLevels.has(i) }"
         @click="gotoLevel(i)"
         :title="`Level ${i+1}: ${l.name}`"
       ></div>
     </div>
     <span>Moves: <strong>{{ history.length }}</strong></span>
     <span>Empty: <strong>{{ emptyCells }}</strong></span>
+    <span style="color:#444c56;margin:0 2px">|</span>
+    <button v-for="d in ['easy','medium','hard']" :key="d" class="rand-btn" :class="{ active: mode === 'random' && difficulty === d }" @click="generateAndPlay(d)">{{ d }}</button>
+    <button class="btn-reset-prog" @click="resetAllProgress">reset</button>
   </div>
 
   <div class="board-wrap">
@@ -303,6 +327,16 @@ h1 {
 </div>
 <script>
 const { createApp, ref, computed, watch, onMounted, onUnmounted } = Vue;
+
+// ── Shuffle ──────────────────────────────────────────────────────────
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
 
 const COLOR_HEX = {
   red:    '#e74c3c',
@@ -410,6 +444,63 @@ const LEVELS = [
   },
 ];
 
+// ── Random puzzle generator ───────────────────────────────────────────
+const RAND_CONFIGS_CK = {
+  easy:   { size: 3, boxRows: 0, boxCols: 0, givens: 7  },
+  medium: { size: 4, boxRows: 2, boxCols: 2, givens: 9  },
+  hard:   { size: 6, boxRows: 2, boxCols: 3, givens: 15 },
+};
+
+const COLOR_NAMES = ['red','blue','green','yellow','orange','purple','cyan','pink'];
+
+function generateColorku(diff) {
+  const { size, boxRows, boxCols, givens } = RAND_CONFIGS_CK[diff] ?? RAND_CONFIGS_CK.medium;
+  const colors = COLOR_NAMES.slice(0, size);
+  const sol    = Array.from({length: size}, () => Array(size).fill(null));
+
+  function valid(r, c, color) {
+    for (let i = 0; i < size; i++) {
+      if (sol[r][i] === color) return false;
+      if (sol[i][c] === color) return false;
+    }
+    if (boxRows) {
+      const br = Math.floor(r / boxRows) * boxRows;
+      const bc = Math.floor(c / boxCols) * boxCols;
+      for (let rr = br; rr < br + boxRows; rr++)
+        for (let cc = bc; cc < bc + boxCols; cc++)
+          if (sol[rr][cc] === color) return false;
+    }
+    return true;
+  }
+
+  function fill(pos) {
+    if (pos === size * size) return true;
+    const r = Math.floor(pos / size), c = pos % size;
+    for (const color of shuffle(colors)) {
+      if (valid(r, c, color)) {
+        sol[r][c] = color;
+        if (fill(pos + 1)) return true;
+        sol[r][c] = null;
+      }
+    }
+    return false;
+  }
+
+  if (!fill(0)) return null; // shouldn't happen for ≤6
+
+  // Pick random cells to keep as "given"
+  const allPos = [];
+  for (let r = 0; r < size; r++) for (let c = 0; c < size; c++) allPos.push([r, c]);
+  const given = shuffle(allPos).slice(0, givens);
+
+  return {
+    name: `Random · ${diff}`,
+    size, boxRows, boxCols, colors,
+    solution: sol.map(row => [...row]),
+    given,
+  };
+}
+
 createApp({
   setup() {
     const currentLevelIdx = ref(0);
@@ -419,11 +510,64 @@ createApp({
     const completedLevels = ref(new Set());
     const showWin         = ref(false);
     const errorMsg        = ref('');
+    const mode            = ref('campaign');
+    const randomLevel     = ref(null);
+    const difficulty      = ref('medium');
+
+    // ── Persistence ──────────────────────────────────────────────────
+    const SAVE_KEY = 'colorku-v1';
+    let saveTimer  = null;
+
+    function saveState() {
+      if (mode.value === 'random') return;
+      try {
+        localStorage.setItem(SAVE_KEY, JSON.stringify({
+          currentLevelIdx: currentLevelIdx.value,
+          completedLevels: [...completedLevels.value],
+          userGrid: userGrid.value,
+          history: history.value,
+        }));
+      } catch {}
+    }
+
+    function loadState() {
+      try {
+        const s = JSON.parse(localStorage.getItem(SAVE_KEY));
+        if (!s) return;
+        if (typeof s.currentLevelIdx === 'number' && s.currentLevelIdx < LEVELS.length)
+          currentLevelIdx.value = s.currentLevelIdx;
+        if (Array.isArray(s.completedLevels)) completedLevels.value = new Set(s.completedLevels);
+        if (Array.isArray(s.userGrid)) userGrid.value = s.userGrid;
+        if (Array.isArray(s.history)) history.value = s.history;
+      } catch {}
+    }
+
+    function resetAllProgress() {
+      if (!confirm('Clear all saved progress?')) return;
+      localStorage.removeItem(SAVE_KEY);
+      completedLevels.value = new Set();
+      currentLevelIdx.value = 0;
+      mode.value = 'campaign';
+      resetLevel();
+    }
+
+    function generateAndPlay(diff) {
+      difficulty.value = diff;
+      const lv = generateColorku(diff);
+      if (!lv) return;
+      randomLevel.value = lv;
+      mode.value = 'random';
+      resetLevel();
+    }
+
+    loadState();
 
     const windowWidth = ref(window.innerWidth);
     function onResize() { windowWidth.value = window.innerWidth; }
 
-    const level = computed(() => LEVELS[currentLevelIdx.value]);
+    const level = computed(() =>
+      mode.value === 'random' ? randomLevel.value : LEVELS[currentLevelIdx.value]
+    );
 
     const cellSize = computed(() => {
       const max = windowWidth.value >= 600 ? 56 : Math.floor((windowWidth.value - 48) / level.value.size);
@@ -434,7 +578,8 @@ createApp({
       return Array.from({ length: size }, () => Array(size).fill(null));
     }
 
-    const userGrid = ref(makeEmptyGrid(LEVELS[0].size));
+    // userGrid may be pre-populated by loadState(); if not, default to empty
+    const userGrid = ref(makeEmptyGrid(LEVELS[currentLevelIdx.value].size));
 
     const givenSet = computed(() =>
       new Set(level.value.given.map(([r, c]) => `${r},${c}`))
@@ -555,6 +700,7 @@ createApp({
     }
 
     function gotoLevel(i) {
+      mode.value = 'campaign';
       currentLevelIdx.value = i;
       resetLevel();
     }
@@ -568,11 +714,17 @@ createApp({
       if (e.key === 'Escape') { selectedColor.value = null; eraserMode.value = false; }
     }
 
+    watch([currentLevelIdx, userGrid, completedLevels, history], () => {
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(saveState, 400);
+    }, { deep: true });
+
     onMounted(() => {
       window.addEventListener('keydown', handleKey);
       window.addEventListener('resize', onResize);
     });
     onUnmounted(() => {
+      clearTimeout(saveTimer);
       window.removeEventListener('keydown', handleKey);
       window.removeEventListener('resize', onResize);
     });
@@ -580,12 +732,14 @@ createApp({
     return {
       currentLevelIdx, selectedColor, eraserMode,
       history, completedLevels, showWin, errorMsg,
+      mode, randomLevel, difficulty,
       level, cellSize, userGrid, fullGrid, conflictSet,
       emptyCells, isSolved,
       COLOR_HEX, LEVELS,
       isGiven, getCellColor, isBoxShade,
       selectColor, toggleEraser, onCellClick, clearCell,
       undo, resetLevel, gotoLevel, nextLevel,
+      generateAndPlay, resetAllProgress,
     };
   }
 }).mount('#app');

@@ -1,4 +1,4 @@
-const CACHE = 'puzzles-v4';
+const CACHE = 'puzzles-v5';
 const ASSETS = [
   '/',
   '/index.html',
