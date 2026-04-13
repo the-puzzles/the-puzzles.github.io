@@ -289,27 +289,6 @@ h1 {
 .fade-enter-active, .fade-leave-active { transition: opacity 0.2s; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
 
-/* ── Random / reset controls ───────────────────────────────────────── */
-.rand-bar {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  margin-bottom: 14px;
-  flex-wrap: wrap;
-}
-.rand-label {
-  font-size: 0.72rem;
-  color: #6e7681;
-  margin-inline-end: 2px;
-}
-.rand-btn {
-  background: #21262d; border: 1px solid #30363d;
-  color: #6e7681; padding: 3px 9px; border-radius: 5px; cursor: pointer;
-  font-size: 0.72rem; font-family: inherit; text-transform: capitalize;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
-}
-.rand-btn:hover { background: #30363d; color: #c9d1d9; }
-.rand-btn.active { background: #1f1a0e; border-color: #f7971e; color: #f7971e; }
 .btn-reset-prog {
   background: none; border: none; color: #484f58; font-size: 0.68rem;
   cursor: pointer; padding: 0 2px; font-family: inherit; text-decoration: underline;
@@ -384,13 +363,8 @@ h1 {
         <p>Every tile placed perfectly.</p>
         <div class="win-btns">
           <button class="btn" @click="resetLevel">Play Again</button>
-          <template v-if="mode === 'random'">
-            <button class="btn accent" @click="generateAndPlay(difficulty)">New Random →</button>
-          </template>
-          <template v-else>
-            <button v-if="currentLevelIdx < LEVELS.length - 1" class="btn accent" @click="nextLevel">Next Level →</button>
-            <span v-else style="color:#ffd200; font-size:0.88rem; padding:8px 4px;">All done! 🏆</span>
-          </template>
+          <button v-if="mode === 'campaign' && currentLevelIdx < LEVELS.length - 1" class="btn accent" @click="nextLevel">Next Level →</button>
+          <button v-else class="btn accent" @click="generateAndPlay('hard')">Bonus Level →</button>
         </div>
       </div>
     </div>
@@ -407,19 +381,14 @@ h1 {
       <div
         v-for="(l, i) in LEVELS" :key="i"
         class="level-pill"
-        :class="{ active: mode === 'campaign' && i === currentLevelIdx, done: completedLevels.has(i) }"
+        :class="{ active: mode === 'campaign' && i === currentLevelIdx, done: completedLevels.includes(i) }"
         @click="gotoLevel(i)"
         :title="`Level ${i+1}: ${l.name}`"
       ></div>
     </div>
     <span>Moves: <strong>{{ history.length }}</strong></span>
     <span>Covered: <strong>{{ coveredCount }} / {{ level.rows * level.cols }}</strong></span>
-  </div>
-
-  <div class="rand-bar">
-    <span class="rand-label">Random:</span>
-    <button v-for="d in ['easy','medium','hard']" :key="d" class="rand-btn" :class="{ active: mode === 'random' && difficulty === d }" @click="generateAndPlay(d)">{{ d }}</button>
-    <button class="btn-reset-prog" @click="resetAllProgress">reset progress</button>
+    <button class="btn-reset-prog" @click="resetAllProgress">reset</button>
   </div>
 
   <div class="game-container">
@@ -793,7 +762,7 @@ createApp({
     const history         = ref([]);
     const won             = ref(false);
     const errorMsg        = ref('');
-    const completedLevels = ref(new Set());
+    const completedLevels = ref([]);
     const mode            = ref('campaign');
     const randomLevel     = ref(null);
     const difficulty      = ref('medium');
@@ -819,7 +788,7 @@ createApp({
         if (!s) return;
         if (typeof s.currentLevelIdx === 'number' && s.currentLevelIdx < LEVELS.length)
           currentLevelIdx.value = s.currentLevelIdx;
-        if (Array.isArray(s.completedLevels)) completedLevels.value = new Set(s.completedLevels);
+        if (Array.isArray(s.completedLevels)) completedLevels.value = s.completedLevels;
         if (Array.isArray(s.history)) history.value = s.history;
       } catch {}
     }
@@ -827,7 +796,7 @@ createApp({
     function resetAllProgress() {
       if (!confirm('Clear all saved progress?')) return;
       localStorage.removeItem(SAVE_KEY);
-      completedLevels.value = new Set();
+      completedLevels.value = [];
       currentLevelIdx.value = 0;
       mode.value = 'campaign';
       resetLevel();
@@ -957,7 +926,8 @@ createApp({
       hoverRow.value = null;
       hoverCol.value = null;
       if (coveredCount.value === level.value.rows * level.value.cols) {
-        completedLevels.value = new Set([...completedLevels.value, currentLevelIdx.value]);
+        if (!completedLevels.value.includes(currentLevelIdx.value))
+          completedLevels.value = [...completedLevels.value, currentLevelIdx.value];
         setTimeout(() => { won.value = true; }, 200);
       }
     }

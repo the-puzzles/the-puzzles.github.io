@@ -54,27 +54,9 @@ h1 {
   margin-bottom: 6px;
 }
 
-/* ── Difficulty bar ───────────────────────────────────────────────── */
-.diff-bar {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  margin-bottom: 12px;
-  font-size: 0.72rem;
-  color: #6e7681;
-}
-.diff-btn {
-  background: #21262d; border: 1px solid #30363d;
-  color: #6e7681; padding: 4px 12px; border-radius: 6px; cursor: pointer;
-  font-size: 0.72rem; font-family: inherit; text-transform: capitalize;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
-}
-.diff-btn:hover { background: #30363d; color: #c9d1d9; }
-.diff-btn.active { background: #0d3d2a; border-color: #34d399; color: #34d399; }
 .btn-reset-prog {
   background: none; border: none; color: #484f58; font-size: 0.65rem;
   cursor: pointer; padding: 0 2px; font-family: inherit; text-decoration: underline;
-  margin-inline-start: auto;
 }
 .btn-reset-prog:hover { color: #8b949e; }
 
@@ -357,20 +339,18 @@ h1 {
   <!-- Top bar: back link + language toggle -->
   <div class="top-bar">
     <a href="index.html" class="back-link">{{ isRTL ? 'כל המשחקים →' : '← All Games' }}</a>
+    <div style="display:flex;gap:8px;align-items:center">
+    <button class="btn-reset-prog" @click="resetAllProgress">{{ isRTL ? 'איפוס' : 'reset' }}</button>
     <div class="lang-toggle">
       <button class="lang-btn" :class="{ active: lang === 'en' }" @click="setLang('en')">EN</button>
       <button class="lang-btn" :class="{ active: lang === 'he' }" @click="setLang('he')">עב</button>
+    </div>
     </div>
   </div>
 
   <h1>OUTLINES</h1>
   <p class="tagline">{{ isRTL ? 'נחשו את שם המדינה לפי צורתה — השתמשו ברמזים אם נתקעתם' : 'Name the country from its shape — use hints if you\'re stuck' }}</p>
 
-  <div class="diff-bar">
-    <span>{{ isRTL ? 'רמת קושי:' : 'Difficulty:' }}</span>
-    <button v-for="d in ['easy','medium','hard']" :key="d" class="diff-btn" :class="{ active: difficulty === d }" @click="setDifficulty(d)">{{ isRTL ? { easy:'קל', medium:'בינוני', hard:'קשה' }[d] : d }}</button>
-    <button class="btn-reset-prog" @click="resetAllProgress">{{ isRTL ? 'איפוס' : 'reset' }}</button>
-  </div>
 
   <!-- ── Results screen ──────────────────────────────────────────── -->
   <div v-if="gameOver" class="results">
@@ -577,21 +557,6 @@ function shuffle(arr) {
   return a;
 }
 
-// Difficulty pools
-const EASY_IDS = new Set([
-  '840','76','250','276','156','392','36','356','380','643',
-  '818','484','724','826','124',
-]);
-const MEDIUM_IDS = new Set([
-  '840','76','250','276','156','392','36','356','380','643',
-  '818','484','724','826','124','32','170','300','364','616',
-  '566','410','792','704','752','804',
-]);
-const DIFFICULTY_POOLS = {
-  easy:   COUNTRIES.filter(c => EASY_IDS.has(c.id)),
-  medium: COUNTRIES.filter(c => MEDIUM_IDS.has(c.id)),
-  hard:   COUNTRIES,
-};
 
 // Works for any script: finds positions of Unicode letters
 function getHintPositions(name) {
@@ -609,7 +574,6 @@ function getHintPositions(name) {
 createApp({
   setup() {
     const lang             = ref('en');
-    const difficulty       = ref('medium');
     const loading          = ref(true);
     const loadError        = ref('');
     const worldData        = ref(null);
@@ -645,7 +609,6 @@ createApp({
       try {
         localStorage.setItem(SAVE_KEY, JSON.stringify({
           lang: lang.value,
-          difficulty: difficulty.value,
           queueIds: queue.value.map(c => c.id),
           currentIdx: currentIdx.value,
           totalScore: totalScore.value,
@@ -664,7 +627,6 @@ createApp({
         const restored = s.queueIds.map(id => COUNTRIES.find(c => c.id === id)).filter(Boolean);
         if (restored.length < ROUND_SIZE) return false;
         lang.value          = s.lang ?? 'en';
-        difficulty.value    = s.difficulty ?? 'medium';
         queue.value         = restored;
         currentIdx.value    = s.currentIdx ?? 0;
         totalScore.value    = s.totalScore ?? 0;
@@ -689,11 +651,6 @@ createApp({
       resetTurn();
     }
 
-    function setDifficulty(d) {
-      if (difficulty.value === d) return;
-      difficulty.value = d;
-      startRound();
-    }
 
     // ── Data loading ────────────────────────────────────────────────
     const DATA_URLS = [
@@ -726,7 +683,7 @@ createApp({
 
     // ── Round management ─────────────────────────────────────────────
     function startRound() {
-      const pool         = DIFFICULTY_POOLS[difficulty.value] ?? COUNTRIES;
+      const pool         = COUNTRIES;
       queue.value        = shuffle(pool).slice(0, ROUND_SIZE);
       currentIdx.value   = 0;
       totalScore.value   = 0;
@@ -891,7 +848,7 @@ createApp({
 
     // ── Auto-save on state changes ────────────────────────────────────
     watch(
-      [queue, currentIdx, totalScore, roundResults, hintsUsed, solved, revealedAnswer, lang, difficulty],
+      [queue, currentIdx, totalScore, roundResults, hintsUsed, solved, revealedAnswer, lang],
       () => { clearTimeout(saveTimer); saveTimer = setTimeout(saveState, 400); },
       { deep: true }
     );
@@ -907,7 +864,7 @@ createApp({
 
     return {
       lang, isRTL, setLang,
-      difficulty, setDifficulty, resetAllProgress,
+      resetAllProgress,
       loading, loadError, loadData, worldData, queue, currentIdx, hintsUsed,
       guess, feedbackMsg, feedbackType, solved, revealedAnswer,
       roundResults, totalScore, maxScore, gameOver,
