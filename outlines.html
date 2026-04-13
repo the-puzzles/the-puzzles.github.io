@@ -284,7 +284,7 @@ h1 {
 .results-list {
   background: #161b22; border: 1px solid #30363d;
   border-radius: 10px; overflow: hidden;
-  margin-bottom: 24px; text-align: left;
+  margin-bottom: 24px; text-align: start;
 }
 .result-row {
   display: flex; align-items: center; gap: 10px;
@@ -332,7 +332,7 @@ h1 {
 
   <!-- Top bar: back link + language toggle -->
   <div class="top-bar">
-    <a href="index.html" class="back-link">{{ isRTL ? 'כל המשחקים ←' : '← All Games' }}</a>
+    <a href="index.html" class="back-link">{{ isRTL ? 'כל המשחקים →' : '← All Games' }}</a>
     <div class="lang-toggle">
       <button class="lang-btn" :class="{ active: lang === 'en' }" @click="setLang('en')">EN</button>
       <button class="lang-btn" :class="{ active: lang === 'he' }" @click="setLang('he')">עב</button>
@@ -340,7 +340,7 @@ h1 {
   </div>
 
   <h1>OUTLINES</h1>
-  <p class="tagline">{{ isRTL ? 'נחש את שם המדינה לפי צורתה — השתמש ברמזים אם תקוע' : 'Name the country from its shape — use hints if you\'re stuck' }}</p>
+  <p class="tagline">{{ isRTL ? 'נחשו את שם המדינה לפי צורתה — השתמשו ברמזים אם נתקעתם' : 'Name the country from its shape — use hints if you\'re stuck' }}</p>
 
   <!-- ── Results screen ──────────────────────────────────────────── -->
   <div v-if="gameOver" class="results">
@@ -359,7 +359,7 @@ h1 {
       </div>
     </div>
 
-    <button class="btn-play-again" @click="startRound">{{ isRTL ? 'שחק שוב ↺' : 'Play Again ↺' }}</button>
+    <button class="btn-play-again" @click="startRound">{{ isRTL ? 'שחקו שוב ↺' : 'Play Again ↺' }}</button>
   </div>
 
   <!-- ── Load error ─────────────────────────────────────────────── -->
@@ -367,7 +367,7 @@ h1 {
     <div style="font-size:2rem;margin-bottom:12px">🌐</div>
     <p style="color:#f85149;font-size:0.88rem;margin-bottom:16px">{{ loadError }}</p>
     <button @click="loadData" style="background:#0d3d2a;border:2px solid #34d399;color:#34d399;padding:10px 24px;border-radius:8px;cursor:pointer;font-size:0.88rem;font-family:inherit;font-weight:700">
-      {{ isRTL ? 'נסה שוב ↺' : 'Retry ↺' }}
+      {{ isRTL ? 'נסו שוב ↺' : 'Retry ↺' }}
     </button>
   </div>
 
@@ -443,7 +443,7 @@ h1 {
         :class="{ shake: shakeInput }"
         :dir="isRTL ? 'rtl' : 'ltr'"
         type="text"
-        :placeholder="isRTL ? '…הקלד שם מדינה' : 'Type country name…'"
+        :placeholder="isRTL ? '…הקלידו שם מדינה' : 'Type country name…'"
         autocomplete="off"
         autocorrect="off"
         autocapitalize="off"
@@ -452,7 +452,7 @@ h1 {
         @input="clearFeedback"
       />
       <button class="btn-submit" @click="submitGuess" :disabled="!guess.trim()">
-        {{ isRTL ? 'קדימה ←' : 'Go →' }}
+        {{ isRTL ? 'שלח' : 'Go →' }}
       </button>
     </div>
 
@@ -474,12 +474,12 @@ h1 {
       </button>
 
       <button v-if="!solved && !revealedAnswer" class="btn-skip" @click="skipCountry">
-        {{ isRTL ? 'דלג ↷' : 'Skip ↷' }}
+        {{ isRTL ? 'דלגו ↷' : 'Skip ↷' }}
       </button>
 
       <button v-if="solved || revealedAnswer" class="btn-next" @click="nextCountry">
         {{ isRTL
-          ? (currentIdx + 1 < ROUND_SIZE ? 'הבא ←' : 'סיום')
+          ? (currentIdx + 1 < ROUND_SIZE ? '← הבא' : 'סיום')
           : (currentIdx + 1 < ROUND_SIZE ? 'Next →' : 'Finish') }}
       </button>
     </div>
@@ -487,7 +487,7 @@ h1 {
 
 </div>
 <script>
-const { createApp, ref, computed, watch, onMounted, onUnmounted, nextTick } = Vue;
+const { createApp, ref, computed, watch, onMounted, onUnmounted, nextTick, watchEffect } = Vue;
 
 const ROUND_SIZE = 10;
 const MAX_HINTS  = 3;
@@ -582,6 +582,12 @@ createApp({
     const inputEl          = ref(null);
 
     const isRTL = computed(() => lang.value === 'he');
+
+    // Sync full-page dir and lang so scrollbars, browser spellcheck, etc. are correct
+    watchEffect(() => {
+      document.documentElement.lang = lang.value;
+      document.documentElement.dir  = isRTL.value ? 'rtl' : 'ltr';
+    });
 
     function setLang(l) {
       if (lang.value === l) return;
@@ -739,14 +745,14 @@ createApp({
         roundResults.value.push({ name: currentName.value, solved: true, pts });
         solved.value = true;
         feedbackMsg.value  = isHe
-          ? `!נכון +${pts}`
+          ? `נכון! +${pts}`
           : `✓ Correct! +${pts} pt${pts !== 1 ? 's' : ''}`;
         feedbackType.value = 'correct';
         showCorrectFlash.value = true;
         setTimeout(() => { showCorrectFlash.value = false; }, 600);
         guess.value = '';
       } else {
-        feedbackMsg.value  = isHe ? '!לא נכון — נסה שוב' : 'Not quite — try again!';
+        feedbackMsg.value  = isHe ? 'לא נכון — נסו שוב!' : 'Not quite — try again!';
         feedbackType.value = 'wrong';
         shakeInput.value   = true;
         setTimeout(() => { shakeInput.value = false; }, 400);
@@ -777,10 +783,10 @@ createApp({
     const resultMessage = computed(() => {
       const pct  = totalScore.value / maxScore.value;
       const isHe = lang.value === 'he';
-      if (pct >= 0.9) return isHe ? 'מדהים! אתה ממש מכיר את המפות 🗺️' : 'Outstanding! You really know your maps. 🗺️';
-      if (pct >= 0.7) return isHe ? 'כל הכבוד! עוד קצת ותשלים את כולן.' : 'Great work! A few more to master.';
-      if (pct >= 0.5) return isHe ? 'לא רע! המשך לחקור את העולם.' : 'Decent! Keep exploring the world.';
-      return isHe ? 'תמשיך לשחק — הצורות יתחילו להידבק!' : 'Keep playing — the shapes will start to stick!';
+      if (pct >= 0.9) return isHe ? 'מדהים! ידע גיאוגרפי מרשים 🗺️' : 'Outstanding! You really know your maps. 🗺️';
+      if (pct >= 0.7) return isHe ? 'כל הכבוד! עוד קצת ומשלימים את כולן.' : 'Great work! A few more to master.';
+      if (pct >= 0.5) return isHe ? 'לא רע! כדאי לחקור עוד.' : 'Decent! Keep exploring the world.';
+      return isHe ? 'כדאי להמשיך לשחק — הצורות יתחילו להידבק!' : 'Keep playing — the shapes will start to stick!';
     });
 
     // ── Keyboard ─────────────────────────────────────────────────────
