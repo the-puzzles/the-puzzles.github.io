@@ -374,6 +374,15 @@ h1 {
     <button class="btn-play-again" @click="startRound">Play Again ↺</button>
   </div>
 
+  <!-- ── Load error ─────────────────────────────────────────────── -->
+  <div v-else-if="loadError" style="text-align:center;margin-top:48px;max-width:360px">
+    <div style="font-size:2rem;margin-bottom:12px">🌐</div>
+    <p style="color:#f85149;font-size:0.88rem;margin-bottom:16px">{{ loadError }}</p>
+    <button @click="loadData" style="background:#0d3d2a;border:2px solid #34d399;color:#34d399;padding:10px 24px;border-radius:8px;cursor:pointer;font-size:0.88rem;font-family:inherit;font-weight:700">
+      Retry ↺
+    </button>
+  </div>
+
   <!-- ── Loading ─────────────────────────────────────────────────── -->
   <div v-else-if="loading" style="color:#6e7681;font-size:0.88rem;margin-top:40px">
     Loading map data…
@@ -561,6 +570,7 @@ function getHintPositions(name) {
 createApp({
   setup() {
     const loading          = ref(true);
+    const loadError        = ref('');
     const worldData        = ref(null);
     const queue            = ref([]);     // countries for this round
     const currentIdx       = ref(0);
@@ -578,18 +588,33 @@ createApp({
     const inputEl          = ref(null);
 
     // ── Data loading ────────────────────────────────────────────────
-    onMounted(async () => {
-      try {
-        const res = await fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json');
-        worldData.value = await res.json();
-      } catch (e) {
-        feedbackMsg.value = 'Failed to load map data. Check your connection.';
-        feedbackType.value = 'wrong';
-      } finally {
-        loading.value = false;
-        if (worldData.value) startRound();
+    const DATA_URLS = [
+      'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json',
+      'https://unpkg.com/world-atlas@2/countries-110m.json',
+    ];
+
+    async function loadData() {
+      loading.value = true;
+      loadError.value = '';
+      for (const url of DATA_URLS) {
+        try {
+          const res = await fetch(url);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          worldData.value = await res.json();
+          break;
+        } catch (e) {
+          console.warn('fetch failed:', url, e);
+        }
       }
-    });
+      loading.value = false;
+      if (worldData.value) {
+        startRound();
+      } else {
+        loadError.value = 'Could not load map data — check your connection and try again.';
+      }
+    }
+
+    onMounted(loadData);
 
     // ── Round management ─────────────────────────────────────────────
     function startRound() {
@@ -646,7 +671,8 @@ createApp({
     const renderError = ref('');
 
     const svgPathData = computed(() => {
-      if (!worldData.value || !current.value) return null;
+      if (!worldData.value) { renderError.value = 'Map data not loaded'; return null; }
+      if (!current.value)   { renderError.value = 'No country queued';   return null; }
       try {
         const features = topojson.feature(
           worldData.value,
@@ -745,7 +771,7 @@ createApp({
     onUnmounted(() => window.removeEventListener('keydown', handleKey));
 
     return {
-      loading, worldData, queue, currentIdx, hintsUsed,
+      loading, loadError, loadData, worldData, queue, currentIdx, hintsUsed,
       guess, feedbackMsg, feedbackType, solved, revealedAnswer,
       roundResults, totalScore, maxScore, gameOver,
       showCorrectFlash, shakeInput, inputEl,
