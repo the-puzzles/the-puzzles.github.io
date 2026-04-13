@@ -1,4 +1,4 @@
-const CACHE = 'puzzles-v5';
+const CACHE = 'puzzles-v6';
 const ASSETS = [
   '/',
   '/index.html',
@@ -7,6 +7,7 @@ const ASSETS = [
   '/tessera.html',
   '/colorku.html',
   '/outlines.html',
+  '/wordsearch.html',
   '/manifest.json',
   '/icon.svg',
   'https://unpkg.com/vue@3/dist/vue.global.js',

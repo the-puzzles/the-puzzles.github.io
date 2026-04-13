@@ -75,7 +75,8 @@ header {
 .card.chromino:hover  { border-color: #58a6ff; box-shadow: 0 12px 40px rgba(88,166,255,0.15); }
 .card.tessera:hover   { border-color: #f7971e; box-shadow: 0 12px 40px rgba(247,151,30,0.15); }
 .card.colorku:hover   { border-color: #c084fc; box-shadow: 0 12px 40px rgba(192,132,252,0.15); }
-.card.outlines:hover  { border-color: #34d399; box-shadow: 0 12px 40px rgba(52,211,153,0.15); }
+.card.outlines:hover    { border-color: #34d399; box-shadow: 0 12px 40px rgba(52,211,153,0.15); }
+.card.wordsearch:hover  { border-color: #fb923c; box-shadow: 0 12px 40px rgba(251,146,60,0.15); }
 
 /* ── Card header ─────────────────────────────────────────────────────── */
 .card-header { display: flex; align-items: center; gap: 14px; }
@@ -90,7 +91,8 @@ header {
 .chromino .card-icon { background: #1c2a3e; }
 .tessera  .card-icon { background: #1f1a0e; }
 .colorku  .card-icon { background: #21103a; }
-.outlines .card-icon { background: #0d2a1e; }
+.outlines .card-icon  { background: #0d2a1e; }
+.wordsearch .card-icon { background: #1f1010; }
 
 .card-title {
   font-size: 1.5rem;
@@ -117,6 +119,12 @@ header {
 }
 .outlines .card-title {
   background: linear-gradient(135deg, #34d399, #06b6d4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.wordsearch .card-title {
+  background: linear-gradient(135deg, #fb923c, #f59e0b);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -176,7 +184,8 @@ header {
 .chromino .rule-dot { background: #58a6ff; }
 .tessera  .rule-dot { background: #f7971e; }
 .colorku  .rule-dot { background: #c084fc; }
-.outlines .rule-dot { background: #34d399; }
+.outlines    .rule-dot { background: #34d399; }
+.wordsearch  .rule-dot { background: #fb923c; }
 
 /* ── Play button ─────────────────────────────────────────────────────── */
 .play-btn {
@@ -201,7 +210,8 @@ header {
 .chromino .play-btn { background: #1f6feb; color: #fff; }
 .tessera  .play-btn { background: #9a5c00; color: #ffd200; border: 1px solid #f7971e; }
 .colorku  .play-btn { background: #5b21b6; color: #e9d5ff; border: 1px solid #c084fc; }
-.outlines .play-btn { background: #0d3d2a; color: #34d399; border: 1px solid #34d399; }
+.outlines    .play-btn { background: #0d3d2a; color: #34d399; border: 1px solid #34d399; }
+.wordsearch  .play-btn { background: #7c2d00; color: #fb923c; border: 1px solid #fb923c; }
 
 .play-arrow { font-size: 1rem; transition: transform 0.15s; }
 .play-btn:hover .play-arrow { transform: translateX(3px); }
@@ -392,6 +402,53 @@ footer {
     </div>
 
     <div class="play-btn">Play Outlines <span class="play-arrow">→</span></div>
+  </a>
+
+  <!-- ── Word Search ──────────────────────────────────────────── -->
+  <a class="card wordsearch" href="wordsearch.html">
+    <div class="card-header">
+      <div class="card-icon">🔍</div>
+      <div class="card-title">WORDSEARCH</div>
+    </div>
+
+    <!-- Mini preview: tiny letter grid with some highlighted cells -->
+    <div class="preview" style="grid-template-columns: repeat(6, 36px);">
+      <div class="preview-cell" style="font-size:0.7rem;color:#6e7681">W</div>
+      <div class="preview-cell" style="font-size:0.7rem;color:#6e7681">X</div>
+      <div class="preview-cell" style="font-size:0.7rem;background:rgba(251,146,60,0.22);color:#fb923c;font-weight:700">C</div>
+      <div class="preview-cell" style="font-size:0.7rem;color:#6e7681">P</div>
+      <div class="preview-cell" style="font-size:0.7rem;color:#6e7681">A</div>
+      <div class="preview-cell" style="font-size:0.7rem;color:#6e7681">T</div>
+      <div class="preview-cell" style="font-size:0.7rem;color:#6e7681">Z</div>
+      <div class="preview-cell" style="font-size:0.7rem;color:#6e7681">K</div>
+      <div class="preview-cell" style="font-size:0.7rem;background:rgba(251,146,60,0.22);color:#fb923c;font-weight:700">A</div>
+      <div class="preview-cell" style="font-size:0.7rem;color:#6e7681">R</div>
+      <div class="preview-cell" style="font-size:0.7rem;color:#6e7681">Q</div>
+      <div class="preview-cell" style="font-size:0.7rem;color:#6e7681">M</div>
+      <div class="preview-cell" style="font-size:0.7rem;color:#6e7681">L</div>
+      <div class="preview-cell" style="font-size:0.7rem;color:#6e7681">O</div>
+      <div class="preview-cell" style="font-size:0.7rem;background:rgba(251,146,60,0.22);color:#fb923c;font-weight:700">T</div>
+      <div class="preview-cell" style="font-size:0.7rem;color:#6e7681">F</div>
+      <div class="preview-cell" style="font-size:0.7rem;color:#6e7681">B</div>
+      <div class="preview-cell" style="font-size:0.7rem;color:#6e7681">V</div>
+      <div class="preview-cell" style="font-size:0.7rem;color:#6e7681">S</div>
+      <div class="preview-cell" style="font-size:0.7rem;color:#6e7681">H</div>
+      <div class="preview-cell" style="font-size:0.7rem;background:rgba(251,146,60,0.22);color:#fb923c;font-weight:700">?</div>
+      <div class="preview-cell" style="font-size:0.7rem;color:#6e7681">G</div>
+      <div class="preview-cell" style="font-size:0.7rem;color:#6e7681">N</div>
+      <div class="preview-cell" style="font-size:0.7rem;color:#6e7681">E</div>
+    </div>
+
+    <p class="card-tagline">A letter grid hides themed words in every direction — plus one mystery word not shown in the list. Find them all to win.</p>
+
+    <div class="card-rules">
+      <div class="rule"><div class="rule-dot"></div><span>8 hidden words across 4 themed categories</span></div>
+      <div class="rule"><div class="rule-dot"></div><span>Words run in all 8 directions</span></div>
+      <div class="rule"><div class="rule-dot"></div><span>One mystery word is hidden — not shown in the list</span></div>
+      <div class="rule"><div class="rule-dot"></div><span>Available in English and Hebrew</span></div>
+    </div>
+
+    <div class="play-btn">Play Word Search <span class="play-arrow">→</span></div>
   </a>
 
 </div>

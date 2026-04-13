@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Word Search — Mystery Word Puzzle</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0d1117">
+<link rel="apple-touch-icon" href="icon.svg">
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: #0d1117;
+  color: #c9d1d9;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 16px 48px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  background: linear-gradient(135deg, #fb923c, #f59e0b);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 4px;
+}
+
+.tagline {
+  color: #6e7681;
+  font-size: 0.82rem;
+  margin-bottom: 18px;
+  text-align: center;
+}
+
+/* ── Top bar ─────────────────────────────────────────────────────── */
+.top-bar {
+  display: flex;
+  width: 100%;
+  max-width: 640px;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.back-link {
+  font-size: 0.78rem;
+  color: #6e7681;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.back-link:hover { color: #c9d1d9; }
+
+.btn-reset-prog {
+  background: none; border: none; color: #484f58; font-size: 0.65rem;
+  cursor: pointer; padding: 0 2px; font-family: inherit; text-decoration: underline;
+}
+.btn-reset-prog:hover { color: #8b949e; }
+
+.lang-toggle { display: flex; gap: 4px; }
+.lang-btn {
+  background: #21262d;
+  border: 1px solid #30363d;
+  color: #6e7681;
+  padding: 5px 11px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-family: inherit;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.lang-btn.active {
+  background: #2a1a00;
+  border-color: #fb923c;
+  color: #fb923c;
+}
+
+/* ── Category selector ───────────────────────────────────────────── */
+.cat-bar {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+.cat-btn {
+  background: #21262d;
+  border: 1px solid #30363d;
+  color: #6e7681;
+  padding: 5px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-family: inherit;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.cat-btn.active {
+  background: #2a1a00;
+  border-color: #fb923c;
+  color: #fb923c;
+}
+
+/* ── Game layout ─────────────────────────────────────────────────── */
+.game-wrap {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  width: 100%;
+  max-width: 640px;
+}
+
+/* ── Grid ─────────────────────────────────────────────────────────── */
+.grid-wrap {
+  flex-shrink: 0;
+  touch-action: none;
+  cursor: default;
+}
+
+.grid-row { display: flex; }
+
+.grid-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1rem;
+  border: 1px solid #21262d;
+  background: #161b22;
+  position: relative;
+  transition: background 0.1s;
+  cursor: default;
+}
+
+.grid-cell.found {
+  background: rgba(251, 146, 60, 0.22);
+  color: #fb923c;
+}
+.grid-cell.selecting {
+  background: rgba(251, 146, 60, 0.38);
+  color: #ffd200;
+}
+.grid-cell.mystery-found {
+  background: rgba(168, 85, 247, 0.28);
+  color: #c084fc;
+}
+
+/* ── Word list ───────────────────────────────────────────────────── */
+.word-list {
+  flex: 1;
+  min-width: 0;
+}
+
+.word-list-title {
+  font-size: 0.72rem;
+  color: #484f58;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 8px;
+}
+
+.word-item {
+  font-size: 0.88rem;
+  color: #8b949e;
+  margin-bottom: 5px;
+  transition: color 0.2s;
+  line-height: 1.4;
+}
+.word-item.done {
+  color: #fb923c;
+  text-decoration: line-through;
+}
+.word-item.mystery {
+  color: #6e7681;
+  font-style: italic;
+  letter-spacing: 0.18em;
+}
+.word-item.mystery-done {
+  color: #c084fc;
+  text-decoration: line-through;
+}
+
+/* ── Phase messages ──────────────────────────────────────────────── */
+.phase-msg {
+  margin-top: 14px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+.phase-msg.hunt {
+  background: #1a0d2a;
+  border: 1px solid #7c3aed;
+  color: #c084fc;
+}
+.phase-msg.won {
+  background: #0d2a0d;
+  border: 1px solid #22c55e;
+  color: #4ade80;
+}
+
+/* ── Win overlay ─────────────────────────────────────────────────── */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+.overlay-box {
+  background: #161b22;
+  border: 2px solid #fb923c;
+  border-radius: 16px;
+  padding: 32px 36px;
+  text-align: center;
+  max-width: 340px;
+  width: 90%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+.overlay-title {
+  font-size: 2rem;
+  font-weight: 900;
+  background: linear-gradient(135deg, #fb923c, #f59e0b);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.overlay-sub { color: #8b949e; font-size: 0.88rem; }
+.overlay-btn {
+  background: #7c2d00;
+  color: #fb923c;
+  border: 1px solid #fb923c;
+  padding: 10px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 700;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+.overlay-btn:hover { background: #9a3900; }
+
+/* ── Mobile ──────────────────────────────────────────────────────── */
+@media (max-width: 500px) {
+  .game-wrap { flex-direction: column; align-items: center; }
+  .word-list { width: 100%; }
+  .word-list-inner { display: flex; flex-wrap: wrap; gap: 6px 16px; }
+  .word-item { margin-bottom: 0; }
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="top-bar">
+    <a class="back-link" href="index.html">{{ isRTL ? 'כל המשחקים →' : '← All Games' }}</a>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="btn-reset-prog" @click="resetProgress">{{ isRTL ? 'איפוס' : 'reset' }}</button>
+      <div class="lang-toggle">
+        <button class="lang-btn" :class="{active: lang==='en'}" @click="setLang('en')">EN</button>
+        <button class="lang-btn" :class="{active: lang==='he'}" @click="setLang('he')">עב</button>
+      </div>
+    </div>
+  </div>
+
+  <h1>{{ isRTL ? 'מצאו מילים' : 'WORDSEARCH' }}</h1>
+  <p class="tagline">{{ isRTL ? 'מצאו את המילים הנסתרות — ומילה אחת מסתתרת בצורה חשאית' : 'Find hidden words — one word hides in secret' }}</p>
+
+  <!-- Category selector -->
+  <div class="cat-bar">
+    <button v-for="cat in categories" :key="cat.id" class="cat-btn" :class="{active: category===cat.id}" @click="selectCategory(cat.id)">
+      {{ cat.label[lang] }}
+    </button>
+  </div>
+
+  <!-- Game -->
+  <div class="game-wrap">
+    <!-- Grid -->
+    <div class="grid-wrap"
+         @mousedown.prevent="startSelect"
+         @mousemove.prevent="moveSelect"
+         @mouseup.prevent="endSelect"
+         @mouseleave="endSelect"
+         @touchstart.prevent="touchStart"
+         @touchmove.prevent="touchMove"
+         @touchend.prevent="touchEnd">
+      <div v-for="(row, r) in grid" :key="r" class="grid-row">
+        <div
+          v-for="(cell, c) in row"
+          :key="c"
+          class="grid-cell"
+          :data-row="r"
+          :data-col="c"
+          :class="{
+            found: isCellFound(r, c) && !isCellMysteryFound(r, c),
+            'mystery-found': isCellMysteryFound(r, c),
+            selecting: isCellSelecting(r, c)
+          }"
+          :style="{ width: cellSize+'px', height: cellSize+'px', fontSize: Math.floor(cellSize*0.5)+'px' }">
+          {{ cell }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Word list -->
+    <div class="word-list">
+      <div class="word-list-title">{{ isRTL ? 'מילים לחיפוש' : 'WORDS TO FIND' }}</div>
+      <div class="word-list-inner">
+        <div v-for="(pw, i) in listedWords" :key="i"
+             class="word-item"
+             :class="{ done: foundIndices.includes(pw.origIdx) }">
+          {{ pw.word }}
+        </div>
+        <!-- Mystery word slot -->
+        <div v-if="phase === 'normal'" class="word-item mystery">
+          {{ mysteryBlanks }}
+        </div>
+        <div v-else-if="phase === 'hunt'" class="word-item mystery">
+          {{ mysteryBlanks }}
+        </div>
+        <div v-else class="word-item mystery-done">
+          {{ placedWords[mysteryIdx] ? placedWords[mysteryIdx].word : '' }}
+        </div>
+      </div>
+
+      <div v-if="phase === 'hunt'" class="phase-msg hunt">
+        {{ isRTL ? 'מצאתם את כל המילים! עכשיו חפשו את המילה הנסתרת...' : 'All words found! Now hunt the mystery word…' }}
+      </div>
+      <div v-if="phase === 'won'" class="phase-msg won">
+        {{ isRTL ? 'כל הכבוד! מצאתם את כולן!' : 'You found them all! Well done!' }}
+      </div>
+    </div>
+  </div>
+
+  <!-- Win overlay -->
+  <div v-if="showOverlay" class="overlay" @click.self="showOverlay=false">
+    <div class="overlay-box">
+      <div class="overlay-title">{{ isRTL ? '🎉 כל הכבוד!' : '🎉 Solved!' }}</div>
+      <div class="overlay-sub">{{ isRTL ? 'מצאתם את כל המילות הנסתרות כולל המילה המסתורית!' : 'You found all hidden words including the mystery word!' }}</div>
+      <button class="overlay-btn" @click="newPuzzle">{{ isRTL ? 'פאזל חדש →' : 'New Puzzle →' }}</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const { createApp, ref, computed, watch, watchEffect, onMounted, onUnmounted } = Vue;
+
+// ── Word bank ─────────────────────────────────────────────────────────────
+const WORD_BANK = {
+  animals: {
+    en: ['CAT','DOG','LION','WOLF','BEAR','OWL','DEER','EAGLE','FOX','FROG','DUCK','FISH'],
+    he: ['חתול','כלב','אריה','זאב','דוב','ינשוף','איל','נשר','שועל','צפרדע','ברווז','דג']
+  },
+  colors: {
+    en: ['RED','BLUE','GREEN','GOLD','PINK','GREY','TEAL','LIME','RUBY','CYAN','ROSE','NAVY'],
+    he: ['אדום','כחול','ירוק','זהב','ורוד','אפור','טורקיז','ליים','רובי','ציאן','ורד','נייבי']
+  },
+  space: {
+    en: ['MOON','STAR','MARS','VENUS','COMET','ORBIT','NEBULA','SATURN','PULSAR','QUASAR','GALAXY','METEOR'],
+    he: ['ירח','כוכב','מאדים','נוגה','שביט','מסלול','ערפילית','שבתאי','פולסר','קוואזר','גלקסיה','מטאור']
+  },
+  food: {
+    en: ['RICE','CORN','SOUP','CAKE','FISH','PLUM','OLIVE','BREAD','MANGO','PIZZA','LEMON','GRAPE'],
+    he: ['אורז','תירס','מרק','עוגה','דג','שזיף','זית','לחם','מנגו','פיצה','לימון','ענב']
+  }
+};
+
+const CATEGORIES = [
+  { id: 'animals', label: { en: '🐾 Animals', he: '🐾 חיות' } },
+  { id: 'colors',  label: { en: '🎨 Colors',  he: '🎨 צבעים' } },
+  { id: 'space',   label: { en: '🚀 Space',   he: '🚀 חלל' } },
+  { id: 'food',    label: { en: '🍕 Food',    he: '🍕 אוכל' } }
+];
+
+const ROWS = 12, COLS = 12;
+const DIRS = [[0,1],[0,-1],[1,0],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1]];
+const SAVE_KEY = 'wordsearch-v1';
+
+// ── Helpers ───────────────────────────────────────────────────────────────
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function emptyGrid() {
+  return Array.from({ length: ROWS }, () => Array(COLS).fill(''));
+}
+
+const ALPHABET = {
+  en: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+  he: 'אבגדהוזחטיכלמנסעפצקרשת'
+};
+
+function fillNoise(grid, lang) {
+  const alpha = ALPHABET[lang] || ALPHABET.en;
+  for (let r = 0; r < ROWS; r++)
+    for (let c = 0; c < COLS; c++)
+      if (!grid[r][c])
+        grid[r][c] = alpha[Math.floor(Math.random() * alpha.length)];
+  return grid;
+}
+
+function tryPlaceWord(grid, word, retries = 30) {
+  const letters = [...word];
+  for (let attempt = 0; attempt < retries; attempt++) {
+    const [dr, dc] = DIRS[Math.floor(Math.random() * DIRS.length)];
+    const maxR = dr === 0 ? ROWS - 1 : dr > 0 ? ROWS - letters.length : letters.length - 1;
+    const minR = dr < 0 ? letters.length - 1 : 0;
+    const maxC = dc === 0 ? COLS - 1 : dc > 0 ? COLS - letters.length : letters.length - 1;
+    const minC = dc < 0 ? letters.length - 1 : 0;
+    if (minR > maxR || minC > maxC) continue;
+    const r0 = minR + Math.floor(Math.random() * (maxR - minR + 1));
+    const c0 = minC + Math.floor(Math.random() * (maxC - minC + 1));
+    // Check for conflicts
+    let ok = true;
+    for (let i = 0; i < letters.length; i++) {
+      const nr = r0 + dr * i, nc = c0 + dc * i;
+      if (grid[nr][nc] !== '' && grid[nr][nc] !== letters[i]) { ok = false; break; }
+    }
+    if (!ok) continue;
+    const cells = [];
+    for (let i = 0; i < letters.length; i++) {
+      const nr = r0 + dr * i, nc = c0 + dc * i;
+      grid[nr][nc] = letters[i];
+      cells.push([nr, nc]);
+    }
+    return { cells, dir: [dr, dc] };
+  }
+  return null;
+}
+
+function generatePuzzle(lang, category) {
+  const wordList = shuffle(WORD_BANK[category][lang]).slice(0, 8);
+  const grid = emptyGrid();
+  const placed = [];
+  for (const word of wordList) {
+    const result = tryPlaceWord(grid, word, 60);
+    if (result) placed.push({ word, cells: result.cells });
+  }
+  fillNoise(grid, lang);
+  // Pick mystery word from placed
+  const mysteryIdx = placed.length > 0 ? Math.floor(Math.random() * placed.length) : -1;
+  return { grid, placedWords: placed, mysteryIdx };
+}
+
+// ── Vue App ───────────────────────────────────────────────────────────────
+createApp({
+  setup() {
+    const lang = ref('en');
+    const category = ref('animals');
+    const grid = ref(emptyGrid());
+    const placedWords = ref([]);
+    const mysteryIdx = ref(-1);
+    const foundIndices = ref([]);
+    const mysteryFound = ref(false);
+    const phase = ref('normal'); // 'normal' | 'hunt' | 'won'
+    const showOverlay = ref(false);
+
+    // Selection state
+    const selStart = ref(null);  // [r, c]
+    const selCurrent = ref(null); // [r, c]
+    const selCells = ref([]);    // [[r,c], ...]
+
+    const windowWidth = ref(window.innerWidth);
+
+    const isRTL = computed(() => lang.value === 'he');
+
+    const cellSize = computed(() => {
+      if (windowWidth.value < 500) return Math.max(22, Math.floor((windowWidth.value - 64) / COLS));
+      return 36;
+    });
+
+    const categories = CATEGORIES;
+
+    const listedWords = computed(() =>
+      placedWords.value
+        .map((pw, i) => ({ ...pw, origIdx: i }))
+        .filter((_, i) => i !== mysteryIdx.value)
+    );
+
+    const mysteryBlanks = computed(() => {
+      if (mysteryIdx.value < 0 || !placedWords.value[mysteryIdx.value]) return '???';
+      const word = placedWords.value[mysteryIdx.value].word;
+      return [...word].map(() => '_').join(' ');
+    });
+
+    // ── Cell state helpers ─────────────────────────────────────────────
+    function isCellFound(r, c) {
+      for (let i = 0; i < placedWords.value.length; i++) {
+        if (i === mysteryIdx.value) continue; // handled by isCellMysteryFound
+        if (!foundIndices.value.includes(i)) continue;
+        const pw = placedWords.value[i];
+        if (pw.cells.some(([pr, pc]) => pr === r && pc === c)) return true;
+      }
+      return false;
+    }
+
+    function isCellMysteryFound(r, c) {
+      if (!mysteryFound.value || mysteryIdx.value < 0) return false;
+      const pw = placedWords.value[mysteryIdx.value];
+      return pw && pw.cells.some(([pr, pc]) => pr === r && pc === c);
+    }
+
+    function isCellSelecting(r, c) {
+      return selCells.value.some(([sr, sc]) => sr === r && sc === c);
+    }
+
+    // ── Selection computation ──────────────────────────────────────────
+    function computeSelCells(start, cur) {
+      if (!start || !cur) return [];
+      const [r0, c0] = start;
+      const [r1, c1] = cur;
+      const dr = r1 - r0, dc = c1 - c0;
+      if (dr === 0 && dc === 0) return [[r0, c0]];
+
+      let dirR, dirC;
+      const absDr = Math.abs(dr), absDc = Math.abs(dc);
+      if (absDr <= absDc * 0.4) { dirR = 0; dirC = dc > 0 ? 1 : -1; }
+      else if (absDc <= absDr * 0.4) { dirR = dr > 0 ? 1 : -1; dirC = 0; }
+      else { dirR = dr > 0 ? 1 : -1; dirC = dc > 0 ? 1 : -1; }
+
+      const len = Math.max(Math.abs(dr), Math.abs(dc));
+      const cells = [];
+      for (let i = 0; i <= len; i++) {
+        cells.push([r0 + dirR * i, c0 + dirC * i]);
+      }
+      return cells;
+    }
+
+    // ── Match checking ─────────────────────────────────────────────────
+    function cellsKey(cells) {
+      return cells.map(([r, c]) => r + ',' + c).join('|');
+    }
+
+    function checkSelection(cells) {
+      if (cells.length < 2) return;
+      const key = cellsKey(cells);
+      const revKey = cellsKey([...cells].reverse());
+      for (let i = 0; i < placedWords.value.length; i++) {
+        const pw = placedWords.value[i];
+        const pwKey = cellsKey(pw.cells);
+        if (key === pwKey || revKey === pwKey) {
+          if (i === mysteryIdx.value) {
+            if (!mysteryFound.value) {
+              mysteryFound.value = true;
+              phase.value = 'won';
+              showOverlay.value = true;
+              saveState();
+            }
+          } else {
+            if (!foundIndices.value.includes(i)) {
+              foundIndices.value = [...foundIndices.value, i];
+              // Check if all listed words done
+              const listedCount = placedWords.value.length - 1; // minus mystery
+              if (foundIndices.value.length >= listedCount && phase.value === 'normal') {
+                phase.value = 'hunt';
+              }
+              saveState();
+            }
+          }
+          break;
+        }
+      }
+    }
+
+    // ── Mouse handlers ─────────────────────────────────────────────────
+    function getCellFromEvent(e) {
+      const el = document.elementFromPoint(e.clientX, e.clientY);
+      if (!el) return null;
+      const cell = el.closest ? el.closest('[data-row]') : null;
+      if (!cell) return null;
+      return [parseInt(cell.dataset.row), parseInt(cell.dataset.col)];
+    }
+
+    function startSelect(e) {
+      const pos = getCellFromEvent(e);
+      if (!pos) return;
+      selStart.value = pos;
+      selCurrent.value = pos;
+      selCells.value = [pos];
+    }
+    function moveSelect(e) {
+      if (!selStart.value) return;
+      const pos = getCellFromEvent(e);
+      if (!pos) return;
+      selCurrent.value = pos;
+      selCells.value = computeSelCells(selStart.value, pos);
+    }
+    function endSelect() {
+      if (selStart.value) checkSelection(selCells.value);
+      selStart.value = null;
+      selCurrent.value = null;
+      selCells.value = [];
+    }
+
+    // ── Touch handlers ─────────────────────────────────────────────────
+    function getCellFromTouch(t) {
+      const el = document.elementFromPoint(t.clientX, t.clientY);
+      if (!el) return null;
+      const cell = el.closest ? el.closest('[data-row]') : null;
+      if (!cell) return null;
+      return [parseInt(cell.dataset.row), parseInt(cell.dataset.col)];
+    }
+
+    function touchStart(e) {
+      const t = e.touches[0];
+      const pos = getCellFromTouch(t);
+      if (!pos) return;
+      selStart.value = pos;
+      selCurrent.value = pos;
+      selCells.value = [pos];
+    }
+    function touchMove(e) {
+      if (!selStart.value) return;
+      const t = e.touches[0];
+      const pos = getCellFromTouch(t);
+      if (!pos) return;
+      selCurrent.value = pos;
+      selCells.value = computeSelCells(selStart.value, pos);
+    }
+    function touchEnd() {
+      if (selStart.value) checkSelection(selCells.value);
+      selStart.value = null;
+      selCurrent.value = null;
+      selCells.value = [];
+    }
+
+    // ── Language & category ────────────────────────────────────────────
+    function setLang(l) {
+      lang.value = l;
+      newPuzzle();
+    }
+
+    function selectCategory(id) {
+      category.value = id;
+      newPuzzle();
+    }
+
+    // ── Puzzle generation ──────────────────────────────────────────────
+    function newPuzzle() {
+      const result = generatePuzzle(lang.value, category.value);
+      grid.value = result.grid;
+      placedWords.value = result.placedWords;
+      mysteryIdx.value = result.mysteryIdx;
+      foundIndices.value = [];
+      mysteryFound.value = false;
+      phase.value = 'normal';
+      showOverlay.value = false;
+      selStart.value = null;
+      selCurrent.value = null;
+      selCells.value = [];
+      saveState();
+    }
+
+    // ── State persistence ──────────────────────────────────────────────
+    function saveState() {
+      try {
+        const state = {
+          version: 1,
+          lang: lang.value,
+          category: category.value,
+          grid: grid.value,
+          placedWords: placedWords.value,
+          mysteryIdx: mysteryIdx.value,
+          foundIndices: foundIndices.value,
+          mysteryFound: mysteryFound.value,
+          phase: phase.value
+        };
+        localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+      } catch {}
+    }
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(SAVE_KEY);
+        if (!raw) return false;
+        const s = JSON.parse(raw);
+        if (s.version !== 1) return false;
+        lang.value = s.lang || 'en';
+        category.value = s.category || 'animals';
+        grid.value = s.grid;
+        placedWords.value = s.placedWords;
+        mysteryIdx.value = s.mysteryIdx ?? -1;
+        foundIndices.value = s.foundIndices || [];
+        mysteryFound.value = s.mysteryFound || false;
+        phase.value = s.phase || 'normal';
+        return true;
+      } catch { return false; }
+    }
+
+    function resetProgress() {
+      if (!confirm(isRTL.value ? 'לאפס את הפאזל הנוכחי?' : 'Reset current puzzle?')) return;
+      localStorage.removeItem(SAVE_KEY);
+      newPuzzle();
+    }
+
+    // ── Resize handler ─────────────────────────────────────────────────
+    function onResize() { windowWidth.value = window.innerWidth; }
+
+    // ── Lifecycle ──────────────────────────────────────────────────────
+    onMounted(() => {
+      window.addEventListener('resize', onResize);
+      if (!loadState()) newPuzzle();
+    });
+
+    onUnmounted(() => {
+      window.removeEventListener('resize', onResize);
+    });
+
+    watchEffect(() => {
+      document.documentElement.lang = lang.value;
+      document.documentElement.dir = isRTL.value ? 'rtl' : 'ltr';
+    });
+
+    return {
+      lang, category, grid, placedWords, mysteryIdx, foundIndices,
+      mysteryFound, phase, showOverlay, selCells,
+      isRTL, cellSize, categories, listedWords, mysteryBlanks,
+      isCellFound, isCellMysteryFound, isCellSelecting,
+      startSelect, moveSelect, endSelect,
+      touchStart, touchMove, touchEnd,
+      setLang, selectCategory, newPuzzle, resetProgress
+    };
+  }
+}).mount('#app');
+</script>
+</body>
+</html>
