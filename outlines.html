@@ -414,7 +414,7 @@ h1 {
           stroke-linejoin="round"
         />
       </svg>
-      <span v-if="!svgPathData" class="loading-msg">Rendering…</span>
+      <span v-if="!svgPathData" class="loading-msg">{{ renderError || 'Rendering…' }}</span>
     </div>
 
     <!-- Letter blanks -->
@@ -643,6 +643,8 @@ createApp({
     });
 
     // ── SVG path ─────────────────────────────────────────────────────
+    const renderError = ref('');
+
     const svgPathData = computed(() => {
       if (!worldData.value || !current.value) return null;
       try {
@@ -650,13 +652,23 @@ createApp({
           worldData.value,
           worldData.value.objects.countries
         ).features;
-        const feat = features.find(f => String(f.id) === current.value.id);
-        if (!feat) return null;
-
-        const proj = d3.geoMercator()
-          .fitExtent([[PAD, PAD], [SVG_W - PAD, SVG_H - PAD]], feat);
+        // Compare as numbers — world-atlas stores IDs as integers
+        const feat = features.find(f => +f.id === +current.value.id);
+        if (!feat) {
+          renderError.value = `Shape not found for ${current.value.name}`;
+          return null;
+        }
+        renderError.value = '';
+        // geoNaturalEarth1 handles antimeridian-spanning countries (e.g. Russia) robustly;
+        // fall back to geoMercator if unavailable (older d3-geo builds)
+        const projFn = d3.geoNaturalEarth1 || d3.geoMercator;
+        const proj = projFn().fitExtent([[PAD, PAD], [SVG_W - PAD, SVG_H - PAD]], feat);
         return d3.geoPath().projection(proj)(feat);
-      } catch { return null; }
+      } catch(e) {
+        renderError.value = String(e);
+        console.error('SVG render error:', e);
+        return null;
+      }
     });
 
     // ── Actions ──────────────────────────────────────────────────────
@@ -737,7 +749,7 @@ createApp({
       guess, feedbackMsg, feedbackType, solved, revealedAnswer,
       roundResults, totalScore, maxScore, gameOver,
       showCorrectFlash, shakeInput, inputEl,
-      current, hintPositions, displayLetters, svgPathData,
+      current, hintPositions, displayLetters, svgPathData, renderError,
       ROUND_SIZE, MAX_HINTS,
       startRound, nextCountry, clearFeedback,
       submitGuess, useHint, skipCountry,
