@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Outlines — Geography Puzzle</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0d1117">
+<link rel="apple-touch-icon" href="icon.svg">
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3-geo@3/dist/d3-geo.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: #0d1117;
+  color: #c9d1d9;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 16px 48px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  background: linear-gradient(135deg, #34d399, #06b6d4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 4px;
+}
+
+.tagline {
+  color: #6e7681;
+  font-size: 0.82rem;
+  margin-bottom: 18px;
+  text-align: center;
+}
+
+/* ── Progress bar ─────────────────────────────────────────────────── */
+.progress-bar {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  margin-bottom: 18px;
+  font-size: 0.82rem;
+  color: #8b949e;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.progress-bar strong { color: #c9d1d9; }
+
+.progress-dots {
+  display: flex;
+  gap: 5px;
+}
+.progress-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: #21262d;
+}
+.progress-dot.done-correct { background: #3fb950; }
+.progress-dot.done-skipped { background: #6e7681; }
+.progress-dot.current      { background: #34d399; }
+
+/* ── Country SVG ──────────────────────────────────────────────────── */
+.svg-wrap {
+  width: 100%;
+  max-width: 560px;
+  background: #161b22;
+  border: 2px solid #30363d;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  min-height: 220px;
+}
+
+.country-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.loading-msg {
+  position: absolute;
+  color: #6e7681;
+  font-size: 0.85rem;
+}
+
+/* ── Letter blanks ────────────────────────────────────────────────── */
+.blanks {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 2px;
+  margin: 18px 0 14px;
+  min-height: 44px;
+  max-width: 560px;
+  align-items: flex-end;
+}
+
+.letter-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.letter-char {
+  font-size: 1.3rem;
+  font-weight: 700;
+  min-width: 22px;
+  text-align: center;
+  line-height: 1;
+  color: #e6edf3;
+  text-transform: uppercase;
+}
+.letter-char.blank      { color: #444c56; }
+.letter-char.hint-char  { color: #a78bfa; }
+.letter-char.space-char { min-width: 10px; }
+
+.letter-underline {
+  width: 22px;
+  height: 2px;
+  background: #444c56;
+  border-radius: 2px;
+}
+.letter-cell.hint-cell .letter-underline  { background: #a78bfa; }
+.letter-cell.solved-cell .letter-underline { background: #3fb950; }
+.letter-cell.space-cell .letter-underline { display: none; }
+
+/* ── Input row ────────────────────────────────────────────────────── */
+.input-row {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  max-width: 420px;
+  margin-bottom: 10px;
+}
+
+.guess-input {
+  flex: 1;
+  background: #161b22;
+  border: 2px solid #30363d;
+  border-radius: 8px;
+  color: #e6edf3;
+  padding: 10px 14px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s;
+  user-select: text;
+  -webkit-user-select: text;
+}
+.guess-input:focus { border-color: #34d399; }
+.guess-input.shake { animation: shake 0.35s ease; }
+
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  20%      { transform: translateX(-6px); }
+  40%      { transform: translateX(6px); }
+  60%      { transform: translateX(-4px); }
+  80%      { transform: translateX(4px); }
+}
+
+.btn-submit {
+  background: #0d3d2a;
+  border: 2px solid #34d399;
+  color: #34d399;
+  padding: 10px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.88rem;
+  font-weight: 700;
+  font-family: inherit;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+.btn-submit:hover { background: #0f4d34; }
+.btn-submit:disabled { opacity: 0.4; cursor: default; }
+
+/* ── Feedback ─────────────────────────────────────────────────────── */
+.feedback {
+  font-size: 0.82rem;
+  min-height: 20px;
+  text-align: center;
+  margin-bottom: 8px;
+}
+.feedback.correct { color: #3fb950; font-weight: 600; }
+.feedback.wrong   { color: #f85149; }
+.feedback.skipped { color: #8b949e; }
+
+/* ── Hint / Skip row ──────────────────────────────────────────────── */
+.action-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.btn-hint {
+  background: #21262d;
+  border: 1px solid #30363d;
+  color: #a78bfa;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.15s, border-color 0.15s;
+}
+.btn-hint:hover:not(:disabled) { background: #2d2040; border-color: #a78bfa; }
+.btn-hint:disabled { opacity: 0.35; cursor: default; }
+
+.hint-pips {
+  display: flex;
+  gap: 3px;
+}
+.hint-pip {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: #444c56;
+}
+.hint-pip.used { background: #a78bfa; }
+
+.btn-skip {
+  background: #21262d;
+  border: 1px solid #30363d;
+  color: #8b949e;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+.btn-skip:hover { background: #30363d; }
+
+.btn-next {
+  background: #0d3d2a;
+  border: 2px solid #34d399;
+  color: #34d399;
+  padding: 8px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.88rem;
+  font-weight: 700;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+.btn-next:hover { background: #0f4d34; }
+
+/* ── Results screen ───────────────────────────────────────────────── */
+.results {
+  text-align: center;
+  max-width: 440px;
+  width: 100%;
+}
+.results-icon { font-size: 3rem; margin-bottom: 10px; }
+.results h2   { font-size: 1.7rem; color: #e6edf3; margin-bottom: 6px; }
+.results-score {
+  font-size: 3rem;
+  font-weight: 900;
+  background: linear-gradient(135deg, #34d399, #06b6d4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 10px 0;
+}
+.results-sub { color: #6e7681; font-size: 0.88rem; margin-bottom: 24px; }
+
+.results-list {
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 24px;
+  text-align: left;
+}
+.result-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 14px;
+  font-size: 0.82rem;
+  border-bottom: 1px solid #21262d;
+}
+.result-row:last-child { border-bottom: none; }
+.result-flag { font-size: 1rem; flex-shrink: 0; }
+.result-name { flex: 1; color: #c9d1d9; }
+.result-pts  { font-weight: 700; font-size: 0.8rem; }
+.pts-3 { color: #3fb950; }
+.pts-2 { color: #58a6ff; }
+.pts-1 { color: #e9c46a; }
+.pts-0 { color: #6e7681; }
+
+.btn-play-again {
+  background: #0d3d2a;
+  border: 2px solid #34d399;
+  color: #34d399;
+  padding: 12px 32px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 700;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+.btn-play-again:hover { background: #0f4d34; }
+
+/* ── Win flash overlay ────────────────────────────────────────────── */
+.correct-flash {
+  position: absolute;
+  inset: 0;
+  background: rgba(63,185,80,0.12);
+  border-radius: 12px;
+  pointer-events: none;
+  animation: flashIn 0.5s ease forwards;
+}
+@keyframes flashIn {
+  0%   { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* ── Mobile ───────────────────────────────────────────────────────── */
+@media (max-width: 480px) {
+  h1 { font-size: 1.8rem; }
+  .letter-char { font-size: 1.1rem; min-width: 18px; }
+  .letter-underline { width: 18px; }
+  .results-score { font-size: 2.4rem; }
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <a href="index.html" style="font-size:0.78rem;color:#6e7681;text-decoration:none;margin-bottom:8px;display:inline-block;transition:color 0.15s;align-self:flex-start" onmouseover="this.style.color='#c9d1d9'" onmouseout="this.style.color='#6e7681'">← All Games</a>
+
+  <h1>OUTLINES</h1>
+  <p class="tagline">Name the country from its shape — use hints if you're stuck</p>
+
+  <!-- ── Results screen ──────────────────────────────────────────── -->
+  <div v-if="gameOver" class="results">
+    <div class="results-icon">🌍</div>
+    <h2>Round Complete!</h2>
+    <div class="results-score">{{ totalScore }} / {{ maxScore }}</div>
+    <p class="results-sub">{{ resultMessage }}</p>
+
+    <div class="results-list">
+      <div v-for="(r, i) in roundResults" :key="i" class="result-row">
+        <span class="result-flag">{{ r.solved ? '✓' : '✗' }}</span>
+        <span class="result-name">{{ r.name }}</span>
+        <span class="result-pts" :class="`pts-${r.pts}`">
+          {{ r.solved ? `+${r.pts} pt${r.pts !== 1 ? 's' : ''}` : 'skipped' }}
+        </span>
+      </div>
+    </div>
+
+    <button class="btn-play-again" @click="startRound">Play Again ↺</button>
+  </div>
+
+  <!-- ── Loading ─────────────────────────────────────────────────── -->
+  <div v-else-if="loading" style="color:#6e7681;font-size:0.88rem;margin-top:40px">
+    Loading map data…
+  </div>
+
+  <!-- ── Game ────────────────────────────────────────────────────── -->
+  <template v-else>
+    <div class="progress-bar">
+      <span><strong>{{ currentIdx + 1 }}</strong> / {{ ROUND_SIZE }}</span>
+      <div class="progress-dots">
+        <div
+          v-for="i in ROUND_SIZE" :key="i"
+          class="progress-dot"
+          :class="{
+            'done-correct': i - 1 < currentIdx && roundResults[i-1]?.solved,
+            'done-skipped': i - 1 < currentIdx && !roundResults[i-1]?.solved,
+            current: i - 1 === currentIdx,
+          }"
+        ></div>
+      </div>
+      <span>Score: <strong>{{ totalScore }}</strong></span>
+    </div>
+
+    <!-- Country shape -->
+    <div class="svg-wrap">
+      <div v-if="showCorrectFlash" class="correct-flash"></div>
+      <svg
+        class="country-svg"
+        viewBox="0 0 560 300"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          v-if="svgPathData"
+          :d="svgPathData"
+          fill="rgba(52,211,153,0.18)"
+          stroke="#34d399"
+          stroke-width="1.5"
+          stroke-linejoin="round"
+        />
+      </svg>
+      <span v-if="!svgPathData" class="loading-msg">Rendering…</span>
+    </div>
+
+    <!-- Letter blanks -->
+    <div class="blanks">
+      <div
+        v-for="(cell, i) in displayLetters"
+        :key="i"
+        class="letter-cell"
+        :class="{
+          'hint-cell':   cell.type === 'hint',
+          'solved-cell': cell.type === 'solved',
+          'space-cell':  cell.type === 'space',
+        }"
+      >
+        <span
+          class="letter-char"
+          :class="{
+            'blank':      cell.type === 'blank',
+            'hint-char':  cell.type === 'hint',
+            'space-char': cell.type === 'space',
+          }"
+        >{{ cell.ch }}</span>
+        <div class="letter-underline"></div>
+      </div>
+    </div>
+
+    <!-- Input -->
+    <div class="input-row">
+      <input
+        ref="inputEl"
+        v-model="guess"
+        class="guess-input"
+        :class="{ shake: shakeInput }"
+        type="text"
+        placeholder="Type country name…"
+        autocomplete="off"
+        autocorrect="off"
+        autocapitalize="off"
+        spellcheck="false"
+        @keydown.enter="submitGuess"
+        @input="clearFeedback"
+      />
+      <button class="btn-submit" @click="submitGuess" :disabled="!guess.trim()">Go →</button>
+    </div>
+
+    <!-- Feedback -->
+    <div class="feedback" :class="feedbackType">{{ feedbackMsg }}</div>
+
+    <!-- Hint / Skip -->
+    <div class="action-row">
+      <button
+        v-if="!revealedAnswer"
+        class="btn-hint"
+        :disabled="hintsUsed >= MAX_HINTS || solved"
+        @click="useHint"
+      >
+        💡 Hint
+        <div class="hint-pips">
+          <div v-for="n in MAX_HINTS" :key="n" class="hint-pip" :class="{ used: n <= hintsUsed }"></div>
+        </div>
+      </button>
+
+      <button v-if="!solved && !revealedAnswer" class="btn-skip" @click="skipCountry">
+        Skip ↷
+      </button>
+
+      <button v-if="solved || revealedAnswer" class="btn-next" @click="nextCountry">
+        {{ currentIdx + 1 < ROUND_SIZE ? 'Next →' : 'Finish' }}
+      </button>
+    </div>
+  </template>
+
+</div>
+<script>
+const { createApp, ref, computed, watch, onMounted, onUnmounted, nextTick } = Vue;
+
+const ROUND_SIZE = 10;
+const MAX_HINTS  = 3;
+const SVG_W = 560, SVG_H = 300, PAD = 28;
+
+const COUNTRIES = [
+  { id: '32',  name: 'Argentina' },
+  { id: '36',  name: 'Australia' },
+  { id: '76',  name: 'Brazil' },
+  { id: '124', name: 'Canada' },
+  { id: '152', name: 'Chile' },
+  { id: '156', name: 'China',          aliases: ['prc'] },
+  { id: '170', name: 'Colombia' },
+  { id: '818', name: 'Egypt' },
+  { id: '246', name: 'Finland' },
+  { id: '250', name: 'France' },
+  { id: '276', name: 'Germany' },
+  { id: '300', name: 'Greece' },
+  { id: '356', name: 'India' },
+  { id: '360', name: 'Indonesia' },
+  { id: '364', name: 'Iran' },
+  { id: '380', name: 'Italy' },
+  { id: '392', name: 'Japan' },
+  { id: '404', name: 'Kenya' },
+  { id: '484', name: 'Mexico' },
+  { id: '504', name: 'Morocco' },
+  { id: '554', name: 'New Zealand' },
+  { id: '566', name: 'Nigeria' },
+  { id: '578', name: 'Norway' },
+  { id: '604', name: 'Peru' },
+  { id: '616', name: 'Poland' },
+  { id: '620', name: 'Portugal' },
+  { id: '643', name: 'Russia',          aliases: ['russian federation'] },
+  { id: '682', name: 'Saudi Arabia' },
+  { id: '710', name: 'South Africa' },
+  { id: '410', name: 'South Korea',     aliases: ['korea'] },
+  { id: '724', name: 'Spain' },
+  { id: '752', name: 'Sweden' },
+  { id: '756', name: 'Switzerland' },
+  { id: '764', name: 'Thailand' },
+  { id: '792', name: 'Turkey',          aliases: ['türkiye', 'turkiye'] },
+  { id: '804', name: 'Ukraine' },
+  { id: '826', name: 'United Kingdom',  aliases: ['uk', 'great britain', 'britain'] },
+  { id: '840', name: 'United States',   aliases: ['usa', 'us', 'america', 'united states of america'] },
+  { id: '704', name: 'Vietnam',         aliases: ['viet nam'] },
+];
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function getHintPositions(name) {
+  const idxs = [];
+  for (let i = 0; i < name.length; i++) if (/[a-zA-Z]/.test(name[i])) idxs.push(i);
+  if (!idxs.length) return [];
+  const picks = new Set([
+    idxs[0],
+    idxs[Math.floor(idxs.length * 0.45)],
+    idxs[Math.floor(idxs.length * 0.75)],
+  ]);
+  return [...picks];
+}
+
+createApp({
+  setup() {
+    const loading          = ref(true);
+    const worldData        = ref(null);
+    const queue            = ref([]);     // countries for this round
+    const currentIdx       = ref(0);
+    const hintsUsed        = ref(0);
+    const guess            = ref('');
+    const feedbackMsg      = ref('');
+    const feedbackType     = ref('');
+    const solved           = ref(false);
+    const revealedAnswer   = ref(false);
+    const roundResults     = ref([]);
+    const totalScore       = ref(0);
+    const gameOver         = ref(false);
+    const showCorrectFlash = ref(false);
+    const shakeInput       = ref(false);
+    const inputEl          = ref(null);
+
+    // ── Data loading ────────────────────────────────────────────────
+    onMounted(async () => {
+      try {
+        const res = await fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json');
+        worldData.value = await res.json();
+      } catch (e) {
+        feedbackMsg.value = 'Failed to load map data. Check your connection.';
+        feedbackType.value = 'wrong';
+      } finally {
+        loading.value = false;
+        if (worldData.value) startRound();
+      }
+    });
+
+    // ── Round management ─────────────────────────────────────────────
+    function startRound() {
+      queue.value      = shuffle(COUNTRIES).slice(0, ROUND_SIZE);
+      currentIdx.value = 0;
+      totalScore.value = 0;
+      roundResults.value = [];
+      gameOver.value   = false;
+      resetTurn();
+    }
+
+    function resetTurn() {
+      hintsUsed.value      = 0;
+      guess.value          = '';
+      feedbackMsg.value    = '';
+      feedbackType.value   = '';
+      solved.value         = false;
+      revealedAnswer.value = false;
+      showCorrectFlash.value = false;
+      nextTick(() => inputEl.value?.focus());
+    }
+
+    function nextCountry() {
+      if (currentIdx.value + 1 >= ROUND_SIZE) {
+        gameOver.value = true;
+      } else {
+        currentIdx.value++;
+        resetTurn();
+      }
+    }
+
+    // ── Current state ────────────────────────────────────────────────
+    const current = computed(() => queue.value[currentIdx.value]);
+
+    const hintPositions = computed(() =>
+      current.value ? getHintPositions(current.value.name) : []
+    );
+
+    const displayLetters = computed(() => {
+      if (!current.value) return [];
+      const name = current.value.name;
+      const revealed = new Set(hintPositions.value.slice(0, hintsUsed.value));
+      const isFinished = solved.value || revealedAnswer.value;
+
+      return name.split('').map((ch, i) => {
+        if (ch === ' ') return { ch: '\u00A0', type: 'space' };
+        if (isFinished)  return { ch, type: 'solved' };
+        if (revealed.has(i)) return { ch, type: 'hint' };
+        return { ch: '_', type: 'blank' };
+      });
+    });
+
+    // ── SVG path ─────────────────────────────────────────────────────
+    const svgPathData = computed(() => {
+      if (!worldData.value || !current.value) return null;
+      try {
+        const features = topojson.feature(
+          worldData.value,
+          worldData.value.objects.countries
+        ).features;
+        const feat = features.find(f => String(f.id) === current.value.id);
+        if (!feat) return null;
+
+        const proj = d3.geoMercator()
+          .fitExtent([[PAD, PAD], [SVG_W - PAD, SVG_H - PAD]], feat);
+        return d3.geoPath().projection(proj)(feat);
+      } catch { return null; }
+    });
+
+    // ── Actions ──────────────────────────────────────────────────────
+    function clearFeedback() {
+      if (feedbackType.value === 'wrong') {
+        feedbackMsg.value  = '';
+        feedbackType.value = '';
+      }
+    }
+
+    function submitGuess() {
+      if (!guess.value.trim() || solved.value || revealedAnswer.value) return;
+      const input = guess.value.trim().toLowerCase();
+      const country = current.value;
+      const valid = [
+        country.name.toLowerCase(),
+        ...(country.aliases || []).map(a => a.toLowerCase()),
+      ];
+
+      if (valid.includes(input)) {
+        const pts = Math.max(1, MAX_HINTS + 1 - hintsUsed.value);
+        totalScore.value += pts;
+        roundResults.value.push({ name: country.name, solved: true, pts });
+        solved.value = true;
+        feedbackMsg.value  = hintsUsed.value === 0 ? '✓ Correct! +' + pts + ' pts' : '✓ Correct! +' + pts + ' pt' + (pts === 1 ? '' : 's');
+        feedbackType.value = 'correct';
+        showCorrectFlash.value = true;
+        setTimeout(() => { showCorrectFlash.value = false; }, 600);
+        guess.value = '';
+      } else {
+        feedbackMsg.value  = 'Not quite — try again!';
+        feedbackType.value = 'wrong';
+        shakeInput.value = true;
+        setTimeout(() => { shakeInput.value = false; }, 400);
+        guess.value = '';
+      }
+    }
+
+    function useHint() {
+      if (hintsUsed.value >= MAX_HINTS || solved.value) return;
+      hintsUsed.value++;
+      feedbackMsg.value  = '';
+      feedbackType.value = '';
+      nextTick(() => inputEl.value?.focus());
+    }
+
+    function skipCountry() {
+      const country = current.value;
+      roundResults.value.push({ name: country.name, solved: false, pts: 0 });
+      revealedAnswer.value = true;
+      feedbackMsg.value  = `The answer was: ${country.name}`;
+      feedbackType.value = 'skipped';
+      guess.value = '';
+    }
+
+    // ── Results text ─────────────────────────────────────────────────
+    const maxScore = computed(() => ROUND_SIZE * (MAX_HINTS + 1));
+
+    const resultMessage = computed(() => {
+      const pct = totalScore.value / maxScore.value;
+      if (pct >= 0.9) return 'Outstanding! You really know your maps. 🗺️';
+      if (pct >= 0.7) return 'Great work! A few more to master.';
+      if (pct >= 0.5) return 'Decent! Keep exploring the world.';
+      return 'Keep playing — the shapes will start to stick!';
+    });
+
+    // ── Keyboard ─────────────────────────────────────────────────────
+    function handleKey(e) {
+      if (e.key === 'h' && !e.ctrlKey && document.activeElement !== inputEl.value) {
+        useHint();
+      }
+    }
+    onMounted(() => window.addEventListener('keydown', handleKey));
+    onUnmounted(() => window.removeEventListener('keydown', handleKey));
+
+    return {
+      loading, worldData, queue, currentIdx, hintsUsed,
+      guess, feedbackMsg, feedbackType, solved, revealedAnswer,
+      roundResults, totalScore, maxScore, gameOver,
+      showCorrectFlash, shakeInput, inputEl,
+      current, hintPositions, displayLetters, svgPathData,
+      ROUND_SIZE, MAX_HINTS,
+      startRound, nextCountry, clearFeedback,
+      submitGuess, useHint, skipCountry,
+      resultMessage,
+    };
+  }
+}).mount('#app');
+</script>
+<script>
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
+</script>
+</body>
+</html>

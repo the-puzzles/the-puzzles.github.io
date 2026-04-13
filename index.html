@@ -72,9 +72,10 @@ header {
   box-shadow: 0 12px 40px rgba(0,0,0,0.5);
 }
 
-.card.chromino:hover { border-color: #58a6ff; box-shadow: 0 12px 40px rgba(88,166,255,0.15); }
-.card.tessera:hover  { border-color: #f7971e; box-shadow: 0 12px 40px rgba(247,151,30,0.15); }
-.card.colorku:hover  { border-color: #c084fc; box-shadow: 0 12px 40px rgba(192,132,252,0.15); }
+.card.chromino:hover  { border-color: #58a6ff; box-shadow: 0 12px 40px rgba(88,166,255,0.15); }
+.card.tessera:hover   { border-color: #f7971e; box-shadow: 0 12px 40px rgba(247,151,30,0.15); }
+.card.colorku:hover   { border-color: #c084fc; box-shadow: 0 12px 40px rgba(192,132,252,0.15); }
+.card.outlines:hover  { border-color: #34d399; box-shadow: 0 12px 40px rgba(52,211,153,0.15); }
 
 /* ── Card header ─────────────────────────────────────────────────────── */
 .card-header { display: flex; align-items: center; gap: 14px; }
@@ -89,6 +90,7 @@ header {
 .chromino .card-icon { background: #1c2a3e; }
 .tessera  .card-icon { background: #1f1a0e; }
 .colorku  .card-icon { background: #21103a; }
+.outlines .card-icon { background: #0d2a1e; }
 
 .card-title {
   font-size: 1.5rem;
@@ -109,6 +111,12 @@ header {
 }
 .colorku .card-title {
   background: linear-gradient(135deg, #c084fc, #f472b6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.outlines .card-title {
+  background: linear-gradient(135deg, #34d399, #06b6d4);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -168,6 +176,7 @@ header {
 .chromino .rule-dot { background: #58a6ff; }
 .tessera  .rule-dot { background: #f7971e; }
 .colorku  .rule-dot { background: #c084fc; }
+.outlines .rule-dot { background: #34d399; }
 
 /* ── Play button ─────────────────────────────────────────────────────── */
 .play-btn {
@@ -192,6 +201,7 @@ header {
 .chromino .play-btn { background: #1f6feb; color: #fff; }
 .tessera  .play-btn { background: #9a5c00; color: #ffd200; border: 1px solid #f7971e; }
 .colorku  .play-btn { background: #5b21b6; color: #e9d5ff; border: 1px solid #c084fc; }
+.outlines .play-btn { background: #0d3d2a; color: #34d399; border: 1px solid #34d399; }
 
 .play-arrow { font-size: 1rem; transition: transform 0.15s; }
 .play-btn:hover .play-arrow { transform: translateX(3px); }
@@ -348,6 +358,40 @@ footer {
     </div>
 
     <div class="play-btn">Play Colorku <span class="play-arrow">→</span></div>
+  </a>
+
+  <!-- ── Outlines ──────────────────────────────────────────────── -->
+  <a class="card outlines" href="outlines.html">
+    <div class="card-header">
+      <div class="card-icon">🌍</div>
+      <div class="card-title">OUTLINES</div>
+    </div>
+
+    <!-- Mini preview: simplified country silhouettes -->
+    <div class="preview" style="grid-template-columns: repeat(3, 36px); padding: 8px;">
+      <div class="preview-cell" style="grid-column:1/-1; height:72px; background:transparent; border:none; display:flex; align-items:center; justify-content:center;">
+        <svg viewBox="0 0 108 72" style="width:108px;height:72px">
+          <!-- Rough Italy shape -->
+          <path d="M38 8 L44 10 L48 16 L50 24 L46 30 L50 38 L54 50 L52 58 L56 64 L52 66 L48 60 L44 52 L40 44 L36 36 L32 28 L30 18 L32 10 Z" fill="rgba(52,211,153,0.22)" stroke="#34d399" stroke-width="1.2"/>
+          <!-- Rough France shape -->
+          <path d="M62 14 L72 12 L80 16 L82 24 L78 32 L72 36 L64 34 L58 28 L58 20 Z" fill="rgba(52,211,153,0.22)" stroke="#34d399" stroke-width="1.2"/>
+          <!-- Rough Japan islands -->
+          <path d="M88 18 L93 16 L96 20 L94 26 L90 28 L87 24 Z" fill="rgba(52,211,153,0.22)" stroke="#34d399" stroke-width="1.2"/>
+          <path d="M84 30 L88 28 L92 32 L90 38 L86 40 L82 36 Z" fill="rgba(52,211,153,0.22)" stroke="#34d399" stroke-width="1.2"/>
+        </svg>
+      </div>
+    </div>
+
+    <p class="card-tagline">A country's outline appears — no labels, no context. Can you name it from its shape alone? Use hints to reveal letters.</p>
+
+    <div class="card-rules">
+      <div class="rule"><div class="rule-dot"></div><span>39 countries drawn from a shuffled pool</span></div>
+      <div class="rule"><div class="rule-dot"></div><span>Type the country name to guess</span></div>
+      <div class="rule"><div class="rule-dot"></div><span>Up to 3 hints reveal letters of the answer</span></div>
+      <div class="rule"><div class="rule-dot"></div><span>10 countries per round · scored on hints used</span></div>
+    </div>
+
+    <div class="play-btn">Play Outlines <span class="play-arrow">→</span></div>
   </a>
 
 </div>

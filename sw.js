@@ -1,4 +1,4 @@
-const CACHE = 'puzzles-v2';
+const CACHE = 'puzzles-v3';
 const ASSETS = [
   '/',
   '/index.html',
@@ -6,9 +6,13 @@ const ASSETS = [
   '/chromino.html',
   '/tessera.html',
   '/colorku.html',
+  '/outlines.html',
   '/manifest.json',
   '/icon.svg',
   'https://unpkg.com/vue@3/dist/vue.global.js',
+  'https://cdn.jsdelivr.net/npm/d3-geo@3/dist/d3-geo.min.js',
+  'https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js',
+  'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json',
 ];
 
 self.addEventListener('install', e => {
