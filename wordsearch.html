@@ -715,30 +715,50 @@ createApp({
         .map(([r, c]) => r + ',' + c).join('|');
     }
 
+    function markFound(i) {
+      if (i === mysteryIdx.value) {
+        if (!mysteryFound.value) {
+          mysteryFound.value = true;
+          phase.value = 'won';
+          showOverlay.value = true;
+          saveState();
+        }
+      } else {
+        if (!foundIndices.value.includes(i)) {
+          foundIndices.value = [...foundIndices.value, i];
+          const listedCount = placedWords.value.length - 1;
+          if (foundIndices.value.length >= listedCount && phase.value === 'normal')
+            phase.value = 'hunt';
+          saveState();
+        }
+      }
+    }
+
     function checkSelection(cells) {
       if (cells.length < 2) return;
       const selKey = sortedKey(cells);
+
+      // Primary: match by exact cell coordinates
       for (let i = 0; i < placedWords.value.length; i++) {
         const pw = placedWords.value[i];
         if (pw.cells.length !== cells.length) continue;
         if (sortedKey(pw.cells) !== selKey) continue;
-        if (i === mysteryIdx.value) {
-          if (!mysteryFound.value) {
-            mysteryFound.value = true;
-            phase.value = 'won';
-            showOverlay.value = true;
-            saveState();
-          }
-        } else {
-          if (!foundIndices.value.includes(i)) {
-            foundIndices.value = [...foundIndices.value, i];
-            const listedCount = placedWords.value.length - 1;
-            if (foundIndices.value.length >= listedCount && phase.value === 'normal')
-              phase.value = 'hunt';
-            saveState();
-          }
+        markFound(i);
+        return;
+      }
+
+      // Fallback: noise may accidentally spell a target word at different coords —
+      // read the actual letters and compare against each word's grid form.
+      const spelled = cells.map(([r, c]) => grid.value[r][c]).join('');
+      const spelledRev = [...spelled].reverse().join('');
+      for (let i = 0; i < placedWords.value.length; i++) {
+        const pw = placedWords.value[i];
+        if (pw.cells.length !== cells.length) continue;
+        const gridWord = lang.value === 'he' ? normalizeHebrew(pw.word) : pw.word;
+        if (gridWord === spelled || gridWord === spelledRev) {
+          markFound(i);
+          return;
         }
-        break;
       }
     }
 
