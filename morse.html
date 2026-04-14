@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Morse Code · Puzzle Games</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0d1117">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: #0d1117;
+  color: #c9d1d9;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 16px 64px;
+}
+
+/* ── Header ─────────────────────────────────────────────────────── */
+.top-bar {
+  width: 100%;
+  max-width: 640px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+.home-btn {
+  color: #6e7681;
+  text-decoration: none;
+  font-size: 0.82rem;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  padding: 5px 10px;
+  transition: color 0.15s, border-color 0.15s;
+}
+.home-btn:hover { color: #c9d1d9; border-color: #6e7681; }
+.page-title {
+  font-size: 1.5rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Main container ──────────────────────────────────────────────── */
+.game-wrap {
+  width: 100%;
+  max-width: 640px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── Panel ───────────────────────────────────────────────────────── */
+.panel {
+  background: #161b22;
+  border: 2px solid #30363d;
+  border-radius: 14px;
+  padding: 20px 22px;
+}
+
+/* ── Level info ──────────────────────────────────────────────────── */
+.level-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.level-label {
+  font-size: 0.78rem;
+  color: #6e7681;
+  letter-spacing: 0.06em;
+}
+.level-badge {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fbbf24;
+}
+.level-dots {
+  display: flex;
+  gap: 5px;
+}
+.level-pip {
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  background: #21262d;
+  border: 1.5px solid #30363d;
+  transition: background 0.2s, border-color 0.2s;
+}
+.level-pip.done { background: #fbbf24; border-color: #fbbf24; }
+.level-pip.current { border-color: #fbbf24; }
+
+/* ── Lamp ────────────────────────────────────────────────────────── */
+.lamp-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 24px 0 16px;
+}
+.lamp {
+  width: 96px; height: 96px;
+  border-radius: 50%;
+  background: #1c1a10;
+  border: 3px solid #3a3510;
+  transition: background 0.05s, box-shadow 0.05s, border-color 0.05s;
+}
+.lamp.on {
+  background: #fbbf24;
+  border-color: #fde68a;
+  box-shadow: 0 0 48px 12px rgba(251,191,36,0.55), 0 0 16px 4px rgba(251,191,36,0.8);
+}
+
+/* ── Code trace ──────────────────────────────────────────────────── */
+.trace-wrap {
+  min-height: 28px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 5px 6px;
+  padding: 4px 0;
+}
+.trace-sym {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.trace-dit {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: #fbbf24;
+}
+.trace-dah {
+  width: 28px; height: 10px;
+  border-radius: 5px;
+  background: #fbbf24;
+}
+.trace-sep {
+  width: 2px; height: 18px;
+  background: #30363d;
+  border-radius: 1px;
+}
+.trace-wsep {
+  width: 2px; height: 18px;
+  background: transparent;
+  border-left: 2px dashed #30363d;
+}
+.trace-letter-gap { width: 6px; }
+.trace-word-gap { width: 14px; }
+
+/* ── Controls ────────────────────────────────────────────────────── */
+.controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.play-btn {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 28px;
+  background: #92400e;
+  color: #fbbf24;
+  border: 1.5px solid #fbbf24;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+  letter-spacing: 0.04em;
+}
+.play-btn:hover { opacity: 0.85; transform: translateY(-1px); }
+.play-btn:active { transform: translateY(0); }
+.play-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+.stop-btn {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 20px;
+  background: #161b22;
+  color: #ef4444;
+  border: 1.5px solid #ef4444;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  letter-spacing: 0.04em;
+}
+.stop-btn:hover { opacity: 0.8; }
+
+.speed-select {
+  display: flex;
+  gap: 4px;
+}
+.speed-btn {
+  padding: 7px 13px;
+  border-radius: 7px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: #21262d;
+  color: #6e7681;
+  border: 1.5px solid #30363d;
+  transition: all 0.15s;
+}
+.speed-btn.active {
+  background: #1c1a10;
+  color: #fbbf24;
+  border-color: #fbbf24;
+}
+.speed-btn:hover:not(.active) { color: #c9d1d9; border-color: #6e7681; }
+
+/* ── Answer ──────────────────────────────────────────────────────── */
+.answer-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+.answer-input {
+  flex: 1;
+  background: #0d1117;
+  border: 1.5px solid #30363d;
+  border-radius: 8px;
+  color: #e6edf3;
+  font-size: 1rem;
+  padding: 10px 14px;
+  outline: none;
+  letter-spacing: 0.05em;
+  transition: border-color 0.15s;
+  font-family: inherit;
+}
+.answer-input:focus { border-color: #fbbf24; }
+.answer-input:disabled { opacity: 0.45; }
+.answer-input.correct { border-color: #22c55e; background: #0d1f12; }
+.answer-input.wrong   { border-color: #ef4444; background: #1f0d0d; }
+
+.check-btn {
+  padding: 10px 20px;
+  background: #fbbf24;
+  color: #0d1117;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 800;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  transition: opacity 0.15s, transform 0.1s;
+  white-space: nowrap;
+}
+.check-btn:hover { opacity: 0.85; transform: translateY(-1px); }
+.check-btn:active { transform: translateY(0); }
+.check-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+/* ── Feedback ────────────────────────────────────────────────────── */
+.feedback {
+  text-align: center;
+  font-size: 0.9rem;
+  font-weight: 600;
+  min-height: 22px;
+  padding: 2px 0;
+}
+.feedback.ok  { color: #22c55e; }
+.feedback.err { color: #ef4444; }
+.feedback.hint-text { color: #fbbf24; }
+
+/* ── Next button ─────────────────────────────────────────────────── */
+.next-btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 12px 28px;
+  background: #14532d;
+  color: #22c55e;
+  border: 1.5px solid #22c55e;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  transition: opacity 0.15s, transform 0.1s;
+  width: 100%;
+  margin-top: 8px;
+}
+.next-btn:hover { opacity: 0.85; transform: translateY(-1px); }
+.next-btn:active { transform: translateY(0); }
+
+/* ── All-done / win banner ───────────────────────────────────────── */
+.win-panel {
+  text-align: center;
+  padding: 32px 20px 28px;
+}
+.win-icon { font-size: 3rem; margin-bottom: 12px; }
+.win-title {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #fbbf24;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
+.win-sub {
+  font-size: 0.88rem;
+  color: #8b949e;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+/* ── Morse reference table ───────────────────────────────────────── */
+.ref-toggle {
+  background: none;
+  border: 1.5px solid #30363d;
+  border-radius: 8px;
+  color: #8b949e;
+  font-size: 0.8rem;
+  padding: 6px 14px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  letter-spacing: 0.04em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  margin: 0 auto;
+}
+.ref-toggle:hover { color: #fbbf24; border-color: #fbbf24; }
+
+.ref-table {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 6px;
+}
+.ref-row {
+  background: #0d1117;
+  border: 1px solid #21262d;
+  border-radius: 6px;
+  padding: 5px 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.ref-letter {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #fbbf24;
+  width: 16px;
+  flex-shrink: 0;
+}
+.ref-code {
+  font-size: 0.72rem;
+  color: #8b949e;
+  letter-spacing: 0.1em;
+}
+
+/* ── Progress summary (bonus levels) ────────────────────────────── */
+.bonus-label {
+  font-size: 0.78rem;
+  color: #6e7681;
+  text-align: center;
+  margin-bottom: 10px;
+  letter-spacing: 0.04em;
+}
+.bonus-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+}
+.bonus-chip {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1.5px solid #30363d;
+  color: #6e7681;
+  background: #0d1117;
+  letter-spacing: 0.04em;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+.bonus-chip.done { border-color: #fbbf24; color: #fbbf24; background: #1c1a10; }
+.bonus-chip.current { border-color: #fbbf24; color: #0d1117; background: #fbbf24; }
+
+/* ── Difficulty toggle ───────────────────────────────────────────── */
+.diff-select {
+  display: flex;
+  gap: 4px;
+}
+.diff-btn {
+  padding: 7px 13px;
+  border-radius: 7px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: #21262d;
+  color: #6e7681;
+  border: 1.5px solid #30363d;
+  transition: all 0.15s;
+}
+.diff-btn.active {
+  background: #1c1a10;
+  color: #fbbf24;
+  border-color: #fbbf24;
+}
+.diff-btn:hover:not(.active) { color: #c9d1d9; border-color: #6e7681; }
+
+/* ── Misc ────────────────────────────────────────────────────────── */
+.hint-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 2px;
+}
+.hint-link {
+  font-size: 0.78rem;
+  color: #6e7681;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+  transition: color 0.15s;
+}
+.hint-link:hover { color: #fbbf24; }
+
+.divider { border: none; border-top: 1px solid #21262d; margin: 4px 0; }
+
+@media (max-width: 480px) {
+  .page-title { font-size: 1.2rem; }
+  .ref-table { grid-template-columns: repeat(auto-fill, minmax(68px, 1fr)); }
+  .lamp { width: 80px; height: 80px; }
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="top-bar">
+    <a class="home-btn" href="index.html">← Home</a>
+    <div class="page-title">MORSE CODE</div>
+  </div>
+
+  <div class="game-wrap">
+
+    <!-- ── Playback + answer panel ───────────────────────────────── -->
+    <div class="panel" v-if="!allDone">
+
+      <!-- Level indicator -->
+      <div class="level-row">
+        <div>
+          <div class="level-label">{{ isBonusMode ? ui.bonus : ui.level }}</div>
+          <div class="level-badge" v-if="!isBonusMode">{{ levelNum }} / {{ CAMPAIGN.length }}</div>
+          <div class="level-badge" v-else>{{ currentBonusWord }}</div>
+        </div>
+        <div class="level-dots" v-if="!isBonusMode">
+          <div v-for="(_, i) in CAMPAIGN" :key="i"
+               :class="['level-pip', completedLevels.includes(i) ? 'done' : (i === currentLevelIdx ? 'current' : '')]"></div>
+        </div>
+      </div>
+
+      <hr class="divider">
+
+      <!-- Lamp -->
+      <div class="lamp-area">
+        <div :class="['lamp', lampOn ? 'on' : '']"></div>
+
+        <!-- Code trace (Easy only) -->
+        <div class="trace-wrap" v-if="difficulty === 'easy'" aria-label="morse code trace">
+          <template v-for="(sym, i) in traceSyms" :key="i">
+            <template v-if="sym.k === 'ls'"><div class="trace-letter-gap"></div></template>
+            <template v-else-if="sym.k === 'ws'"><div class="trace-word-gap"></div></template>
+            <template v-else-if="sym.k === 'd'"><div class="trace-dit"></div></template>
+            <template v-else-if="sym.k === 'h'"><div class="trace-dah"></div></template>
+          </template>
+        </div>
+      </div>
+
+      <!-- Speed + Difficulty + Play -->
+      <div class="controls">
+        <div class="diff-select">
+          <button :class="['diff-btn', difficulty === 'easy' ? 'active' : '']"
+                  @click="setDifficulty('easy')">{{ ui.easy }}</button>
+          <button :class="['diff-btn', difficulty === 'hard' ? 'active' : '']"
+                  @click="setDifficulty('hard')">{{ ui.hard }}</button>
+        </div>
+        <div class="speed-select">
+          <button v-for="s in SPEEDS" :key="s.id"
+                  :class="['speed-btn', speed === s.id ? 'active' : '']"
+                  @click="setSpeed(s.id)">{{ s.label }}</button>
+        </div>
+        <button class="play-btn" @click="play" :disabled="playing">
+          ▶ {{ ui.play }}
+        </button>
+        <button class="stop-btn" v-if="playing" @click="stop">■</button>
+      </div>
+
+      <hr class="divider" style="margin-top:16px">
+
+      <!-- Answer -->
+      <div style="margin-top:14px; display:flex; flex-direction:column; gap:10px;">
+        <div class="answer-row">
+          <input class="answer-input"
+                 :class="answered === true ? 'correct' : answered === false ? 'wrong' : ''"
+                 v-model="userAnswer"
+                 :placeholder="ui.placeholder"
+                 :disabled="answered === true"
+                 @keydown.enter="checkAnswer"
+                 autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" />
+          <button class="check-btn" @click="checkAnswer"
+                  :disabled="answered === true || userAnswer.trim() === ''">
+            {{ ui.check }}
+          </button>
+        </div>
+
+        <div class="hint-row">
+          <div :class="['feedback', fbClass]">{{ feedbackMsg }}</div>
+          <button class="hint-link" v-if="answered !== true && hintLevel < 2" @click="giveHint">
+            {{ ui.hint }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Next -->
+      <button class="next-btn" v-if="answered === true" @click="nextLevel">
+        {{ isLastLevel ? ui.finish : ui.next }} →
+      </button>
+
+    </div>
+
+    <!-- ── Win banner ─────────────────────────────────────────────── -->
+    <div class="panel win-panel" v-if="allDone && !isBonusMode">
+      <div class="win-icon">📡</div>
+      <div class="win-title">{{ ui.winTitle }}</div>
+      <div class="win-sub">{{ ui.winSub }}</div>
+      <button class="play-btn" style="margin:0 auto" @click="startBonus">{{ ui.bonusStart }}</button>
+    </div>
+
+    <!-- ── Bonus mode ─────────────────────────────────────────────── -->
+    <div class="panel" v-if="allDone && isBonusMode">
+
+      <!-- Level indicator (reused) -->
+      <div class="level-row">
+        <div>
+          <div class="level-label">{{ ui.bonus }}</div>
+          <div class="level-badge">{{ currentBonusWord }}</div>
+        </div>
+        <div class="level-dots">
+          <div v-for="(_, i) in bonusQueue" :key="i"
+               :class="['level-pip', bonusCompleted.includes(i) ? 'done' : (i === bonusIdx ? 'current' : '')]"></div>
+        </div>
+      </div>
+
+      <hr class="divider">
+
+      <div class="lamp-area">
+        <div :class="['lamp', lampOn ? 'on' : '']"></div>
+        <div class="trace-wrap" v-if="difficulty === 'easy'" aria-label="morse code trace">
+          <template v-for="(sym, i) in traceSyms" :key="i">
+            <template v-if="sym.k === 'ls'"><div class="trace-letter-gap"></div></template>
+            <template v-else-if="sym.k === 'ws'"><div class="trace-word-gap"></div></template>
+            <template v-else-if="sym.k === 'd'"><div class="trace-dit"></div></template>
+            <template v-else-if="sym.k === 'h'"><div class="trace-dah"></div></template>
+          </template>
+        </div>
+      </div>
+
+      <div class="controls">
+        <div class="diff-select">
+          <button :class="['diff-btn', difficulty === 'easy' ? 'active' : '']"
+                  @click="setDifficulty('easy')">{{ ui.easy }}</button>
+          <button :class="['diff-btn', difficulty === 'hard' ? 'active' : '']"
+                  @click="setDifficulty('hard')">{{ ui.hard }}</button>
+        </div>
+        <div class="speed-select">
+          <button v-for="s in SPEEDS" :key="s.id"
+                  :class="['speed-btn', speed === s.id ? 'active' : '']"
+                  @click="setSpeed(s.id)">{{ s.label }}</button>
+        </div>
+        <button class="play-btn" @click="play" :disabled="playing">▶ {{ ui.play }}</button>
+        <button class="stop-btn" v-if="playing" @click="stop">■</button>
+      </div>
+
+      <hr class="divider" style="margin-top:16px">
+
+      <div style="margin-top:14px; display:flex; flex-direction:column; gap:10px;">
+        <div class="answer-row">
+          <input class="answer-input"
+                 :class="answered === true ? 'correct' : answered === false ? 'wrong' : ''"
+                 v-model="userAnswer"
+                 :placeholder="ui.placeholder"
+                 :disabled="answered === true"
+                 @keydown.enter="checkAnswer"
+                 autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" />
+          <button class="check-btn" @click="checkAnswer"
+                  :disabled="answered === true || userAnswer.trim() === ''">{{ ui.check }}</button>
+        </div>
+        <div class="hint-row">
+          <div :class="['feedback', fbClass]">{{ feedbackMsg }}</div>
+          <button class="hint-link" v-if="answered !== true && hintLevel < 2" @click="giveHint">{{ ui.hint }}</button>
+        </div>
+      </div>
+
+      <button class="next-btn" v-if="answered === true" @click="nextBonus">
+        {{ bonusIdx >= bonusQueue.length - 1 ? ui.restart : ui.next }} →
+      </button>
+    </div>
+
+    <!-- ── Morse reference table ──────────────────────────────────── -->
+    <div class="panel">
+      <button class="ref-toggle" @click="showRef = !showRef">
+        <span>{{ showRef ? '▾' : '▸' }}</span> {{ ui.refTitle }}
+      </button>
+      <div class="ref-table" v-if="showRef">
+        <div class="ref-row" v-for="entry in MORSE_TABLE" :key="entry.ch">
+          <span class="ref-letter">{{ entry.ch }}</span>
+          <span class="ref-code">{{ entry.display }}</span>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /game-wrap -->
+</div><!-- /app -->
+
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+<script>
+const { createApp, ref, computed, watch, watchEffect, onMounted } = Vue;
+
+/* ── Morse encoding ────────────────────────────────────────────── */
+const MORSE_MAP = {
+  A:'.-',   B:'-...', C:'-.-.', D:'-..', E:'.', F:'..-.',
+  G:'--.',  H:'....', I:'..',   J:'.---',K:'-.-', L:'.-..',
+  M:'--',   N:'-.',   O:'---',  P:'.--.', Q:'--.-',R:'.-.',
+  S:'...',  T:'-',    U:'..-',  V:'...-', W:'.--', X:'-..-',
+  Y:'-.--', Z:'--..',
+  '0':'-----','1':'.----','2':'..---','3':'...--','4':'....-',
+  '5':'.....','6':'-....','7':'--...','8':'---..','9':'----.',
+};
+
+const MORSE_TABLE = Object.entries(MORSE_MAP).map(([ch, code]) => ({
+  ch,
+  code,
+  display: [...code].map(c => c === '.' ? '·' : '−').join(' ')
+}));
+
+/* Encode message to sequence of timing events
+   k: 'd'=dit, 'h'=dah, 's'=symbol-gap, 'l'=letter-gap, 'w'=word-gap
+   trace: 'd','h','ls'=letter-sep,'ws'=word-sep
+*/
+function encodeMessage(msg) {
+  const events = [];   // { k, dur_units }
+  const traceSyms = [];
+  const words = msg.toUpperCase().split(/\s+/).filter(Boolean);
+  words.forEach((word, wi) => {
+    if (wi > 0) { events.push({ k: 'w', u: 7 }); traceSyms.push({ k: 'ws' }); }
+    [...word].forEach((ch, ci) => {
+      if (ci > 0) { events.push({ k: 'l', u: 3 }); traceSyms.push({ k: 'ls' }); }
+      const code = MORSE_MAP[ch];
+      if (!code) return;
+      [...code].forEach((sym, si) => {
+        if (si > 0) events.push({ k: 's', u: 1 });
+        if (sym === '.') { events.push({ k: 'd', u: 1 }); traceSyms.push({ k: 'd' }); }
+        else             { events.push({ k: 'h', u: 3 }); traceSyms.push({ k: 'h' }); }
+      });
+    });
+  });
+  return { events, traceSyms };
+}
+
+/* ── Campaign & bonus words ────────────────────────────────────── */
+const CAMPAIGN = ['SOS', 'HI', 'YES', 'COOL', 'HELLO', 'MORSE', 'KEEP GOING', 'WELL DONE'];
+const BONUS_POOL = [
+  'RADIO', 'BEEP', 'SIGNAL', 'ROGER', 'WILCO', 'COPY',
+  'MAYDAY', 'STAND BY', 'CQ CQ', 'OVER', 'BRAVO', 'ECHO',
+  'LIMA', 'DELTA', 'ALPHA', 'FOXTROT', 'TANGO',
+];
+
+/* Shuffle array (Fisher-Yates) */
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/* ── Speeds ────────────────────────────────────────────────────── */
+const SPEEDS = [
+  { id: 'slow',   label: 'Slow',   unit: 280 },
+  { id: 'normal', label: 'Normal', unit: 180 },
+  { id: 'fast',   label: 'Fast',   unit: 100 },
+];
+
+/* ── UI strings ────────────────────────────────────────────────── */
+const UI = {
+  en: {
+    play: 'Play', check: 'Check', hint: 'Show a hint',
+    placeholder: 'Type the message…',
+    level: 'LEVEL', bonus: 'BONUS',
+    next: 'Next Level', finish: 'Finish Campaign',
+    restart: 'Play Again',
+    refTitle: 'Morse Code Reference',
+    winTitle: 'CAMPAIGN COMPLETE!',
+    winSub: 'You decoded all messages. Ready for bonus challenges?',
+    bonusStart: 'Bonus Mode →',
+    hintLetters: (word) => `Starts with: ${word[0]}`,
+    hintWords: (n) => `${n} word${n > 1 ? 's' : ''} in the message`,
+    feedbackOk: '✓ Correct!',
+    feedbackErr: '✗ Try again',
+    easy: 'Easy', hard: 'Hard',
+  },
+  he: {
+    play: 'נגן', check: 'בדוק', hint: 'הצג רמז',
+    placeholder: 'הקלד את ההודעה…',
+    level: 'שלב', bonus: 'בונוס',
+    next: 'שלב הבא', finish: 'סיים קמפיין',
+    restart: 'שחק שוב',
+    refTitle: 'טבלת מורס',
+    winTitle: 'הקמפיין הושלם!',
+    winSub: 'פיצחת את כל ההודעות. מוכן לאתגרי בונוס?',
+    bonusStart: 'מצב בונוס ←',
+    hintLetters: (word) => `מתחיל ב: ${word[0]}`,
+    hintWords: (n) => `${n} מילה${n > 1 ? 'ות' : ''} בהודעה`,
+    feedbackOk: '✓ נכון!',
+    feedbackErr: '✗ נסה שוב',
+    easy: 'קל', hard: 'קשה',
+  },
+};
+
+/* ── Persistence ───────────────────────────────────────────────── */
+const SAVE_KEY = 'morse-v1';
+
+function saveState(state) {
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); } catch(_) {}
+}
+function loadState() {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch(_) { return null; }
+}
+
+/* ── App ───────────────────────────────────────────────────────── */
+createApp({
+  setup() {
+    const lang = ref('en');
+    const speed = ref('normal');
+    const difficulty = ref('easy');   // 'easy' | 'hard'
+    const currentLevelIdx = ref(0);
+    const completedLevels = ref([]);
+
+    const isBonusMode = ref(false);
+    const bonusQueue = ref([]);
+    const bonusIdx = ref(0);
+    const bonusCompleted = ref([]);
+
+    const lampOn = ref(false);
+    const playing = ref(false);
+    const traceSyms = ref([]);
+
+    const userAnswer = ref('');
+    const answered = ref(null);   // null | true | false
+    const feedbackMsg = ref('');
+    const fbClass = ref('');
+    const hintLevel = ref(0);     // 0=none, 1=first letter, 2=word count
+
+    const showRef = ref(false);
+
+    // Generation counter for cancellable playback
+    let playGen = 0;
+
+    const ui = computed(() => UI[lang.value]);
+
+    const allDone = computed(() =>
+      completedLevels.value.length >= CAMPAIGN.length
+    );
+
+    const levelNum = computed(() => currentLevelIdx.value + 1);
+
+    const isLastLevel = computed(() =>
+      !isBonusMode.value && currentLevelIdx.value === CAMPAIGN.length - 1
+    );
+
+    const currentMessage = computed(() => {
+      if (isBonusMode.value) {
+        return bonusQueue.value[bonusIdx.value] || '';
+      }
+      return CAMPAIGN[currentLevelIdx.value] || '';
+    });
+
+    const currentBonusWord = computed(() => bonusQueue.value[bonusIdx.value] || '');
+
+    // ── Detect system language preference ────────────────────────
+    function detectLang() {
+      const saved = loadState();
+      if (saved && saved.lang) return saved.lang;
+      const bl = (navigator.language || '').toLowerCase();
+      return bl.startsWith('he') || bl.startsWith('ar') ? 'he' : 'en';
+    }
+
+    watchEffect(() => {
+      const dir = lang.value === 'he' ? 'rtl' : 'ltr';
+      document.documentElement.dir = dir;
+      document.documentElement.lang = lang.value;
+    });
+
+    // ── State persistence ─────────────────────────────────────────
+    function persist() {
+      saveState({
+        version: 1,
+        lang: lang.value,
+        speed: speed.value,
+        difficulty: difficulty.value,
+        currentLevelIdx: currentLevelIdx.value,
+        completedLevels: completedLevels.value,
+        isBonusMode: isBonusMode.value,
+        bonusQueue: bonusQueue.value,
+        bonusIdx: bonusIdx.value,
+        bonusCompleted: bonusCompleted.value,
+      });
+    }
+
+    function setSpeed(s) {
+      speed.value = s;
+      persist();
+    }
+
+    function setDifficulty(d) {
+      difficulty.value = d;
+      traceSyms.value = [];
+      persist();
+    }
+
+    // ── Playback engine ───────────────────────────────────────────
+    function unitMs() {
+      return SPEEDS.find(s => s.id === speed.value)?.unit ?? 180;
+    }
+
+    function delay(ms, gen) {
+      return new Promise(resolve => {
+        setTimeout(() => resolve(gen === playGen), ms);
+      });
+    }
+
+    async function play() {
+      if (playing.value) return;
+      const gen = ++playGen;
+      playing.value = true;
+      lampOn.value = false;
+      traceSyms.value = [];
+
+      const { events, traceSyms: syms } = encodeMessage(currentMessage.value);
+      const u = unitMs();
+
+      // Pre-compute trace positions for each on-event
+      // We'll append to traceSyms as we encounter visual symbols
+      let tracePos = 0; // index into syms
+
+      for (const ev of events) {
+        if (gen !== playGen) break;
+
+        if (ev.k === 'd' || ev.k === 'h') {
+          lampOn.value = true;
+          // Append trace symbol
+          if (tracePos < syms.length) {
+            // Append separators if needed
+            while (tracePos < syms.length && (syms[tracePos].k === 'ls' || syms[tracePos].k === 'ws')) {
+              traceSyms.value = [...traceSyms.value, syms[tracePos]];
+              tracePos++;
+            }
+            if (tracePos < syms.length) {
+              traceSyms.value = [...traceSyms.value, syms[tracePos]];
+              tracePos++;
+            }
+          }
+          const ok = await delay(ev.u * u, gen);
+          if (!ok) break;
+          lampOn.value = false;
+        } else {
+          // silence gap
+          lampOn.value = false;
+          const ok = await delay(ev.u * u, gen);
+          if (!ok) break;
+        }
+      }
+
+      if (gen === playGen) {
+        lampOn.value = false;
+        playing.value = false;
+      }
+    }
+
+    function stop() {
+      playGen++;
+      playing.value = false;
+      lampOn.value = false;
+    }
+
+    // ── Answer checking ───────────────────────────────────────────
+    function normalize(s) {
+      return s.trim().toUpperCase().replace(/\s+/g, ' ');
+    }
+
+    function checkAnswer() {
+      if (answered.value === true) return;
+      const got = normalize(userAnswer.value);
+      const want = normalize(currentMessage.value);
+      if (got === want) {
+        answered.value = true;
+        feedbackMsg.value = ui.value.feedbackOk;
+        fbClass.value = 'ok';
+        // Mark completed
+        if (!isBonusMode.value) {
+          const idx = currentLevelIdx.value;
+          if (!completedLevels.value.includes(idx)) {
+            completedLevels.value = [...completedLevels.value, idx];
+          }
+        } else {
+          if (!bonusCompleted.value.includes(bonusIdx.value)) {
+            bonusCompleted.value = [...bonusCompleted.value, bonusIdx.value];
+          }
+        }
+        persist();
+      } else {
+        answered.value = false;
+        feedbackMsg.value = ui.value.feedbackErr;
+        fbClass.value = 'err';
+        setTimeout(() => {
+          if (answered.value === false) { answered.value = null; feedbackMsg.value = ''; fbClass.value = ''; }
+        }, 1200);
+      }
+    }
+
+    function giveHint() {
+      const msg = currentMessage.value;
+      if (hintLevel.value === 0) {
+        const firstWord = msg.split(' ')[0];
+        feedbackMsg.value = ui.value.hintLetters(firstWord);
+        fbClass.value = 'hint-text';
+        hintLevel.value = 1;
+      } else if (hintLevel.value === 1) {
+        const n = msg.split(' ').length;
+        feedbackMsg.value = ui.value.hintWords(n);
+        fbClass.value = 'hint-text';
+        hintLevel.value = 2;
+      }
+    }
+
+    function resetRound() {
+      stop();
+      traceSyms.value = [];
+      userAnswer.value = '';
+      answered.value = null;
+      feedbackMsg.value = '';
+      fbClass.value = '';
+      hintLevel.value = 0;
+    }
+
+    function nextLevel() {
+      if (isLastLevel.value) {
+        // All campaign done — trigger win state
+        persist();
+        resetRound();
+        return;
+      }
+      currentLevelIdx.value++;
+      resetRound();
+      persist();
+    }
+
+    function startBonus() {
+      bonusQueue.value = shuffle(BONUS_POOL);
+      bonusIdx.value = 0;
+      bonusCompleted.value = [];
+      isBonusMode.value = true;
+      resetRound();
+      persist();
+    }
+
+    function nextBonus() {
+      if (bonusIdx.value >= bonusQueue.value.length - 1) {
+        // Restart bonus with new shuffle
+        bonusQueue.value = shuffle(BONUS_POOL);
+        bonusIdx.value = 0;
+        bonusCompleted.value = [];
+      } else {
+        bonusIdx.value++;
+      }
+      resetRound();
+      persist();
+    }
+
+    // ── Load state ────────────────────────────────────────────────
+    onMounted(() => {
+      const saved = loadState();
+      if (saved) {
+        if (saved.lang) lang.value = saved.lang;
+        if (saved.speed) speed.value = saved.speed;
+        if (saved.difficulty) difficulty.value = saved.difficulty;
+        if (typeof saved.currentLevelIdx === 'number') currentLevelIdx.value = saved.currentLevelIdx;
+        if (Array.isArray(saved.completedLevels)) completedLevels.value = saved.completedLevels;
+        if (saved.isBonusMode) {
+          isBonusMode.value = true;
+          if (Array.isArray(saved.bonusQueue) && saved.bonusQueue.length) bonusQueue.value = saved.bonusQueue;
+          else bonusQueue.value = shuffle(BONUS_POOL);
+          if (typeof saved.bonusIdx === 'number') bonusIdx.value = saved.bonusIdx;
+          if (Array.isArray(saved.bonusCompleted)) bonusCompleted.value = saved.bonusCompleted;
+        }
+      } else {
+        lang.value = detectLang();
+      }
+    });
+
+    return {
+      lang, speed, SPEEDS, difficulty, ui,
+      currentLevelIdx, completedLevels, levelNum, isLastLevel, allDone,
+      isBonusMode, bonusQueue, bonusIdx, bonusCompleted, currentBonusWord,
+      lampOn, playing, traceSyms,
+      userAnswer, answered, feedbackMsg, fbClass, hintLevel,
+      showRef,
+      CAMPAIGN, MORSE_TABLE,
+      currentMessage,
+      play, stop, setSpeed, setDifficulty,
+      checkAnswer, giveHint,
+      nextLevel, nextBonus, startBonus,
+    };
+  }
+}).mount('#app');
+
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
+</script>
+</body>
+</html>

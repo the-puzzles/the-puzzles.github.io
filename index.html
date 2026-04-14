@@ -77,6 +77,7 @@ header {
 .card.colorku:hover   { border-color: #c084fc; box-shadow: 0 12px 40px rgba(192,132,252,0.15); }
 .card.outlines:hover    { border-color: #34d399; box-shadow: 0 12px 40px rgba(52,211,153,0.15); }
 .card.wordsearch:hover  { border-color: #fb923c; box-shadow: 0 12px 40px rgba(251,146,60,0.15); }
+.card.morse:hover       { border-color: #fbbf24; box-shadow: 0 12px 40px rgba(251,191,36,0.15); }
 
 /* ── Card header ─────────────────────────────────────────────────────── */
 .card-header { display: flex; align-items: center; gap: 14px; }
@@ -93,6 +94,7 @@ header {
 .colorku  .card-icon { background: #21103a; }
 .outlines .card-icon  { background: #0d2a1e; }
 .wordsearch .card-icon { background: #1f1010; }
+.morse      .card-icon { background: #1c1a10; }
 
 .card-title {
   font-size: 1.5rem;
@@ -125,6 +127,12 @@ header {
 }
 .wordsearch .card-title {
   background: linear-gradient(135deg, #fb923c, #f59e0b);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.morse .card-title {
+  background: linear-gradient(135deg, #fbbf24, #fde68a);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -186,6 +194,7 @@ header {
 .colorku  .rule-dot { background: #c084fc; }
 .outlines    .rule-dot { background: #34d399; }
 .wordsearch  .rule-dot { background: #fb923c; }
+.morse       .rule-dot { background: #fbbf24; }
 
 /* ── Play button ─────────────────────────────────────────────────────── */
 .play-btn {
@@ -212,6 +221,7 @@ header {
 .colorku  .play-btn { background: #5b21b6; color: #e9d5ff; border: 1px solid #c084fc; }
 .outlines    .play-btn { background: #0d3d2a; color: #34d399; border: 1px solid #34d399; }
 .wordsearch  .play-btn { background: #7c2d00; color: #fb923c; border: 1px solid #fb923c; }
+.morse       .play-btn { background: #92400e; color: #fbbf24; border: 1px solid #fbbf24; }
 
 .play-arrow { font-size: 1rem; transition: transform 0.15s; }
 .play-btn:hover .play-arrow { transform: translateX(3px); }
@@ -449,6 +459,48 @@ footer {
     </div>
 
     <div class="play-btn">Play Word Search <span class="play-arrow">→</span></div>
+  </a>
+
+  <!-- ── Morse Code ──────────────────────────────────────────── -->
+  <a class="card morse" href="morse.html">
+    <div class="card-header">
+      <div class="card-icon">📡</div>
+      <div class="card-title">MORSE CODE</div>
+    </div>
+
+    <!-- Mini preview: lamp + dots/dashes for SOS -->
+    <div class="preview" style="grid-template-columns: 1fr; padding: 16px 12px;">
+      <div style="display:flex; flex-direction:column; align-items:center; gap:12px; width:100%;">
+        <div style="width:52px;height:52px;border-radius:50%;background:#1c1a10;border:2px solid #3a3510;box-shadow:0 0 24px 6px rgba(251,191,36,0.45);background:#fbbf24;"></div>
+        <div style="display:flex;align-items:center;gap:5px;">
+          <!-- S: ... -->
+          <div style="width:8px;height:8px;border-radius:50%;background:#fbbf24;"></div>
+          <div style="width:8px;height:8px;border-radius:50%;background:#fbbf24;"></div>
+          <div style="width:8px;height:8px;border-radius:50%;background:#fbbf24;"></div>
+          <div style="width:10px;"></div>
+          <!-- O: --- -->
+          <div style="width:22px;height:8px;border-radius:4px;background:#fbbf24;"></div>
+          <div style="width:22px;height:8px;border-radius:4px;background:#fbbf24;"></div>
+          <div style="width:22px;height:8px;border-radius:4px;background:#fbbf24;"></div>
+          <div style="width:10px;"></div>
+          <!-- S: ... -->
+          <div style="width:8px;height:8px;border-radius:50%;background:#fbbf24;"></div>
+          <div style="width:8px;height:8px;border-radius:50%;background:#fbbf24;"></div>
+          <div style="width:8px;height:8px;border-radius:50%;background:#fbbf24;"></div>
+        </div>
+      </div>
+    </div>
+
+    <p class="card-tagline">A lamp flashes dots and dashes. Decode the Morse code signal into words using the reference table.</p>
+
+    <div class="card-rules">
+      <div class="rule"><div class="rule-dot"></div><span>Watch the lamp flash — short blinks are dots, long are dashes</span></div>
+      <div class="rule"><div class="rule-dot"></div><span>Use the built-in reference table to decode</span></div>
+      <div class="rule"><div class="rule-dot"></div><span>8 campaign levels · speed control</span></div>
+      <div class="rule"><div class="rule-dot"></div><span>Hints reveal first letter or word count</span></div>
+    </div>
+
+    <div class="play-btn">Play Morse Code <span class="play-arrow">→</span></div>
   </a>
 
 </div>
