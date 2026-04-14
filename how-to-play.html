@@ -282,6 +282,7 @@ kbd {
 .wordsearch .play-link { background: #7c2d12; color: #fed7aa; border: 1px solid #fb923c; }
 .morse    .play-link { background: #713f12; color: #fef3c7; border: 1px solid #fbbf24; }
 .wordladder .play-link { background: #164e63; color: #a5f3fc; border: 1px solid #22d3ee; }
+.braille    .play-link { background: #2e1065; color: #ddd6fe; border: 1px solid #a78bfa; }
 
 .outlines .section-title {
   background: linear-gradient(135deg, #34d399, #6ee7b7);
@@ -299,11 +300,16 @@ kbd {
   background: linear-gradient(135deg, #22d3ee, #a5f3fc);
   -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
 }
+.braille .section-title {
+  background: linear-gradient(135deg, #a78bfa, #c4b5fd);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
 
 .outlines  .step-num { background: #052e16; color: #34d399; }
 .wordsearch .step-num { background: #431407; color: #fb923c; }
 .morse    .step-num { background: #3d1f00; color: #fbbf24; }
 .wordladder .step-num { background: #082f49; color: #22d3ee; }
+.braille    .step-num { background: #1e1065; color: #a78bfa; }
 
 /* ── Morse lamp demo ──────────────────────────────────────────────── */
 .lamp-demo {
@@ -360,6 +366,52 @@ kbd {
 }
 .ladder-cell.start { border-color: #6e7681; }
 .ladder-cell.end   { border-color: #22d3ee; background: #082f49; color: #22d3ee; }
+
+/* ── Braille demo cell ────────────────────────────────────────────── */
+.braille-demo-cell {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr 1fr;
+  gap: 7px;
+  padding: 12px 10px;
+  background: #0d1117;
+  border: 1.5px solid #21262d;
+  border-radius: 10px;
+}
+.bdemo-dot {
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: #1e1e2e;
+  border: 1.5px solid #2d2b55;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.55rem;
+  font-weight: 700;
+  color: transparent;
+}
+.bdemo-dot.lit {
+  background: #a78bfa;
+  border-color: #c4b5fd;
+  box-shadow: 0 0 8px 2px rgba(167,139,250,0.5);
+  color: #1e1528;
+}
+.braille-word-demo {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.braille-letter-demo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.braille-letter-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #a78bfa;
+}
 
 /* ── Mobile ───────────────────────────────────────────────────────── */
 @media (max-width: 540px) {
@@ -776,6 +828,76 @@ kbd {
     </div>
   </div>
 
+  <!-- ── BRAILLE ──────────────────────────────────────────────────── -->
+  <div class="section braille">
+    <div class="section-header">
+      <div class="section-icon">⠿</div>
+      <div class="section-title">Braille</div>
+    </div>
+    <div class="section-body">
+
+      <p class="intro-text">
+        Watch the dots of a Braille cell light up one by one and decode the hidden word.
+        Each letter is a unique pattern of raised dots in a 2×3 grid.
+      </p>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-text">Press <strong>Play</strong> — dots light up in order (1→6) for each letter, then the next letter follows.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-text">In <strong>Easy</strong> mode each lit dot shows its number. In <strong>Hard</strong> mode just the dots are shown — no labels.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-text">Type the word you decoded, then press <strong>Check</strong> (or Enter). Use the hint button for the first letter or word length.</div>
+        </div>
+      </div>
+
+      <!-- Demo: spell HI -->
+      <div class="demo" style="align-items:center;gap:20px;flex-direction:column">
+        <div class="braille-word-demo">
+          <!-- H: dots 1,2,5 — display order [1,4,2,5,3,6] -->
+          <div class="braille-letter-demo">
+            <div class="braille-demo-cell">
+              <div class="bdemo-dot lit">1</div>
+              <div class="bdemo-dot">4</div>
+              <div class="bdemo-dot lit">2</div>
+              <div class="bdemo-dot lit">5</div>
+              <div class="bdemo-dot">3</div>
+              <div class="bdemo-dot">6</div>
+            </div>
+            <div class="braille-letter-label">H</div>
+          </div>
+          <!-- I: dots 2,4 — display order [1,4,2,5,3,6] -->
+          <div class="braille-letter-demo">
+            <div class="braille-demo-cell">
+              <div class="bdemo-dot">1</div>
+              <div class="bdemo-dot lit">4</div>
+              <div class="bdemo-dot lit">2</div>
+              <div class="bdemo-dot">5</div>
+              <div class="bdemo-dot">3</div>
+              <div class="bdemo-dot">6</div>
+            </div>
+            <div class="braille-letter-label">I</div>
+          </div>
+        </div>
+        <div style="font-size:0.78rem;color:#8b949e;text-align:center">
+          The word <strong style="color:#a78bfa">HI</strong> — dots light left-column top-to-bottom, then right-column
+        </div>
+      </div>
+
+      <div class="note-box" style="border-color:#4c1d95;background:#1e1528">
+        <strong>Dot numbering:</strong> Left column top→bottom = 1, 2, 3 &nbsp;·&nbsp; Right column top→bottom = 4, 5, 6.
+        The dots always animate in order 1 through 6 — only active dots light up.
+      </div>
+
+      <a class="play-link" href="braille.html">Play Braille →</a>
+    </div>
+  </div>
+
   <!-- ── CONTROLS ────────────────────────────────────────────────── -->
   <div class="section controls">
     <div class="section-header">
@@ -858,6 +980,24 @@ kbd {
         <div class="ctrl-desc">Reveal one suggested next word</div>
         <div class="ctrl-label">Give Up</div>
         <div class="ctrl-desc">Show the full solution path</div>
+      </div>
+
+      <div class="divider" style="height:1px;background:#21262d"></div>
+
+      <div style="font-size:0.8rem;color:#6e7681;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px">Braille</div>
+      <div class="controls-grid">
+        <div class="ctrl-label">▶ Play</div>
+        <div class="ctrl-desc">Animate the word letter-by-letter in Braille dots</div>
+        <div class="ctrl-label">■ Stop</div>
+        <div class="ctrl-desc">Stop playback mid-animation</div>
+        <div class="ctrl-label">Easy / Hard</div>
+        <div class="ctrl-desc">Easy shows dot numbers inside lit dots; Hard shows plain dots</div>
+        <div class="ctrl-label">Slow / Normal / Fast</div>
+        <div class="ctrl-desc">Control how long each dot stays lit</div>
+        <div class="ctrl-label">Type word → Enter</div>
+        <div class="ctrl-desc">Submit your decoded word</div>
+        <div class="ctrl-label">Show a hint</div>
+        <div class="ctrl-desc">Reveal the first letter or total letter count</div>
       </div>
 
       <div class="divider" style="height:1px;background:#21262d"></div>

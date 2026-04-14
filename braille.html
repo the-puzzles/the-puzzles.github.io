@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Braille · Puzzle Games</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0d1117">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: #0d1117;
+  color: #c9d1d9;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 16px 64px;
+}
+
+/* ── Header ─────────────────────────────────────────────────────── */
+.top-bar {
+  width: 100%;
+  max-width: 640px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+.home-btn {
+  color: #6e7681;
+  text-decoration: none;
+  font-size: 0.82rem;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  padding: 5px 10px;
+  transition: color 0.15s, border-color 0.15s;
+}
+.home-btn:hover { color: #c9d1d9; border-color: #6e7681; }
+.page-title {
+  font-size: 1.5rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  background: linear-gradient(135deg, #a78bfa, #7c3aed);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Main container ──────────────────────────────────────────────── */
+.game-wrap {
+  width: 100%;
+  max-width: 640px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── Panel ───────────────────────────────────────────────────────── */
+.panel {
+  background: #161b22;
+  border: 2px solid #30363d;
+  border-radius: 14px;
+  padding: 20px 22px;
+}
+
+/* ── Level info ──────────────────────────────────────────────────── */
+.level-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.level-label {
+  font-size: 0.78rem;
+  color: #6e7681;
+  letter-spacing: 0.06em;
+}
+.level-badge {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #a78bfa;
+}
+.level-dots {
+  display: flex;
+  gap: 5px;
+}
+.level-pip {
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  background: #21262d;
+  border: 1.5px solid #30363d;
+  transition: background 0.2s, border-color 0.2s;
+}
+.level-pip.done { background: #a78bfa; border-color: #a78bfa; }
+.level-pip.current { border-color: #a78bfa; }
+
+/* ── Braille cell ────────────────────────────────────────────────── */
+.cell-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 24px 0 16px;
+}
+
+/* The 2×3 grid of dots */
+.braille-cell {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr 1fr;
+  gap: 14px;
+  padding: 20px 18px;
+  background: #0d1117;
+  border: 2px solid #21262d;
+  border-radius: 14px;
+}
+
+/* Dots are placed in the order they appear in the 2×3 grid:
+   visual order: [1,4], [2,5], [3,6]  (left col = 1,2,3; right col = 4,5,6) */
+.bdot {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  background: #1e1e2e;
+  border: 2.5px solid #2d2b55;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: transparent;
+  transition: background 0.08s, box-shadow 0.08s, border-color 0.08s, color 0.08s;
+}
+.bdot.lit {
+  background: #a78bfa;
+  border-color: #c4b5fd;
+  box-shadow: 0 0 18px 5px rgba(167,139,250,0.5), 0 0 6px 2px rgba(167,139,250,0.8);
+}
+.bdot.lit.show-num {
+  color: #1e1528;
+}
+
+/* Word progress dots under the cell */
+.word-progress {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+  min-height: 14px;
+}
+.letter-pip {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: #21262d;
+  border: 1.5px solid #30363d;
+  transition: background 0.2s, border-color 0.2s;
+}
+.letter-pip.done { background: #a78bfa; border-color: #a78bfa; }
+.letter-pip.current { border-color: #a78bfa; }
+
+/* ── Controls ────────────────────────────────────────────────────── */
+.controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.play-btn {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 28px;
+  background: #2e1065;
+  color: #a78bfa;
+  border: 1.5px solid #a78bfa;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+  letter-spacing: 0.04em;
+}
+.play-btn:hover { opacity: 0.85; transform: translateY(-1px); }
+.play-btn:active { transform: translateY(0); }
+.play-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+.stop-btn {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 20px;
+  background: #161b22;
+  color: #ef4444;
+  border: 1.5px solid #ef4444;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  letter-spacing: 0.04em;
+}
+.stop-btn:hover { opacity: 0.8; }
+
+.speed-select {
+  display: flex;
+  gap: 4px;
+}
+.speed-btn {
+  padding: 7px 13px;
+  border-radius: 7px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: #21262d;
+  color: #6e7681;
+  border: 1.5px solid #30363d;
+  transition: all 0.15s;
+}
+.speed-btn.active {
+  background: #1e1528;
+  color: #a78bfa;
+  border-color: #a78bfa;
+}
+.speed-btn:hover:not(.active) { color: #c9d1d9; border-color: #6e7681; }
+
+.diff-select {
+  display: flex;
+  gap: 4px;
+}
+.diff-btn {
+  padding: 7px 13px;
+  border-radius: 7px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: #21262d;
+  color: #6e7681;
+  border: 1.5px solid #30363d;
+  transition: all 0.15s;
+}
+.diff-btn.active {
+  background: #1e1528;
+  color: #a78bfa;
+  border-color: #a78bfa;
+}
+.diff-btn:hover:not(.active) { color: #c9d1d9; border-color: #6e7681; }
+
+/* ── Answer ──────────────────────────────────────────────────────── */
+.answer-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+.answer-input {
+  flex: 1;
+  background: #0d1117;
+  border: 1.5px solid #30363d;
+  border-radius: 8px;
+  color: #e6edf3;
+  font-size: 1rem;
+  padding: 10px 14px;
+  outline: none;
+  letter-spacing: 0.05em;
+  transition: border-color 0.15s;
+  font-family: inherit;
+}
+.answer-input:focus { border-color: #a78bfa; }
+.answer-input:disabled { opacity: 0.45; }
+.answer-input.correct { border-color: #22c55e; background: #0d1f12; }
+.answer-input.wrong   { border-color: #ef4444; background: #1f0d0d; }
+
+.check-btn {
+  padding: 10px 20px;
+  background: #a78bfa;
+  color: #0d1117;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 800;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  transition: opacity 0.15s, transform 0.1s;
+  white-space: nowrap;
+}
+.check-btn:hover { opacity: 0.85; transform: translateY(-1px); }
+.check-btn:active { transform: translateY(0); }
+.check-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+/* ── Feedback ────────────────────────────────────────────────────── */
+.feedback {
+  text-align: center;
+  font-size: 0.9rem;
+  font-weight: 600;
+  min-height: 22px;
+  padding: 2px 0;
+}
+.feedback.ok   { color: #22c55e; }
+.feedback.err  { color: #ef4444; }
+.feedback.hint-text { color: #a78bfa; }
+
+/* ── Next button ─────────────────────────────────────────────────── */
+.next-btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 12px 28px;
+  background: #14532d;
+  color: #22c55e;
+  border: 1.5px solid #22c55e;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  transition: opacity 0.15s, transform 0.1s;
+  width: 100%;
+  margin-top: 8px;
+}
+.next-btn:hover { opacity: 0.85; transform: translateY(-1px); }
+.next-btn:active { transform: translateY(0); }
+
+/* ── Win banner ──────────────────────────────────────────────────── */
+.win-panel {
+  text-align: center;
+  padding: 32px 20px 28px;
+}
+.win-icon { font-size: 3rem; margin-bottom: 12px; }
+.win-title {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #a78bfa;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
+.win-sub {
+  font-size: 0.88rem;
+  color: #8b949e;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+/* ── Reference table ─────────────────────────────────────────────── */
+.ref-toggle {
+  background: none;
+  border: 1.5px solid #30363d;
+  border-radius: 8px;
+  color: #8b949e;
+  font-size: 0.8rem;
+  padding: 6px 14px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  letter-spacing: 0.04em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  margin: 0 auto;
+}
+.ref-toggle:hover { color: #a78bfa; border-color: #a78bfa; }
+
+.ref-section-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #6e7681;
+  margin: 14px 0 8px;
+  text-transform: uppercase;
+}
+.ref-section-label:first-child { margin-top: 14px; }
+.ref-table {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: 6px;
+}
+.ref-row {
+  background: #0d1117;
+  border: 1px solid #21262d;
+  border-radius: 8px;
+  padding: 6px 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ref-letter {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #a78bfa;
+  width: 14px;
+  flex-shrink: 0;
+}
+/* Mini braille cell in reference table */
+.mini-cell {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr 1fr;
+  gap: 3px;
+}
+.mini-dot {
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  background: #21262d;
+  border: 1px solid #30363d;
+}
+.mini-dot.lit {
+  background: #a78bfa;
+  border-color: #c4b5fd;
+}
+
+/* ── Hint / misc ─────────────────────────────────────────────────── */
+.hint-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 2px;
+}
+.hint-link {
+  font-size: 0.78rem;
+  color: #6e7681;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+  transition: color 0.15s;
+}
+.hint-link:hover { color: #a78bfa; }
+
+.divider { border: none; border-top: 1px solid #21262d; margin: 4px 0; }
+
+@media (max-width: 480px) {
+  .page-title { font-size: 1.2rem; }
+  .ref-table { grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); }
+  .bdot { width: 32px; height: 32px; }
+  .braille-cell { gap: 10px; padding: 16px 14px; }
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="top-bar">
+    <a class="home-btn" href="index.html">← Home</a>
+    <div class="page-title">BRAILLE</div>
+  </div>
+
+  <div class="game-wrap">
+
+    <!-- ── Playback + answer panel ───────────────────────────────── -->
+    <div class="panel" v-if="!showWinBanner">
+
+      <!-- Level indicator -->
+      <div class="level-row">
+        <div>
+          <div class="level-label">{{ isBonusMode ? 'BONUS' : 'LEVEL' }}</div>
+          <div class="level-badge" v-if="!isBonusMode">{{ levelNum }} / {{ CAMPAIGN.length }}</div>
+          <div class="level-badge" v-else>{{ currentWord }}</div>
+        </div>
+        <div class="level-dots" v-if="!isBonusMode">
+          <div v-for="(_, i) in CAMPAIGN" :key="i"
+               :class="['level-pip', completedLevels.includes(i) ? 'done' : (i === currentLevelIdx ? 'current' : '')]"></div>
+        </div>
+      </div>
+
+      <hr class="divider">
+
+      <!-- Braille cell display -->
+      <div class="cell-area">
+        <div class="braille-cell" aria-label="Braille cell">
+          <!-- Grid order: [1,4], [2,5], [3,6] — left col top-to-bottom = 1,2,3; right = 4,5,6 -->
+          <div v-for="pos in DISPLAY_ORDER" :key="pos"
+               :class="['bdot', litDots.has(pos) ? 'lit' : '', litDots.has(pos) && difficulty === 'easy' ? 'show-num' : '']">
+            {{ litDots.has(pos) && difficulty === 'easy' ? pos : '' }}
+          </div>
+        </div>
+
+        <!-- Letter progress pips -->
+        <div class="word-progress">
+          <div v-for="(ch, i) in currentLetters" :key="i"
+               :class="['letter-pip', i < letterIdx ? 'done' : (i === letterIdx ? 'current' : '')]"></div>
+        </div>
+      </div>
+
+      <!-- Speed + Difficulty + Play -->
+      <div class="controls">
+        <div class="diff-select">
+          <button :class="['diff-btn', difficulty === 'easy' ? 'active' : '']"
+                  @click="setDifficulty('easy')">Easy</button>
+          <button :class="['diff-btn', difficulty === 'hard' ? 'active' : '']"
+                  @click="setDifficulty('hard')">Hard</button>
+        </div>
+        <div class="speed-select">
+          <button v-for="s in SPEEDS" :key="s.id"
+                  :class="['speed-btn', speed === s.id ? 'active' : '']"
+                  @click="setSpeed(s.id)">{{ s.label }}</button>
+        </div>
+        <button class="play-btn" @click="play" :disabled="playing">
+          ▶ Play
+        </button>
+        <button class="stop-btn" v-if="playing" @click="stop">■</button>
+      </div>
+
+      <hr class="divider" style="margin-top:16px">
+
+      <!-- Answer -->
+      <div style="margin-top:14px; display:flex; flex-direction:column; gap:10px;">
+        <div class="answer-row">
+          <input class="answer-input"
+                 :class="answered === true ? 'correct' : answered === false ? 'wrong' : ''"
+                 v-model="userAnswer"
+                 placeholder="Type the word…"
+                 :disabled="answered === true"
+                 @keydown.enter="checkAnswer"
+                 autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" />
+          <button class="check-btn" @click="checkAnswer"
+                  :disabled="answered === true || userAnswer.trim() === ''">
+            Check
+          </button>
+        </div>
+
+        <div class="hint-row">
+          <div :class="['feedback', fbClass]">{{ feedbackMsg }}</div>
+          <button class="hint-link" v-if="answered !== true && hintLevel < 2" @click="giveHint">
+            Show a hint
+          </button>
+        </div>
+      </div>
+
+      <!-- Next -->
+      <button class="next-btn" v-if="answered === true" @click="nextLevel">
+        {{ isLastLevel ? 'Finish Campaign' : (isBonusMode && bonusIdx >= bonusQueue.length - 1 ? 'Play Again' : 'Next Level') }} →
+      </button>
+
+    </div>
+
+    <!-- ── Win banner ─────────────────────────────────────────────── -->
+    <div class="panel win-panel" v-if="showWinBanner">
+      <div class="win-icon">⠿</div>
+      <div class="win-title">CAMPAIGN COMPLETE!</div>
+      <div class="win-sub">You decoded all the words. Ready for bonus challenges?</div>
+      <button class="play-btn" style="margin:0 auto" @click="startBonus">Bonus Mode →</button>
+    </div>
+
+    <!-- ── Braille reference table ───────────────────────────────── -->
+    <div class="panel">
+      <button class="ref-toggle" @click="showRef = !showRef">
+        <span>{{ showRef ? '▾' : '▸' }}</span> Braille Reference
+      </button>
+      <template v-if="showRef">
+        <div class="ref-section-label">Letters</div>
+        <div class="ref-table">
+          <div class="ref-row" v-for="entry in BRAILLE_LETTERS_REF" :key="entry.ch">
+            <span class="ref-letter">{{ entry.ch }}</span>
+            <div class="mini-cell">
+              <div v-for="pos in DISPLAY_ORDER" :key="pos"
+                   :class="['mini-dot', entry.dots.includes(pos) ? 'lit' : '']"></div>
+            </div>
+          </div>
+        </div>
+        <div class="ref-section-label">Numbers</div>
+        <div style="font-size:0.75rem; color:#8b949e; margin-bottom:8px; line-height:1.5;">
+          Numbers use a number indicator (dots 3,4,5,6) followed by the pattern for A–J (1–0).
+        </div>
+        <div class="ref-table">
+          <div class="ref-row" v-for="entry in BRAILLE_NUMBERS_REF" :key="entry.ch">
+            <span class="ref-letter">{{ entry.ch }}</span>
+            <div class="mini-cell">
+              <div v-for="pos in DISPLAY_ORDER" :key="pos"
+                   :class="['mini-dot', entry.dots.includes(pos) ? 'lit' : '']"></div>
+            </div>
+          </div>
+        </div>
+      </template>
+    </div>
+
+  </div><!-- /game-wrap -->
+</div><!-- /app -->
+
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+<script>
+const { createApp, ref, computed, watchEffect, onMounted } = Vue;
+
+/* ── Braille encoding ──────────────────────────────────────────── */
+// Dots numbered 1-6: left column top→bottom = 1,2,3; right column = 4,5,6
+const BRAILLE_MAP = {
+  A:[1],       B:[1,2],     C:[1,4],     D:[1,4,5],   E:[1,5],
+  F:[1,2,4],   G:[1,2,4,5], H:[1,2,5],   I:[2,4],     J:[2,4,5],
+  K:[1,3],     L:[1,2,3],   M:[1,3,4],   N:[1,3,4,5], O:[1,3,5],
+  P:[1,2,3,4], Q:[1,2,3,4,5],R:[1,2,3,5],S:[2,3,4],   T:[2,3,4,5],
+  U:[1,3,6],   V:[1,2,3,6], W:[2,4,5,6], X:[1,3,4,6], Y:[1,3,4,5,6],
+  Z:[1,3,5,6],
+};
+
+// Number indicator = dots 3,4,5,6; numbers reuse A-J patterns
+const NUM_INDICATOR = [3,4,5,6];
+const BRAILLE_DIGIT_MAP = {
+  '1':[1],'2':[1,2],'3':[1,4],'4':[1,4,5],'5':[1,5],
+  '6':[1,2,4],'7':[1,2,4,5],'8':[1,2,5],'9':[2,4],'0':[2,4,5],
+};
+
+// CSS grid display order for the 2×3 cell: [1,4,2,5,3,6]
+const DISPLAY_ORDER = [1,4,2,5,3,6];
+
+/* ── Campaign & bonus words ────────────────────────────────────── */
+const CAMPAIGN = [
+  'HI',        // 2 letters, very easy
+  'CAT',       // 3 letters
+  'LOVE',      // 4 letters
+  'HELLO',     // 5 letters
+  'WORLD',     // 5 letters
+  'BRIGHT',    // 6 letters
+  'READING',   // 7 letters
+  'LANGUAGE',  // 8 letters
+];
+
+const BONUS_POOL = [
+  'ART', 'BEE', 'CUP', 'DOG', 'EGG', 'FUN', 'GEM', 'HOP',
+  'ICE', 'JOY', 'KEY', 'MAP', 'NET', 'OWL', 'PEN', 'QUIZ',
+  'RUN', 'SKY', 'TOP', 'USE', 'VAN', 'WAX', 'YAK', 'ZEN',
+  'BOOK', 'CALM', 'DRUM', 'EASY', 'FAST', 'GLOW', 'HAND', 'IDEA',
+  'JUST', 'KIND', 'LEAF', 'MIND', 'NICE', 'OPEN', 'PLAN', 'REAL',
+  'SAFE', 'TEAM', 'UNIT', 'VERY', 'WISH', 'YOGA', 'ZERO',
+  'BRAVE', 'CLIMB', 'DREAM', 'FOCUS', 'GRACE', 'HONOR', 'INNER',
+  'LEARN', 'MUSIC', 'NOBLE', 'OCEAN', 'PEACE', 'QUEST', 'RIVER',
+  'SHARP', 'TRUST', 'UNITY', 'VALUE', 'WATER', 'YOUTH',
+];
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/* ── Speeds ────────────────────────────────────────────────────── */
+const SPEEDS = [
+  { id: 'slow',   label: 'Slow',   dotMs: 600, gapMs: 300, letterGapMs: 900 },
+  { id: 'normal', label: 'Normal', dotMs: 380, gapMs: 180, letterGapMs: 600 },
+  { id: 'fast',   label: 'Fast',   dotMs: 200, gapMs: 100, letterGapMs: 350 },
+];
+
+/* ── Reference data ────────────────────────────────────────────── */
+const BRAILLE_LETTERS_REF = Object.entries(BRAILLE_MAP).map(([ch, dots]) => ({ ch, dots }));
+const BRAILLE_NUMBERS_REF = Object.entries(BRAILLE_DIGIT_MAP).map(([ch, dots]) => ({ ch, dots }));
+
+/* ── Persistence ───────────────────────────────────────────────── */
+const SAVE_KEY = 'braille-v1';
+function saveState(s) { try { localStorage.setItem(SAVE_KEY, JSON.stringify(s)); } catch(_) {} }
+function loadState()  { try { const r = localStorage.getItem(SAVE_KEY); return r ? JSON.parse(r) : null; } catch(_) { return null; } }
+
+/* ── App ───────────────────────────────────────────────────────── */
+createApp({
+  setup() {
+    const speed      = ref('normal');
+    const difficulty = ref('easy');
+    const currentLevelIdx = ref(0);
+    const completedLevels = ref([]);
+
+    const isBonusMode  = ref(false);
+    const bonusQueue   = ref([]);
+    const bonusIdx     = ref(0);
+    const bonusCompleted = ref([]);
+
+    const litDots  = ref(new Set());
+    const letterIdx = ref(0);   // which letter of the word is currently being shown
+    const playing  = ref(false);
+
+    const userAnswer  = ref('');
+    const answered    = ref(null);   // null | true | false
+    const feedbackMsg = ref('');
+    const fbClass     = ref('');
+    const hintLevel   = ref(0);
+
+    const showRef = ref(false);
+    const showWinBanner = ref(false);
+
+    let playGen = 0;
+
+    /* ── Derived ─────────────────────────────────────────────────── */
+    const allDone = computed(() => completedLevels.value.length >= CAMPAIGN.length);
+    const levelNum = computed(() => currentLevelIdx.value + 1);
+    const isLastLevel = computed(() => !isBonusMode.value && currentLevelIdx.value === CAMPAIGN.length - 1);
+
+    const currentWord = computed(() => {
+      if (isBonusMode.value) return bonusQueue.value[bonusIdx.value] || '';
+      return CAMPAIGN[currentLevelIdx.value] || '';
+    });
+
+    // Letters of current word (uppercased, no spaces for braille)
+    const currentLetters = computed(() =>
+      [...currentWord.value.replace(/\s/g, '')].map(c => c.toUpperCase())
+    );
+
+    /* ── Persistence ─────────────────────────────────────────────── */
+    function persist() {
+      saveState({
+        version: 1,
+        speed: speed.value,
+        difficulty: difficulty.value,
+        currentLevelIdx: currentLevelIdx.value,
+        completedLevels: completedLevels.value,
+        isBonusMode: isBonusMode.value,
+        showWinBanner: showWinBanner.value,
+        bonusQueue: bonusQueue.value,
+        bonusIdx: bonusIdx.value,
+        bonusCompleted: bonusCompleted.value,
+      });
+    }
+
+    function setSpeed(s) { speed.value = s; persist(); }
+    function setDifficulty(d) { difficulty.value = d; persist(); }
+
+    /* ── Playback engine ─────────────────────────────────────────── */
+    function speedCfg() {
+      return SPEEDS.find(s => s.id === speed.value) || SPEEDS[1];
+    }
+
+    function delay(ms, gen) {
+      return new Promise(resolve => setTimeout(() => resolve(gen === playGen), ms));
+    }
+
+    // Light up dots 1→6 one by one (skipping dots not in pattern)
+    async function playLetter(dots, gen) {
+      const cfg = speedCfg();
+      litDots.value = new Set();
+      for (const dot of [1,2,3,4,5,6]) {
+        if (gen !== playGen) return false;
+        if (dots.includes(dot)) {
+          litDots.value = new Set([...litDots.value, dot]);
+          const ok = await delay(cfg.dotMs, gen);
+          if (!ok) return false;
+        }
+      }
+      // Hold the complete letter briefly
+      const ok = await delay(cfg.dotMs * 0.6, gen);
+      if (!ok) return false;
+      litDots.value = new Set();
+      return true;
+    }
+
+    async function play() {
+      if (playing.value) return;
+      const gen = ++playGen;
+      playing.value = true;
+      litDots.value = new Set();
+      letterIdx.value = 0;
+
+      const letters = currentLetters.value;
+      const cfg = speedCfg();
+
+      for (let i = 0; i < letters.length; i++) {
+        if (gen !== playGen) break;
+        letterIdx.value = i;
+        const ch = letters[i];
+        const dots = BRAILLE_MAP[ch] || [];
+        const ok = await playLetter(dots, gen);
+        if (!ok) break;
+        // Gap between letters
+        if (i < letters.length - 1) {
+          const gapOk = await delay(cfg.letterGapMs, gen);
+          if (!gapOk) break;
+        }
+      }
+
+      if (gen === playGen) {
+        playing.value = false;
+        litDots.value = new Set();
+        letterIdx.value = letters.length; // all shown
+      }
+    }
+
+    function stop() {
+      ++playGen;
+      playing.value = false;
+      litDots.value = new Set();
+    }
+
+    /* ── Answer checking ─────────────────────────────────────────── */
+    function checkAnswer() {
+      if (answered.value === true) return;
+      const input = userAnswer.value.trim().toUpperCase().replace(/\s+/g, ' ');
+      const target = currentWord.value.toUpperCase();
+      if (input === target) {
+        answered.value = true;
+        feedbackMsg.value = '✓ Correct!';
+        fbClass.value = 'ok';
+        stop();
+        if (!isBonusMode.value && !completedLevels.value.includes(currentLevelIdx.value)) {
+          completedLevels.value = [...completedLevels.value, currentLevelIdx.value];
+        }
+        if (isBonusMode.value && !bonusCompleted.value.includes(bonusIdx.value)) {
+          bonusCompleted.value = [...bonusCompleted.value, bonusIdx.value];
+        }
+        persist();
+      } else {
+        answered.value = false;
+        feedbackMsg.value = '✗ Try again';
+        fbClass.value = 'err';
+        setTimeout(() => {
+          if (answered.value === false) {
+            answered.value = null;
+            feedbackMsg.value = '';
+            fbClass.value = '';
+          }
+        }, 1200);
+      }
+    }
+
+    function giveHint() {
+      const word = currentWord.value;
+      if (hintLevel.value === 0) {
+        feedbackMsg.value = `Starts with: ${word[0]}`;
+        fbClass.value = 'hint-text';
+        hintLevel.value = 1;
+      } else if (hintLevel.value === 1) {
+        feedbackMsg.value = `${word.replace(/\s/g, '').length} letters`;
+        fbClass.value = 'hint-text';
+        hintLevel.value = 2;
+      }
+    }
+
+    /* ── Level navigation ────────────────────────────────────────── */
+    function resetRound() {
+      stop();
+      userAnswer.value = '';
+      answered.value = null;
+      feedbackMsg.value = '';
+      fbClass.value = '';
+      hintLevel.value = 0;
+      letterIdx.value = 0;
+    }
+
+    function nextLevel() {
+      if (isBonusMode.value) {
+        nextBonus();
+        return;
+      }
+      if (currentLevelIdx.value < CAMPAIGN.length - 1) {
+        currentLevelIdx.value++;
+        resetRound();
+        persist();
+      } else {
+        // Campaign finished — show win banner
+        showWinBanner.value = true;
+        resetRound();
+      }
+    }
+
+    function startBonus() {
+      showWinBanner.value = false;
+      isBonusMode.value = true;
+      bonusQueue.value = shuffle(BONUS_POOL);
+      bonusIdx.value = 0;
+      bonusCompleted.value = [];
+      resetRound();
+      persist();
+    }
+
+    function nextBonus() {
+      if (bonusIdx.value < bonusQueue.value.length - 1) {
+        bonusIdx.value++;
+      } else {
+        // Reshuffle and start over
+        bonusQueue.value = shuffle(BONUS_POOL);
+        bonusIdx.value = 0;
+        bonusCompleted.value = [];
+      }
+      resetRound();
+      persist();
+    }
+
+    /* ── Init ────────────────────────────────────────────────────── */
+    onMounted(() => {
+      const saved = loadState();
+      if (saved && saved.version === 1) {
+        speed.value      = saved.speed      || 'normal';
+        difficulty.value = saved.difficulty || 'easy';
+        currentLevelIdx.value  = saved.currentLevelIdx  || 0;
+        completedLevels.value  = saved.completedLevels  || [];
+        isBonusMode.value      = saved.isBonusMode      || false;
+        showWinBanner.value    = saved.showWinBanner    || false;
+        bonusQueue.value       = saved.bonusQueue        || [];
+        bonusIdx.value         = saved.bonusIdx          || 0;
+        bonusCompleted.value   = saved.bonusCompleted    || [];
+        if (isBonusMode.value && bonusQueue.value.length === 0) {
+          bonusQueue.value = shuffle(BONUS_POOL);
+        }
+      }
+    });
+
+    return {
+      CAMPAIGN, SPEEDS, DISPLAY_ORDER,
+      BRAILLE_LETTERS_REF, BRAILLE_NUMBERS_REF,
+      speed, difficulty, currentLevelIdx, completedLevels,
+      isBonusMode, bonusQueue, bonusIdx, bonusCompleted,
+      litDots, letterIdx, playing,
+      userAnswer, answered, feedbackMsg, fbClass, hintLevel,
+      showRef, showWinBanner,
+      allDone, levelNum, isLastLevel, currentWord, currentLetters,
+      setSpeed, setDifficulty,
+      play, stop,
+      checkAnswer, giveHint,
+      nextLevel, startBonus, nextBonus,
+    };
+  }
+}).mount('#app');
+</script>
+</body>
+</html>

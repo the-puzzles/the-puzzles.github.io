@@ -79,6 +79,7 @@ header {
 .card.wordsearch:hover  { border-color: #fb923c; box-shadow: 0 12px 40px rgba(251,146,60,0.15); }
 .card.morse:hover       { border-color: #fbbf24; box-shadow: 0 12px 40px rgba(251,191,36,0.15); }
 .card.wordladder:hover  { border-color: #22d3ee; box-shadow: 0 12px 40px rgba(34,211,238,0.15); }
+.card.braille:hover     { border-color: #a78bfa; box-shadow: 0 12px 40px rgba(167,139,250,0.15); }
 
 /* ── Card header ─────────────────────────────────────────────────────── */
 .card-header { display: flex; align-items: center; gap: 14px; }
@@ -97,6 +98,7 @@ header {
 .wordsearch .card-icon { background: #1f1010; }
 .morse      .card-icon { background: #1c1a10; }
 .wordladder .card-icon { background: #0c1e24; }
+.braille    .card-icon { background: #1e1528; }
 
 .card-title {
   font-size: 1.5rem;
@@ -141,6 +143,12 @@ header {
 }
 .wordladder .card-title {
   background: linear-gradient(135deg, #22d3ee, #0ea5e9);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.braille .card-title {
+  background: linear-gradient(135deg, #a78bfa, #7c3aed);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -204,6 +212,7 @@ header {
 .wordsearch  .rule-dot { background: #fb923c; }
 .morse       .rule-dot { background: #fbbf24; }
 .wordladder  .rule-dot { background: #22d3ee; }
+.braille     .rule-dot { background: #a78bfa; }
 
 /* ── Play button ─────────────────────────────────────────────────────── */
 .play-btn {
@@ -232,6 +241,7 @@ header {
 .wordsearch  .play-btn { background: #7c2d00; color: #fb923c; border: 1px solid #fb923c; }
 .morse       .play-btn { background: #92400e; color: #fbbf24; border: 1px solid #fbbf24; }
 .wordladder  .play-btn { background: #0c2233; color: #22d3ee; border: 1px solid #22d3ee; }
+.braille     .play-btn { background: #2e1065; color: #a78bfa; border: 1px solid #a78bfa; }
 
 .play-arrow { font-size: 1rem; transition: transform 0.15s; }
 .play-btn:hover .play-arrow { transform: translateX(3px); }
@@ -559,6 +569,48 @@ footer {
     </div>
 
     <div class="play-btn">Play Word Ladder <span class="play-arrow">→</span></div>
+  </a>
+
+  <!-- ── Braille ─────────────────────────────────────────────── -->
+  <a class="card braille" href="braille.html">
+    <div class="card-header">
+      <div class="card-icon">⠿</div>
+      <div class="card-title">BRAILLE</div>
+    </div>
+
+    <!-- Mini preview: 2×3 braille cell -->
+    <div class="preview" style="grid-template-columns: 1fr; padding: 14px 20px;">
+      <div style="display:flex;justify-content:center;align-items:center;gap:16px;">
+        <!-- Letter H: dots 1,2,5 -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr 1fr;gap:5px;padding:8px 7px;background:#0d1117;border:1.5px solid #21262d;border-radius:8px;">
+          <div style="width:10px;height:10px;border-radius:50%;background:#a78bfa;border:1.5px solid #c4b5fd;box-shadow:0 0 6px rgba(167,139,250,0.6)"></div>
+          <div style="width:10px;height:10px;border-radius:50%;background:#21262d;border:1.5px solid #30363d"></div>
+          <div style="width:10px;height:10px;border-radius:50%;background:#a78bfa;border:1.5px solid #c4b5fd;box-shadow:0 0 6px rgba(167,139,250,0.6)"></div>
+          <div style="width:10px;height:10px;border-radius:50%;background:#a78bfa;border:1.5px solid #c4b5fd;box-shadow:0 0 6px rgba(167,139,250,0.6)"></div>
+          <div style="width:10px;height:10px;border-radius:50%;background:#21262d;border:1.5px solid #30363d"></div>
+          <div style="width:10px;height:10px;border-radius:50%;background:#21262d;border:1.5px solid #30363d"></div>
+        </div>
+        <div style="font-size:1.4rem;font-weight:800;color:#a78bfa;">H</div>
+        <!-- Letter I: dots 2,4 -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr 1fr;gap:5px;padding:8px 7px;background:#0d1117;border:1.5px solid #21262d;border-radius:8px;">
+          <div style="width:10px;height:10px;border-radius:50%;background:#21262d;border:1.5px solid #30363d"></div>
+          <div style="width:10px;height:10px;border-radius:50%;background:#21262d;border:1.5px solid #30363d"></div>
+          <div style="width:10px;height:10px;border-radius:50%;background:#a78bfa;border:1.5px solid #c4b5fd;box-shadow:0 0 6px rgba(167,139,250,0.6)"></div>
+          <div style="width:10px;height:10px;border-radius:50%;background:#a78bfa;border:1.5px solid #c4b5fd;box-shadow:0 0 6px rgba(167,139,250,0.6)"></div>
+          <div style="width:10px;height:10px;border-radius:50%;background:#21262d;border:1.5px solid #30363d"></div>
+          <div style="width:10px;height:10px;border-radius:50%;background:#21262d;border:1.5px solid #30363d"></div>
+        </div>
+        <div style="font-size:1.4rem;font-weight:800;color:#a78bfa;">I</div>
+      </div>
+    </div>
+
+    <div class="rules">
+      <div class="rule"><div class="rule-dot"></div><span>Watch dots light up · decode the word</span></div>
+      <div class="rule"><div class="rule-dot"></div><span>Easy mode labels each dot 1–6</span></div>
+      <div class="rule"><div class="rule-dot"></div><span>8 campaign levels + unlimited bonus words</span></div>
+    </div>
+
+    <div class="play-btn">Play Braille <span class="play-arrow">→</span></div>
   </a>
 
 </div>
