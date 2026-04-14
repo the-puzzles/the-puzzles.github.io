@@ -472,10 +472,63 @@ function generateColorku(diff) {
 
   if (!fill(0)) return null; // shouldn't happen for ≤6
 
-  // Pick random cells to keep as "given"
-  const allPos = [];
-  for (let r = 0; r < size; r++) for (let c = 0; c < size; c++) allPos.push([r, c]);
-  const given = shuffle(allPos).slice(0, givens);
+  // Count solutions of a partially-filled grid (stops at 2 to short-circuit).
+  // Ensures the puzzle has a unique solution before handing it to the player.
+  function countSolutions(g) {
+    g = g.map(row => [...row]);
+    let count = 0;
+    function ok(r, c, color) {
+      for (let i = 0; i < size; i++) {
+        if (i !== c && g[r][i] === color) return false;
+        if (i !== r && g[i][c] === color) return false;
+      }
+      if (boxRows) {
+        const br = Math.floor(r / boxRows) * boxRows;
+        const bc = Math.floor(c / boxCols) * boxCols;
+        for (let rr = br; rr < br + boxRows; rr++)
+          for (let cc = bc; cc < bc + boxCols; cc++)
+            if ((rr !== r || cc !== c) && g[rr][cc] === color) return false;
+      }
+      return true;
+    }
+    function solve(pos) {
+      if (count >= 2) return;
+      if (pos === size * size) { count++; return; }
+      const r = Math.floor(pos / size), c = pos % size;
+      if (g[r][c] !== null) { solve(pos + 1); return; }
+      for (const color of colors) {
+        if (ok(r, c, color)) {
+          g[r][c] = color; solve(pos + 1); g[r][c] = null;
+          if (count >= 2) return;
+        }
+      }
+    }
+    solve(0);
+    return count;
+  }
+
+  // Peel-away: start with the full solution, remove cells one by one in random
+  // order — only accept a removal if the puzzle still has exactly one solution.
+  // This guarantees the puzzle is uniquely solvable, preventing false conflicts
+  // when the player finds a valid but unintended alternative solution.
+  const givenGrid = sol.map(row => [...row]);
+  const positions = shuffle(
+    Array.from({ length: size * size }, (_, i) => [Math.floor(i / size), i % size])
+  );
+  let removed = 0;
+  const target = size * size - givens;
+  for (const [r, c] of positions) {
+    if (removed >= target) break;
+    const saved = givenGrid[r][c];
+    givenGrid[r][c] = null;
+    if (countSolutions(givenGrid) === 1) { removed++; }
+    else { givenGrid[r][c] = saved; }
+  }
+
+  const given = [];
+  for (let r = 0; r < size; r++)
+    for (let c = 0; c < size; c++)
+      if (givenGrid[r][c] !== null) given.push([r, c]);
 
   return {
     name: `Random · ${diff}`,
