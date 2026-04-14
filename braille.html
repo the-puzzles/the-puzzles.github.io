@@ -508,7 +508,6 @@ body {
           <div v-for="(item, i) in traceCells" :key="i"
                :class="['trace-item', item.active ? 'active' : 'done']">
             <span class="trace-braille">{{ item.unicode }}</span>
-            <span class="trace-latin">{{ item.ch }}</span>
           </div>
         </div>
       </div>
