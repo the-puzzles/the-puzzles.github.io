@@ -230,7 +230,7 @@ h1 {
         <div class="win-btns">
           <button class="btn" @click="resetLevel">Play Again</button>
           <button v-if="mode === 'campaign' && currentLevelIdx < LEVELS.length - 1" class="btn btn-accent" @click="nextLevel">Next Level →</button>
-          <button v-else class="btn btn-accent" @click="generateAndPlay('hard')">Bonus Level →</button>
+          <button v-else class="btn btn-accent" @click="generateAndPlay('expert')">Expert Puzzle →</button>
         </div>
       </div>
     </div>
@@ -329,6 +329,8 @@ const COLOR_HEX = {
   yellow: '#e9c46a',
   orange: '#e67e22',
   purple: '#9b59b6',
+  cyan:   '#22d3ee',
+  pink:   '#ec4899',
 };
 
 const LEVELS = [
@@ -428,11 +430,120 @@ const LEVELS = [
   },
 ];
 
+// ── Deterministic peel-away for campaign levels ───────────────────────
+// Uses a seeded LCG shuffle so the same given cells are produced on every
+// page load, while still being guaranteed uniquely solvable.
+function seededShuffle(arr, seed) {
+  const a = [...arr];
+  let s = seed >>> 0;
+  for (let i = a.length - 1; i > 0; i--) {
+    s = (Math.imul(s, 1664525) + 1013904223) >>> 0;
+    const j = s % (i + 1);
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function buildCampaignLevel(name, solution, size, boxRows, boxCols, colors, targetGivens) {
+  function countSol(g) {
+    g = g.map(r => [...r]);
+    let n = 0;
+    function ok(r, c, col) {
+      for (let i = 0; i < size; i++) {
+        if (i !== c && g[r][i] === col) return false;
+        if (i !== r && g[i][c] === col) return false;
+      }
+      if (boxRows) {
+        const br = Math.floor(r / boxRows) * boxRows;
+        const bc = Math.floor(c / boxCols) * boxCols;
+        for (let rr = br; rr < br + boxRows; rr++)
+          for (let cc = bc; cc < bc + boxCols; cc++)
+            if ((rr !== r || cc !== c) && g[rr][cc] === col) return false;
+      }
+      return true;
+    }
+    function solve(pos) {
+      if (n >= 2) return;
+      if (pos === size * size) { n++; return; }
+      const r = Math.floor(pos / size), c = pos % size;
+      if (g[r][c]) { solve(pos + 1); return; }
+      for (const col of colors) {
+        if (ok(r, c, col)) { g[r][c] = col; solve(pos + 1); g[r][c] = null; if (n >= 2) return; }
+      }
+    }
+    solve(0);
+    return n;
+  }
+  const givenGrid = solution.map(r => [...r]);
+  const allPos = Array.from({length: size * size}, (_, i) => [Math.floor(i / size), i % size]);
+  let removed = 0;
+  for (const [r, c] of seededShuffle(allPos, 0xc0ffee)) {
+    if (removed >= size * size - targetGivens) break;
+    const saved = givenGrid[r][c];
+    givenGrid[r][c] = null;
+    if (countSol(givenGrid) === 1) removed++;
+    else givenGrid[r][c] = saved;
+  }
+  const given = [];
+  for (let r = 0; r < size; r++)
+    for (let c = 0; c < size; c++)
+      if (givenGrid[r][c] !== null) given.push([r, c]);
+  return { name, size, boxRows, boxCols, colors, solution, given };
+}
+
+// Append harder campaign levels (generated once at load, deterministic)
+LEVELS.push(
+  // ── Level 7: fresh 6×6 solution, harder ──────────────────────────────
+  buildCampaignLevel(
+    'Six Reloaded',
+    [
+      ['blue',   'red',    'orange', 'purple', 'yellow', 'green' ],
+      ['purple', 'yellow', 'green',  'blue',   'red',    'orange'],
+      ['red',    'orange', 'blue',   'yellow', 'green',  'purple'],
+      ['yellow', 'green',  'purple', 'orange', 'blue',   'red'   ],
+      ['green',  'purple', 'yellow', 'red',    'orange', 'blue'  ],
+      ['orange', 'blue',   'red',    'green',  'purple', 'yellow'],
+    ],
+    6, 2, 3, ['red','blue','green','yellow','orange','purple'], 12
+  ),
+  // ── Level 8: 8×8, 8 colors, medium ───────────────────────────────────
+  buildCampaignLevel(
+    'Octet',
+    [
+      ['red',    'blue',   'green',  'yellow', 'orange', 'purple', 'cyan',   'pink'  ],
+      ['orange', 'purple', 'cyan',   'pink',   'red',    'blue',   'green',  'yellow'],
+      ['blue',   'red',    'yellow', 'green',  'purple', 'orange', 'pink',   'cyan'  ],
+      ['purple', 'orange', 'pink',   'cyan',   'blue',   'red',    'yellow', 'green' ],
+      ['green',  'yellow', 'red',    'blue',   'cyan',   'pink',   'orange', 'purple'],
+      ['cyan',   'pink',   'orange', 'purple', 'green',  'yellow', 'red',    'blue'  ],
+      ['yellow', 'green',  'blue',   'red',    'pink',   'cyan',   'purple', 'orange'],
+      ['pink',   'cyan',   'purple', 'orange', 'yellow', 'green',  'blue',   'red'   ],
+    ],
+    8, 2, 4, ['red','blue','green','yellow','orange','purple','cyan','pink'], 24
+  ),
+  // ── Level 9: 8×8, 8 colors, hard ─────────────────────────────────────
+  buildCampaignLevel(
+    'Color Master',
+    [
+      ['red',    'blue',   'green',  'yellow', 'orange', 'purple', 'cyan',   'pink'  ],
+      ['orange', 'purple', 'cyan',   'pink',   'red',    'blue',   'green',  'yellow'],
+      ['blue',   'red',    'yellow', 'green',  'purple', 'orange', 'pink',   'cyan'  ],
+      ['purple', 'orange', 'pink',   'cyan',   'blue',   'red',    'yellow', 'green' ],
+      ['green',  'yellow', 'red',    'blue',   'cyan',   'pink',   'orange', 'purple'],
+      ['cyan',   'pink',   'orange', 'purple', 'green',  'yellow', 'red',    'blue'  ],
+      ['yellow', 'green',  'blue',   'red',    'pink',   'cyan',   'purple', 'orange'],
+      ['pink',   'cyan',   'purple', 'orange', 'yellow', 'green',  'blue',   'red'   ],
+    ],
+    8, 2, 4, ['red','blue','green','yellow','orange','purple','cyan','pink'], 17
+  )
+);
+
 // ── Random puzzle generator ───────────────────────────────────────────
 const RAND_CONFIGS_CK = {
   easy:   { size: 3, boxRows: 0, boxCols: 0, givens: 7  },
   medium: { size: 4, boxRows: 2, boxCols: 2, givens: 9  },
   hard:   { size: 6, boxRows: 2, boxCols: 3, givens: 15 },
+  expert: { size: 8, boxRows: 2, boxCols: 4, givens: 22 },
 };
 
 const COLOR_NAMES = ['red','blue','green','yellow','orange','purple','cyan','pink'];
@@ -607,8 +718,9 @@ createApp({
     );
 
     const cellSize = computed(() => {
-      const max = windowWidth.value >= 600 ? 56 : Math.floor((windowWidth.value - 48) / level.value.size);
-      return Math.min(56, Math.max(38, max));
+      const { size } = level.value;
+      const available = windowWidth.value >= 600 ? 500 : windowWidth.value - 48;
+      return Math.min(56, Math.max(32, Math.floor(available / size)));
     });
 
     function makeEmptyGrid(size) {
