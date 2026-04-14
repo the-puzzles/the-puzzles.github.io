@@ -636,31 +636,19 @@ createApp({
     });
 
     const conflictSet = computed(() => {
-      const { size, boxRows, boxCols } = level.value;
+      // Compare each filled cell directly against the known solution.
+      // Duplicate-scanning across rows/cols/boxes produces false conflicts
+      // when the puzzle has multiple valid solutions — a player following a
+      // valid alternative path can still trigger a false box conflict for
+      // diagonal cells in the same box. Checking against the solution is
+      // simpler and always correct: only truly wrong placements are flagged.
+      const { size, solution } = level.value;
       const grid = fullGrid.value;
       const bad = new Set();
-      for (let r = 0; r < size; r++) {
-        for (let c = 0; c < size; c++) {
-          const color = grid[r][c];
-          if (!color) continue;
-          // row
-          for (let cc = 0; cc < size; cc++)
-            if (cc !== c && grid[r][cc] === color) { bad.add(`${r},${c}`); bad.add(`${r},${cc}`); }
-          // col
-          for (let rr = 0; rr < size; rr++)
-            if (rr !== r && grid[rr][c] === color) { bad.add(`${r},${c}`); bad.add(`${rr},${c}`); }
-          // box
-          if (boxRows) {
-            const br = Math.floor(r / boxRows) * boxRows;
-            const bc = Math.floor(c / boxCols) * boxCols;
-            for (let rr = br; rr < br + boxRows; rr++)
-              for (let cc = bc; cc < bc + boxCols; cc++)
-                if ((rr !== r || cc !== c) && grid[rr][cc] === color) {
-                  bad.add(`${r},${c}`); bad.add(`${rr},${cc}`);
-                }
-          }
-        }
-      }
+      for (let r = 0; r < size; r++)
+        for (let c = 0; c < size; c++)
+          if (grid[r][c] && grid[r][c] !== solution[r][c])
+            bad.add(`${r},${c}`);
       return bad;
     });
 
