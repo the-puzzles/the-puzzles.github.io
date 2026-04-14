@@ -604,17 +604,21 @@ createApp({
     }
 
     // ── Match checking ─────────────────────────────────────────────────
-    function cellsKey(cells) {
-      return cells.map(([r, c]) => r + ',' + c).join('|');
+    // Sort by (row, col) so drag direction doesn't matter — any order over
+    // the same cells matches, which is essential for RTL intuition.
+    function sortedKey(cells) {
+      return [...cells]
+        .sort((a, b) => a[0] - b[0] || a[1] - b[1])
+        .map(([r, c]) => r + ',' + c).join('|');
     }
 
     function checkSelection(cells) {
       if (cells.length < 2) return;
-      const key    = cellsKey(cells);
-      const revKey = cellsKey([...cells].reverse());
+      const selKey = sortedKey(cells);
       for (let i = 0; i < placedWords.value.length; i++) {
-        const pwKey = cellsKey(placedWords.value[i].cells);
-        if (key !== pwKey && revKey !== pwKey) continue;
+        const pw = placedWords.value[i];
+        if (pw.cells.length !== cells.length) continue;
+        if (sortedKey(pw.cells) !== selKey) continue;
         if (i === mysteryIdx.value) {
           if (!mysteryFound.value) {
             mysteryFound.value = true;
