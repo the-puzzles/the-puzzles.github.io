@@ -43,13 +43,27 @@ header {
   line-height: 1.6;
 }
 
-/* ── Cards grid ─────────────────────────────────────────────────────── */
+/* ── Category sections ───────────────────────────────────────────────── */
+.categories {
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+  max-width: 860px;
+  width: 100%;
+}
+.category-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #444c56;
+  margin-bottom: 16px;
+}
 .cards {
   display: flex;
   gap: 28px;
   flex-wrap: wrap;
   justify-content: center;
-  max-width: 860px;
   width: 100%;
 }
 
@@ -271,7 +285,12 @@ footer {
   <a href="how-to-play.html" style="display:inline-block;margin-top:12px;font-size:0.82rem;color:#6e7681;text-decoration:none;border:1px solid #30363d;border-radius:6px;padding:5px 12px;transition:color 0.15s,border-color 0.15s" onmouseover="this.style.color='#c9d1d9';this.style.borderColor='#6e7681'" onmouseout="this.style.color='#6e7681';this.style.borderColor='#30363d'">How to Play ↗</a>
 </header>
 
-<div class="cards">
+<div class="categories">
+
+<!-- ── SHAPES & COLORS ───────────────────────────────────────────── -->
+<div>
+  <div class="category-label">Shapes &amp; Colors</div>
+  <div class="cards">
 
   <!-- ── Chromino ───────────────────────────────────────────────── -->
   <a class="card chromino" href="chromino.html">
@@ -400,6 +419,14 @@ footer {
     <div class="play-btn">Play Colorku <span class="play-arrow">→</span></div>
   </a>
 
+  </div><!-- /cards shapes -->
+</div><!-- /category shapes -->
+
+<!-- ── GEOGRAPHY ─────────────────────────────────────────────────── -->
+<div>
+  <div class="category-label">Geography</div>
+  <div class="cards">
+
   <!-- ── Outlines ──────────────────────────────────────────────── -->
   <a class="card outlines" href="outlines.html">
     <div class="card-header">
@@ -433,6 +460,14 @@ footer {
 
     <div class="play-btn">Play Outlines <span class="play-arrow">→</span></div>
   </a>
+
+  </div><!-- /cards geography -->
+</div><!-- /category geography -->
+
+<!-- ── WORDS ─────────────────────────────────────────────────────── -->
+<div>
+  <div class="category-label">Words</div>
+  <div class="cards">
 
   <!-- ── Word Search ──────────────────────────────────────────── -->
   <a class="card wordsearch" href="wordsearch.html">
@@ -479,48 +514,6 @@ footer {
     </div>
 
     <div class="play-btn">Play Word Search <span class="play-arrow">→</span></div>
-  </a>
-
-  <!-- ── Morse Code ──────────────────────────────────────────── -->
-  <a class="card morse" href="morse.html">
-    <div class="card-header">
-      <div class="card-icon">📡</div>
-      <div class="card-title">MORSE CODE</div>
-    </div>
-
-    <!-- Mini preview: lamp + dots/dashes for SOS -->
-    <div class="preview" style="grid-template-columns: 1fr; padding: 16px 12px;">
-      <div style="display:flex; flex-direction:column; align-items:center; gap:12px; width:100%;">
-        <div style="width:52px;height:52px;border-radius:50%;background:#1c1a10;border:2px solid #3a3510;box-shadow:0 0 24px 6px rgba(251,191,36,0.45);background:#fbbf24;"></div>
-        <div style="display:flex;align-items:center;gap:5px;">
-          <!-- S: ... -->
-          <div style="width:8px;height:8px;border-radius:50%;background:#fbbf24;"></div>
-          <div style="width:8px;height:8px;border-radius:50%;background:#fbbf24;"></div>
-          <div style="width:8px;height:8px;border-radius:50%;background:#fbbf24;"></div>
-          <div style="width:10px;"></div>
-          <!-- O: --- -->
-          <div style="width:22px;height:8px;border-radius:4px;background:#fbbf24;"></div>
-          <div style="width:22px;height:8px;border-radius:4px;background:#fbbf24;"></div>
-          <div style="width:22px;height:8px;border-radius:4px;background:#fbbf24;"></div>
-          <div style="width:10px;"></div>
-          <!-- S: ... -->
-          <div style="width:8px;height:8px;border-radius:50%;background:#fbbf24;"></div>
-          <div style="width:8px;height:8px;border-radius:50%;background:#fbbf24;"></div>
-          <div style="width:8px;height:8px;border-radius:50%;background:#fbbf24;"></div>
-        </div>
-      </div>
-    </div>
-
-    <p class="card-tagline">A lamp flashes dots and dashes. Decode the Morse code signal into words using the reference table.</p>
-
-    <div class="card-rules">
-      <div class="rule"><div class="rule-dot"></div><span>Watch the lamp flash — short blinks are dots, long are dashes</span></div>
-      <div class="rule"><div class="rule-dot"></div><span>Use the built-in reference table to decode</span></div>
-      <div class="rule"><div class="rule-dot"></div><span>8 campaign levels · speed control</span></div>
-      <div class="rule"><div class="rule-dot"></div><span>Hints reveal first letter or word count</span></div>
-    </div>
-
-    <div class="play-btn">Play Morse Code <span class="play-arrow">→</span></div>
   </a>
 
   <!-- ── Word Ladder ─────────────────────────────────────────── -->
@@ -571,6 +564,56 @@ footer {
     <div class="play-btn">Play Word Ladder <span class="play-arrow">→</span></div>
   </a>
 
+  </div><!-- /cards words -->
+</div><!-- /category words -->
+
+<!-- ── CODES ──────────────────────────────────────────────────────── -->
+<div>
+  <div class="category-label">Codes</div>
+  <div class="cards">
+
+  <!-- ── Morse Code ──────────────────────────────────────────── -->
+  <a class="card morse" href="morse.html">
+    <div class="card-header">
+      <div class="card-icon">📡</div>
+      <div class="card-title">MORSE CODE</div>
+    </div>
+
+    <!-- Mini preview: lamp + dots/dashes for SOS -->
+    <div class="preview" style="grid-template-columns: 1fr; padding: 16px 12px;">
+      <div style="display:flex; flex-direction:column; align-items:center; gap:12px; width:100%;">
+        <div style="width:52px;height:52px;border-radius:50%;background:#1c1a10;border:2px solid #3a3510;box-shadow:0 0 24px 6px rgba(251,191,36,0.45);background:#fbbf24;"></div>
+        <div style="display:flex;align-items:center;gap:5px;">
+          <!-- S: ... -->
+          <div style="width:8px;height:8px;border-radius:50%;background:#fbbf24;"></div>
+          <div style="width:8px;height:8px;border-radius:50%;background:#fbbf24;"></div>
+          <div style="width:8px;height:8px;border-radius:50%;background:#fbbf24;"></div>
+          <div style="width:10px;"></div>
+          <!-- O: --- -->
+          <div style="width:22px;height:8px;border-radius:4px;background:#fbbf24;"></div>
+          <div style="width:22px;height:8px;border-radius:4px;background:#fbbf24;"></div>
+          <div style="width:22px;height:8px;border-radius:4px;background:#fbbf24;"></div>
+          <div style="width:10px;"></div>
+          <!-- S: ... -->
+          <div style="width:8px;height:8px;border-radius:50%;background:#fbbf24;"></div>
+          <div style="width:8px;height:8px;border-radius:50%;background:#fbbf24;"></div>
+          <div style="width:8px;height:8px;border-radius:50%;background:#fbbf24;"></div>
+        </div>
+      </div>
+    </div>
+
+    <p class="card-tagline">A lamp flashes dots and dashes. Decode the Morse code signal into words using the reference table.</p>
+
+    <div class="card-rules">
+      <div class="rule"><div class="rule-dot"></div><span>Watch the lamp flash — short blinks are dots, long are dashes</span></div>
+      <div class="rule"><div class="rule-dot"></div><span>Use the built-in reference table to decode</span></div>
+      <div class="rule"><div class="rule-dot"></div><span>8 campaign levels · speed control</span></div>
+      <div class="rule"><div class="rule-dot"></div><span>Hints reveal first letter or word count</span></div>
+    </div>
+
+    <div class="play-btn">Play Morse Code <span class="play-arrow">→</span></div>
+  </a>
+
   <!-- ── Braille ─────────────────────────────────────────────── -->
   <a class="card braille" href="braille.html">
     <div class="card-header">
@@ -613,7 +656,10 @@ footer {
     <div class="play-btn">Play Braille <span class="play-arrow">→</span></div>
   </a>
 
-</div>
+  </div><!-- /cards codes -->
+</div><!-- /category codes -->
+
+</div><!-- /categories -->
 
 <footer>
   Drag shapes · Tap to select · Swipe to rotate
