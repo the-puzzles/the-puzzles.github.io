@@ -162,6 +162,43 @@ body {
 .letter-pip.done { background: #a78bfa; border-color: #a78bfa; }
 .letter-pip.current { border-color: #a78bfa; }
 
+/* ── Braille trace (easy mode) ───────────────────────────────────── */
+.trace-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 4px 0;
+}
+.trace-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+.trace-braille {
+  font-size: 1.8rem;
+  line-height: 1;
+  color: #4a3d6e;
+  transition: color 0.1s;
+}
+.trace-item.done .trace-braille { color: #a78bfa; }
+.trace-item.active .trace-braille {
+  color: #c4b5fd;
+  filter: drop-shadow(0 0 6px rgba(167,139,250,0.7));
+}
+.trace-latin {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #4a3d6e;
+  letter-spacing: 0.05em;
+  transition: color 0.1s;
+}
+.trace-item.done .trace-latin { color: #a78bfa; }
+.trace-item.active .trace-latin { color: #c4b5fd; }
+
 /* ── Controls ────────────────────────────────────────────────────── */
 .controls {
   display: flex;
@@ -338,7 +375,7 @@ body {
   margin-bottom: 20px;
 }
 
-/* ── Reference table ─────────────────────────────────────────────── */
+/* ── Reference table / braille char display ─────────────────────── */
 .ref-toggle {
   background: none;
   border: 1.5px solid #30363d;
@@ -387,22 +424,10 @@ body {
   width: 14px;
   flex-shrink: 0;
 }
-/* Mini braille cell in reference table */
-.mini-cell {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr 1fr 1fr;
-  gap: 3px;
-}
-.mini-dot {
-  width: 9px; height: 9px;
-  border-radius: 50%;
-  background: #21262d;
-  border: 1px solid #30363d;
-}
-.mini-dot.lit {
-  background: #a78bfa;
-  border-color: #c4b5fd;
+.ref-braille {
+  font-size: 1.4rem;
+  line-height: 1;
+  color: #c4b5fd;
 }
 
 /* ── Hint / misc ─────────────────────────────────────────────────── */
@@ -477,6 +502,15 @@ body {
           <div v-for="(ch, i) in currentLetters" :key="i"
                :class="['letter-pip', i < letterIdx ? 'done' : (i === letterIdx ? 'current' : '')]"></div>
         </div>
+
+        <!-- Braille trace (easy mode) -->
+        <div class="trace-wrap" v-if="difficulty === 'easy'" aria-label="Braille letter trace">
+          <div v-for="(item, i) in traceCells" :key="i"
+               :class="['trace-item', item.active ? 'active' : 'done']">
+            <span class="trace-braille">{{ item.unicode }}</span>
+            <span class="trace-latin">{{ item.ch }}</span>
+          </div>
+        </div>
       </div>
 
       <!-- Speed + Difficulty + Play -->
@@ -549,10 +583,7 @@ body {
         <div class="ref-table">
           <div class="ref-row" v-for="entry in BRAILLE_LETTERS_REF" :key="entry.ch">
             <span class="ref-letter">{{ entry.ch }}</span>
-            <div class="mini-cell">
-              <div v-for="pos in DISPLAY_ORDER" :key="pos"
-                   :class="['mini-dot', entry.dots.includes(pos) ? 'lit' : '']"></div>
-            </div>
+            <span class="ref-braille">{{ entry.unicode }}</span>
           </div>
         </div>
         <div class="ref-section-label">Numbers</div>
@@ -562,10 +593,7 @@ body {
         <div class="ref-table">
           <div class="ref-row" v-for="entry in BRAILLE_NUMBERS_REF" :key="entry.ch">
             <span class="ref-letter">{{ entry.ch }}</span>
-            <div class="mini-cell">
-              <div v-for="pos in DISPLAY_ORDER" :key="pos"
-                   :class="['mini-dot', entry.dots.includes(pos) ? 'lit' : '']"></div>
-            </div>
+            <span class="ref-braille">{{ entry.unicode }}</span>
           </div>
         </div>
       </template>
@@ -639,9 +667,17 @@ const SPEEDS = [
   { id: 'fast',   label: 'Fast',   dotMs: 200, gapMs: 100, letterGapMs: 350 },
 ];
 
+/* ── Unicode Braille ───────────────────────────────────────────── */
+// U+2800 + bitmask: dot N → bit (N-1), so dot1=1, dot2=2, dot3=4, dot4=8, dot5=16, dot6=32
+function dotsToUnicode(dots) {
+  let code = 0x2800;
+  for (const d of dots) code += (1 << (d - 1));
+  return String.fromCodePoint(code);
+}
+
 /* ── Reference data ────────────────────────────────────────────── */
-const BRAILLE_LETTERS_REF = Object.entries(BRAILLE_MAP).map(([ch, dots]) => ({ ch, dots }));
-const BRAILLE_NUMBERS_REF = Object.entries(BRAILLE_DIGIT_MAP).map(([ch, dots]) => ({ ch, dots }));
+const BRAILLE_LETTERS_REF = Object.entries(BRAILLE_MAP).map(([ch, dots]) => ({ ch, dots, unicode: dotsToUnicode(dots) }));
+const BRAILLE_NUMBERS_REF = Object.entries(BRAILLE_DIGIT_MAP).map(([ch, dots]) => ({ ch, dots, unicode: dotsToUnicode(dots) }));
 
 /* ── Persistence ───────────────────────────────────────────────── */
 const SAVE_KEY = 'braille-v1';
@@ -661,9 +697,10 @@ createApp({
     const bonusIdx     = ref(0);
     const bonusCompleted = ref([]);
 
-    const litDots  = ref(new Set());
-    const letterIdx = ref(0);   // which letter of the word is currently being shown
-    const playing  = ref(false);
+    const litDots    = ref(new Set());
+    const letterIdx  = ref(0);   // which letter of the word is currently being shown
+    const traceCells = ref([]);  // easy-mode trace: [{ch, unicode, active}]
+    const playing    = ref(false);
 
     const userAnswer  = ref('');
     const answered    = ref(null);   // null | true | false
@@ -744,6 +781,7 @@ createApp({
       playing.value = true;
       litDots.value = new Set();
       letterIdx.value = 0;
+      traceCells.value = [];
 
       const letters = currentLetters.value;
       const cfg = speedCfg();
@@ -753,8 +791,14 @@ createApp({
         letterIdx.value = i;
         const ch = letters[i];
         const dots = BRAILLE_MAP[ch] || [];
+        // Push active trace cell for this letter
+        traceCells.value = [...traceCells.value, { ch, unicode: dotsToUnicode(dots), active: true }];
         const ok = await playLetter(dots, gen);
         if (!ok) break;
+        // Mark as done
+        const cells = traceCells.value;
+        cells[cells.length - 1] = { ...cells[cells.length - 1], active: false };
+        traceCells.value = [...cells];
         // Gap between letters
         if (i < letters.length - 1) {
           const gapOk = await delay(cfg.letterGapMs, gen);
@@ -828,6 +872,7 @@ createApp({
       fbClass.value = '';
       hintLevel.value = 0;
       letterIdx.value = 0;
+      traceCells.value = [];
     }
 
     function nextLevel() {
@@ -893,7 +938,7 @@ createApp({
       BRAILLE_LETTERS_REF, BRAILLE_NUMBERS_REF,
       speed, difficulty, currentLevelIdx, completedLevels,
       isBonusMode, bonusQueue, bonusIdx, bonusCompleted,
-      litDots, letterIdx, playing,
+      litDots, letterIdx, traceCells, playing,
       userAnswer, answered, feedbackMsg, fbClass, hintLevel,
       showRef, showWinBanner,
       allDone, levelNum, isLastLevel, currentWord, currentLetters,
