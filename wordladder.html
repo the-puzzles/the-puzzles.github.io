@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Word Ladder · Puzzle Games</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0d1117">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: #0d1117; color: #c9d1d9;
+  min-height: 100vh; display: flex; flex-direction: column;
+  align-items: center; padding: 24px 16px 64px;
+}
+.top-bar {
+  width: 100%; max-width: 560px; display: flex;
+  align-items: center; gap: 12px; margin-bottom: 20px;
+}
+.home-btn {
+  color: #6e7681; text-decoration: none; font-size: 0.82rem;
+  border: 1px solid #30363d; border-radius: 6px; padding: 5px 10px;
+  transition: color 0.15s, border-color 0.15s; flex-shrink: 0;
+}
+.home-btn:hover { color: #c9d1d9; border-color: #6e7681; }
+.page-title {
+  font-size: 1.5rem; font-weight: 900; letter-spacing: 0.08em;
+  background: linear-gradient(135deg, #22d3ee, #0ea5e9);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.game-wrap { width: 100%; max-width: 560px; display: flex; flex-direction: column; gap: 14px; }
+.panel { background: #161b22; border: 2px solid #30363d; border-radius: 14px; padding: 18px 20px; }
+.divider { border: none; border-top: 1px solid #21262d; margin: 4px 0; }
+
+/* ── Selectors ───────────────────────────────────────────────────── */
+.selector-row { display: flex; gap: 6px; flex-wrap: wrap; }
+.sel-btn {
+  padding: 7px 14px; border-radius: 8px; font-size: 0.8rem; font-weight: 700;
+  cursor: pointer; background: #21262d; color: #6e7681;
+  border: 1.5px solid #30363d; letter-spacing: 0.04em; transition: all 0.15s;
+}
+.sel-btn:hover:not(.active) { color: #c9d1d9; border-color: #6e7681; }
+.sel-btn.active { background: #0c2233; color: #22d3ee; border-color: #22d3ee; }
+.sel-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.sel-label { font-size: 0.72rem; color: #6e7681; letter-spacing: 0.08em; margin-bottom: 7px; }
+
+/* ── Level row ───────────────────────────────────────────────────── */
+.level-row {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 8px; margin-bottom: 14px;
+}
+.level-meta { font-size: 0.78rem; color: #6e7681; }
+.level-stat { font-size: 0.92rem; font-weight: 700; color: #22d3ee; }
+.level-dots { display: flex; gap: 5px; }
+.level-pip {
+  width: 9px; height: 9px; border-radius: 50%;
+  background: #21262d; border: 1.5px solid #30363d;
+  transition: background 0.2s, border-color 0.2s;
+}
+.level-pip.done    { background: #22d3ee; border-color: #22d3ee; }
+.level-pip.current { border-color: #22d3ee; }
+
+/* ── Ladder ──────────────────────────────────────────────────────── */
+.ladder { display: flex; flex-direction: column; align-items: center; padding: 10px 0; }
+.rung-word { display: flex; gap: 5px; justify-content: center; padding: 7px 0; }
+.rung-arrow { font-size: 0.75rem; color: #30363d; line-height: 1; user-select: none; }
+.letter-box {
+  min-width: 36px; height: 42px; padding: 0 2px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.2rem; font-weight: 800;
+  border-radius: 7px; background: #1c2230; border: 2px solid #30363d; color: #c9d1d9;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+.letter-box.changed   { background: #0c2233; border-color: #22d3ee; color: #22d3ee; }
+.letter-box.start-ltr { background: #0d2218; border-color: #22c55e; color: #22c55e; }
+.letter-box.end-ltr   { background: #0c2233; border-color: #22d3ee; color: #7dd3fc; opacity: 0.55; }
+.letter-box.win-ltr   { background: #0d2218; border-color: #22c55e; color: #22c55e; }
+
+/* ── Input ───────────────────────────────────────────────────────── */
+.input-row { display: flex; gap: 8px; margin-top: 14px; }
+.word-input {
+  flex: 1; background: #0d1117; border: 1.5px solid #30363d;
+  border-radius: 8px; color: #e6edf3; font-size: 1.1rem; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 10px 14px; outline: none; transition: border-color 0.15s; font-family: inherit;
+}
+.word-input:focus { border-color: #22d3ee; }
+.word-input:disabled { opacity: 0.4; }
+.add-btn {
+  padding: 10px 18px; background: #22d3ee; color: #0d1117;
+  border: none; border-radius: 8px; font-size: 0.9rem; font-weight: 800;
+  cursor: pointer; transition: opacity 0.15s, transform 0.1s; white-space: nowrap;
+}
+.add-btn:hover { opacity: 0.85; transform: translateY(-1px); }
+.add-btn:active { transform: translateY(0); }
+.add-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+.undo-btn {
+  padding: 10px 13px; background: #21262d; color: #8b949e;
+  border: 1.5px solid #30363d; border-radius: 8px; font-size: 0.85rem;
+  font-weight: 600; cursor: pointer; transition: all 0.15s;
+}
+.undo-btn:hover { color: #c9d1d9; border-color: #6e7681; }
+.undo-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ── Controls ────────────────────────────────────────────────────── */
+.controls { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.hint-btn {
+  padding: 8px 14px; background: none; color: #6e7681;
+  border: 1.5px solid #30363d; border-radius: 8px; font-size: 0.8rem;
+  font-weight: 600; cursor: pointer; transition: all 0.15s;
+}
+.hint-btn:hover { color: #22d3ee; border-color: #22d3ee; }
+.hint-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.giveup-btn {
+  padding: 8px 14px; background: none; color: #6e7681;
+  border: 1.5px solid #30363d; border-radius: 8px; font-size: 0.8rem;
+  font-weight: 600; cursor: pointer; transition: all 0.15s; margin-left: auto;
+}
+.giveup-btn:hover { color: #ef4444; border-color: #ef4444; }
+
+/* ── Feedback ────────────────────────────────────────────────────── */
+.feedback {
+  text-align: center; font-size: 0.88rem; font-weight: 600;
+  min-height: 22px; padding: 4px 0; margin-top: 4px;
+}
+.feedback.ok   { color: #22c55e; }
+.feedback.err  { color: #ef4444; }
+.feedback.hint { color: #22d3ee; }
+.feedback.warn { color: #f59e0b; }
+
+/* ── Solution reveal (Give Up) ───────────────────────────────────── */
+.solution-box {
+  margin-top: 12px; padding: 12px 14px;
+  background: #0d1117; border: 1px solid #21262d; border-radius: 8px;
+  font-size: 0.85rem; color: #8b949e; line-height: 1.9;
+}
+.solution-box strong { color: #6e7681; font-size: 0.72rem; letter-spacing: 0.08em; display: block; margin-bottom: 4px; }
+.solution-word { color: #c9d1d9; font-weight: 700; letter-spacing: 0.06em; }
+.solution-arrow { color: #30363d; }
+
+/* ── Win / Next ──────────────────────────────────────────────────── */
+.win-bar { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; padding: 6px 0 2px; }
+.win-title { font-size: 1.15rem; font-weight: 800; color: #22c55e; letter-spacing: 0.05em; }
+.win-sub   { font-size: 0.82rem; color: #8b949e; }
+.next-btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 12px 28px; width: 100%; margin-top: 10px;
+  background: #0d2218; color: #22c55e; border: 1.5px solid #22c55e;
+  border-radius: 10px; font-size: 0.95rem; font-weight: 700;
+  cursor: pointer; letter-spacing: 0.04em; transition: opacity 0.15s, transform 0.1s;
+}
+.next-btn:hover { opacity: 0.85; transform: translateY(-1px); }
+.next-btn:active { transform: translateY(0); }
+.all-done { text-align: center; padding: 32px 20px 24px; }
+.done-icon  { font-size: 3rem; margin-bottom: 12px; }
+.done-title { font-size: 1.4rem; font-weight: 800; color: #22d3ee; letter-spacing: 0.05em; margin-bottom: 8px; }
+.done-sub   { font-size: 0.88rem; color: #8b949e; line-height: 1.6; margin-bottom: 20px; }
+.restart-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 12px 28px; background: #0c2233; color: #22d3ee;
+  border: 1.5px solid #22d3ee; border-radius: 10px; font-size: 0.95rem;
+  font-weight: 700; cursor: pointer; transition: opacity 0.15s, transform 0.1s;
+}
+.restart-btn:hover { opacity: 0.85; transform: translateY(-1px); }
+
+@media (max-width: 480px) {
+  .page-title { font-size: 1.2rem; }
+  .letter-box { min-width: 30px; height: 36px; font-size: 1rem; }
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="top-bar">
+    <a class="home-btn" href="index.html">← Home</a>
+    <div class="page-title">WORD LADDER</div>
+  </div>
+
+  <div class="game-wrap">
+
+    <!-- ── Language + length selectors ──────────────────────────── -->
+    <div class="panel" style="padding:14px 18px; display:flex; flex-direction:column; gap:12px;">
+      <div>
+        <div class="sel-label">LANGUAGE</div>
+        <div class="selector-row">
+          <button v-for="l in LANGS" :key="l.id"
+                  :class="['sel-btn', lang === l.id ? 'active' : '']"
+                  @click="switchLang(l.id)">{{ l.label }}</button>
+        </div>
+      </div>
+      <div>
+        <div class="sel-label">WORD LENGTH</div>
+        <div class="selector-row">
+          <button v-for="n in [3,4,5]" :key="n"
+                  :class="['sel-btn', wordLen === n ? 'active' : '']"
+                  :disabled="!availableLens.includes(n)"
+                  @click="switchLen(n)">{{ n }} letters</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── All done ─────────────────────────────────────────────── -->
+    <div class="panel all-done" v-if="allDone">
+      <div class="done-icon">🏆</div>
+      <div class="done-title">ALL LEVELS DONE!</div>
+      <div class="done-sub">You climbed every {{ wordLen }}-letter ladder in {{ langLabel }}.</div>
+      <button class="restart-btn" @click="restartSlot">Play Again →</button>
+    </div>
+
+    <!-- ── Main panel ────────────────────────────────────────────── -->
+    <div class="panel" v-if="!allDone && levels.length">
+
+      <div class="level-row">
+        <div>
+          <div class="level-meta">Level {{ currentLevelIdx + 1 }} / {{ levels.length }}</div>
+          <div class="level-stat">Par {{ level.par }} · Steps {{ steps }}</div>
+        </div>
+        <div class="level-dots">
+          <div v-for="(_, i) in levels" :key="i"
+               :class="['level-pip', slotCompleted.includes(i) ? 'done' : i === currentLevelIdx ? 'current' : '']"></div>
+        </div>
+      </div>
+
+      <hr class="divider">
+
+      <!-- Ladder -->
+      <div class="ladder">
+        <div v-for="(word, wi) in chain" :key="wi + word">
+          <div class="rung-arrow" v-if="wi > 0">↓</div>
+          <div class="rung-word" :style="isRTL ? 'direction:rtl' : ''">
+            <div v-for="(item, li) in letterInfo(wi)" :key="li"
+                 :class="['letter-box',
+                   wi === 0 ? 'start-ltr' :
+                   (solved && wi === chain.length - 1) ? 'win-ltr' :
+                   item.changed ? 'changed' : '']">{{ item.ch }}</div>
+          </div>
+        </div>
+
+        <!-- Target word (dimmed until reached) -->
+        <template v-if="!solved">
+          <div class="rung-arrow">↓</div>
+          <div class="rung-word" :style="isRTL ? 'direction:rtl' : ''">
+            <div v-for="ch in level.end" :key="ch" class="letter-box end-ltr">{{ ch }}</div>
+          </div>
+        </template>
+      </div>
+
+      <!-- Input -->
+      <div class="input-row" v-if="!solved && !gaveUp">
+        <input class="word-input"
+               v-model="inputWord"
+               :maxlength="wordLen"
+               :placeholder="'·'.repeat(wordLen)"
+               :disabled="solved"
+               :dir="isRTL ? 'rtl' : 'ltr'"
+               @keydown.enter="addWord"
+               :autocapitalize="isRTL ? 'off' : 'characters'"
+               autocomplete="off" autocorrect="off" spellcheck="false" />
+        <button class="add-btn" @click="addWord" :disabled="inputWord.trim().length === 0">Add</button>
+        <button class="undo-btn" @click="undo" :disabled="chain.length <= 1">↩</button>
+      </div>
+
+      <!-- Controls -->
+      <div class="controls" v-if="!solved && !gaveUp">
+        <button class="hint-btn" @click="giveHint"
+                :disabled="hintIdx >= level.solution.length - 1">
+          💡 Hint{{ hintIdx > 0 ? ' (' + hintIdx + ')' : '' }}
+        </button>
+        <button class="giveup-btn" @click="doGiveUp">Give Up</button>
+      </div>
+
+      <!-- Feedback -->
+      <div :class="['feedback', fbClass]" v-if="fbMsg">{{ fbMsg }}</div>
+
+      <!-- Give-up solution -->
+      <div class="solution-box" v-if="gaveUp">
+        <strong>SOLUTION PATH</strong>
+        <span v-for="(w, i) in level.solution" :key="i">
+          <span class="solution-word">{{ w }}</span><span class="solution-arrow" v-if="i < level.solution.length - 1"> → </span>
+        </span>
+      </div>
+      <button class="next-btn" v-if="gaveUp" @click="nextLevel">
+        {{ currentLevelIdx >= levels.length - 1 ? 'Finish' : 'Next Level' }} →
+      </button>
+
+      <!-- Win -->
+      <div class="win-bar" v-if="solved">
+        <div class="win-title">
+          {{ steps === level.par ? '🌟 Perfect!' : steps <= level.par + 2 ? '✓ Well Done!' : '✓ Solved!' }}
+        </div>
+        <div class="win-sub" v-if="steps === level.par">Optimal {{ level.par }}-step path!</div>
+        <div class="win-sub" v-else>{{ steps }} steps · par is {{ level.par }}</div>
+        <button class="next-btn" @click="nextLevel">
+          {{ currentLevelIdx >= levels.length - 1 ? 'Finish' : 'Next Level' }} →
+        </button>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+<script>
+const { createApp, ref, computed, onMounted } = Vue;
+
+/* ── Helpers ───────────────────────────────────────────────────────*/
+const HE_FINALS = {'ם':'מ','ן':'נ','ף':'פ','ך':'כ','ץ':'צ'};
+function normChar(c, lang) { return lang === 'he' ? (HE_FINALS[c] || c) : c; }
+function normWord(w, lang)  { return [...w].map(c => normChar(c, lang)).join(''); }
+function diffCount(a, b, lang) {
+  const na = normWord(a, lang), nb = normWord(b, lang);
+  if (na.length !== nb.length) return Infinity;
+  let n = 0; for (let i = 0; i < na.length; i++) if (na[i] !== nb[i]) n++;
+  return n;
+}
+
+/* ── Word lists ────────────────────────────────────────────────────*/
+const DICT = {
+  en: {
+    3: new Set('act age aid aim air ale all ant ape arc are ark arm art ash ask ate awe axe aye bad bag ban bar bat bay bed beg bet bid big bin bit bow box boy bud bug bun bus but buy cab can cap car cat cob cod cog cop cot cow cry cub cup cut dab dam day den dew did dig dim dip dog dot dry dub dug dun duo dye ear eat egg ego elk elm end era eve ewe eye fad fan far fat fed few fig fin fit fix flu fly foe fog for fox fry fun fur gab gag gap gas gel gem gin got gum gun gut had ham has hat hay hen her hid him hip his hit hob hod hog hop hot hub hug hum hut ice ill ink inn ion ire ivy jab jam jar jaw jet jig job jog joy jug jut keg kid kin kit lab lad lap law lax lay led leg let lid lip lit log lot low mad map mar mat mob mod mop mud mug mum nab nap nag net nit nod nor not nun nut oar odd ode oil old opt orb ore our owe owl own pad pal pan par pat paw pay pea peg pen pep pet pig pin pit pod pop pot pow pub pun pup put rag ram ran rap rat raw ray red rep rib rid rig rim rip rob rod roe rot row rub rug rum run rut rye sad sap sat saw say sea set sew sin sip sir sit ski sky sob sod sow spa spy sue sum sun tab tan tap tar tax tea ten tin tip toe ton too top toy tub tug two urn use van vat vet vex via vie vow wad war was wax way web wed wig win wit woe wok won woo yak yam yap yaw yew you zap zip zoo'.split(' ')),
+    4: new Set('able ache acid acre aged aide aims airy akin also alto amen amid arch area army arts awed axle back bait bale ball balm band bane bang bank bard bare bark barn base bath bead beam bean bear beat been beer bell belt best bird bite blot blow blue blur boar boat body bold bolt bond bone book boom boon boot bore born boss both brad bran brew brow buck bulk bull burn busy cage cake call calm came cane cape card care cart case cash cast cave cell chat chin chip chop chum clam clap claw clay clip club clue coal coat code coil coin cold colt come cone cook cool cope copy cord core cork corn cost coup cove cram crew crop crow cube cure curl damp dare dark dart dash date dawn dead deaf deal dean debt deck deed deep deft dell deny desk dice diet dill dine dire dirt dish disk dive dole done doom dorm dose dote dove down drag draw drew drip drop drum dual dull dune dusk dust each earl earn ease east edge epic even ever evil exam face fact fail fair fake fall fame farm fast fate fawn fear feat feed feel feet fell felt file fill film find fine fire firm fish fist five flag flaw flew flip flow foam fond fool foot fore fork form fort foul four free frog from fuel full fume fund fuse gale game gang gate gave gear gild gilt gist give glad glow glue goad goal gold gone good gore gown gram grew grid grin grip grit grow gulf gust hack hail half hall halt hand hare harm hate have hawk head heal heap heat heel held helm help here herd hero hike hill hint hire hold hole home hood hook hose host hour hull hung hunt hurl hurt icon idle inch into iron item jell join joke jolt jump just keen keep kick kill kind king knee knot know lack laid lame lamp lane lark last late lawn lead leaf leak lean leap left lend less liar lick life lift like lime line link list live load loft lone long lore lord lose loss lost loud love luck lure lurk lust lute mace made mail main make male mall mane mare mark mask mass mast maze meal mean meet melt mice mild milk mill mine mint mire miss mist moan moat mock mold mole mood moon moor more most move much mule muse must nail neck need nest news next nice nine node none noon norm nose note null oath obey odor once only open oral pace page pain pair pale palm pave peal pear peat peel peer pile pill pine pipe plan play plea plot plow ploy plus poem poet poke pole poll pond pool poor pope pore pork port post pour prey prod prop pull pump pure push race rack raft rage raid rail rain rake ramp rang rank rant rare real reap reed reef reel rely rent rest rice rich ride ring riot rise risk road roam roar robe rock rode role roll roof room root rope rose ruin rule ruse rush rust safe sage sail sake salt same sand sane sang sank seal seam seep self sell send serf shed ship shoe shop shot show shut sick sign silk sing sink site size skin skip slam slap slid slim slip slow slug snap snow soar sock soft soil sole some song sore sort soul soup sour sown spin spot spur star stay stem step stew stir stop such suit sung sunk sure swam swan swap sway swim tail tale tall tame taut teal tell tend tent term that them then this tied tilt time tire told toll tone tool torn tour town trap tray tree trim trio trip true tube tune turn ugly unit upon urge used vale vane vary veil vein vent very vial vice view vile vine void vole vote wade wage wake walk wall wane ward ware warm warn wart wary wash wave weal wear weed weld well went west wide wife wild will wilt wink wire wise wish with woke wolf womb wont wore work worm worn wrap wren yell yoke your zeal zero zone zoom'.split(' ')),
+    5: new Set('beard beast began being below bench bible bison blade blame bland blaze bleat bleed blend bless blink block blood bloom blown blunt board boast brace brain brand braid brass brave brawn bread break breed brick bride brine brisk broke brook brown brush cabin candy cargo cause cedar chain chair chalk charm chart chase cheap cheat check cheek cheer chess chest chief child civil claim clamp clang clash class clean clear clerk cliff climb cling close cloud coach coast count cover crack craft crash crazy cream creek crest crisp cross crowd crown cruel crush crust curve daily dairy dance decay decoy delay dense depot depth devil dirty dodge doubt dough draft drain drama dream dress drink drive drove eagle early earth eight elder elite empty enemy enter entry equal erase evade exact exile extra faint faith false fancy fatal feast fetch field fifth fifty fight final fixed flame flank flash flesh flock flood floor flour flown fluid flute focus force forge forum found frame frank fraud front frost frown fruit gaudy ghost given glare glass gleam glean glide globe gloom glory gloss glove grace grade grain grand grant grasp grass grate grave graze great greet grief grill grind groan groom gross group grove grown guard guide guild guile guise haven heavy hedge hence holly honey honor horse hotel house human humid hurry ideal image imply inner judge juice jumbo knack kneel knife knock known label large laser laugh layer learn lease least legal lemon level light limit loose lover lower lucky lunar magic major maker manor march marsh match mayor media mercy merit metal might model money month moral mount mouse mouth music nasal nasty naval nerve night noble noise north novel obese ocean offer often order other outer owned paddy paint panel paper party peace peach phase phone piano piece pilot pinch pitch pixel place plaid plain plane plank plate plaza plead pluck plumb point poise polar polka porch pound power prank press price pride prime print prize prone proof prose proud prove psalm pulse purge queen query queue quick quiet quota quote radar radio rally raven reach react ready realm refer reign relay revel rider rigid risky rival rivet rocky rouge rough round royal sadly saint sauce scale scare scent scene scope score scout screw seize sense serve seven shade shake shall shame shape share sharp sheer shelf shell shift shine shirt shock shore shout shove shown siege sight silly since sixth sixty skate skill skull slack slain slant slash sleet slide slime sling small smart smash smell smile smoke snare sneak sniff solar solid solve sonic south space spare spark speak spear spell spend spill spine spoke sport spray squad stain stair stake stale stall stand stare start state stave stick stiff still stomp stone store storm story stout stove strap straw stray strip study stunt style sugar suite sunny super surge swear sweat sweep sweet swept swift swine swoop tabby taken tense tepid terms thank theft there these thing third thorn those timid tired titan today token topic torch total touch tough tower toxic track trade trail train trait tramp tread trend trice trick tried trust truth tulip twang tweed twine twist ultra undue unfit union until upper upset urban usage usher vague valid value vapor vital waist waste watch water weary wedge weigh weird while white whole wider wield witty world worry worth wound wrath wreck write yacht yield young youth zesty'.split(' ')),
+  },
+  es: {
+    3: new Set(['sol','mar','sal','pan','paz','luz','rey','red','ley','gas','mes','vez','pie','fin','hoy','son','san','tan','ser','dar','ver','por','con','sin','una','uno','dos','mal','rio','eje','ojo','eco','ego','ira','feo','gel','pez','tos','gol','bar','col','par','van','mas','fue','hay','era','ten','pon','les','bus','don','ron','sus','res','sed','haz','hoz','tez','van','fan','can','ran','ban','man','son','ton','ron','con','don','hon','ion','mon','non','bon']),
+    4: new Set(['casa','masa','misa','visa','boca','bota','nota','nata','vino','fino','filo','silo','vida','viva','bien','amor','alma','algo','agua','alta','bajo','cama','cara','paso','sola','tono','luna','ropa','beso','gato','piel','mano','hora','idea','rato','rayo','roto','rojo','rica','rico','todo','poco','esto','solo','polo','bola','cola','pala','sala','gala','bala','rama','fama','dama','lama','rata','mata','pata','lata','gata','ruta','gota','sota','rota','mota','sopa','mora','copa','loca','loco','toca','roca','foca','cota','rana','lana','sana','mana','cana','bana','jana','tana','vana','rina','mina','cina','bina','fina','pina','sina','vina','rina']),
+  },
+  he: {
+    3: new Set(['כלב','כלה','כלי','גלה','גלד','גבה','גבר','גבל','ספר','ספה','שפר','שפה','שיר','שיש','שים','שבר','שבע','שמש','שמר','שמע','שמן','שמח','שמד','בית','ביש','ילד','ילה','אכל','אמר','אמן','אמת','דבר','דבש','דגל','דלי','דלת','לחם','לחש','עצם','עמד','עמל','עבד','קמה','קמח','רוח','רגל','רבה','חלם','חלב','חלף','חלק','נחש','נחם','נחת','תפח','תפר','מלח','מלך','זית','זין','פרי','פרח','פרד','כבה','כבד','אבל','אבן']),
+  },
+  ar: {
+    3: new Set(['شمس','شمع','قمع','قمر','كتب','كلب','كلم','قلب','قلم','علم','حلم','حلب','جلب','جلد','بحر','نهر','نجم','جبل','ولد','بلد','حمل','أكل','فكر','قلع','علق','حقل','هجم','هضم','هدم','فتح','خرج','دخل','طبخ','صبر','ركب','سمع','نار','باب','كسب','كسر','نجح','مشى','سبح','رسم','لعب','حفر','قفز','طار','سقط','وقف','بكى','ضحك','أكل','نام','صاح','جرى','رأى']),
+  },
+};
+
+/* ── Levels ────────────────────────────────────────────────────────*/
+const LEVELS = {
+  en: {
+    3: [
+      { start:'CAT', end:'DOG', par:3, solution:['CAT','COT','COG','DOG'] },
+      { start:'HOT', end:'WET', par:3, solution:['HOT','HIT','WIT','WET'] },
+      { start:'FAR', end:'FEW', par:3, solution:['FAR','FAD','FED','FEW'] },
+    ],
+    4: [
+      { start:'COLD', end:'WARM', par:4, solution:['COLD','CORD','WORD','WARD','WARM'] },
+      { start:'HATE', end:'LOVE', par:4, solution:['HATE','LATE','LANE','LONE','LOVE'] },
+      { start:'HEAD', end:'TAIL', par:5, solution:['HEAD','HEAL','TEAL','TELL','TALL','TAIL'] },
+    ],
+    5: [
+      { start:'BREAD', end:'GREED', par:3, solution:['BREAD','TREAD','TREED','GREED'] },
+      { start:'STEAM', end:'SPEED', par:4, solution:['STEAM','STEAL','STEEL','STEED','SPEED'] },
+      { start:'BLACK', end:'THICK', par:5, solution:['BLACK','SLACK','SLICK','CLICK','CHICK','THICK'] },
+    ],
+  },
+  es: {
+    3: [
+      { start:'SOL', end:'SAL', par:3, solution:['SOL','SON','SAN','SAL'] },
+      { start:'BAR', end:'MES', par:3, solution:['BAR','MAR','MAS','MES'] },
+      { start:'MAR', end:'PAZ', par:2, solution:['MAR','PAR','PAZ'] },
+    ],
+    4: [
+      { start:'CASA', end:'VISA', par:3, solution:['CASA','MASA','MISA','VISA'] },
+      { start:'BOCA', end:'NATA', par:3, solution:['BOCA','BOTA','NOTA','NATA'] },
+      { start:'VINO', end:'SILO', par:3, solution:['VINO','FINO','FILO','SILO'] },
+    ],
+  },
+  he: {
+    3: [
+      { start:'כלב', end:'גבה', par:3, solution:['כלב','כלה','גלה','גבה'] },
+      { start:'ספר', end:'שיר', par:3, solution:['ספר','שפר','שער','שיר'] },
+      { start:'שמש', end:'שמן', par:3, solution:['שמש','שמר','שמע','שמן'] },
+    ],
+  },
+  ar: {
+    3: [
+      { start:'شمس', end:'قمر', par:3, solution:['شمس','شمع','قمع','قمر'] },
+      { start:'كتب', end:'علم', par:4, solution:['كتب','كلب','قلب','قلم','علم'] },
+      { start:'حلم', end:'جلد', par:3, solution:['حلم','حلب','جلب','جلد'] },
+    ],
+  },
+};
+
+const AVAILABLE_LENS = { en:[3,4,5], es:[3,4], he:[3], ar:[3] };
+
+const LANGS = [
+  { id:'en', label:'EN' },
+  { id:'es', label:'ES' },
+  { id:'he', label:'עב' },
+  { id:'ar', label:'عر' },
+];
+
+/* ── Persistence ───────────────────────────────────────────────────*/
+const SAVE_KEY = 'wordladder-v2';
+function saveState(s) { try { localStorage.setItem(SAVE_KEY, JSON.stringify(s)); } catch(_){} }
+function loadState()  { try { const r = localStorage.getItem(SAVE_KEY); return r ? JSON.parse(r) : null; } catch(_){ return null; } }
+
+/* ── App ───────────────────────────────────────────────────────────*/
+createApp({
+  setup() {
+    const lang    = ref('en');
+    const wordLen = ref(3);
+
+    // Per-slot state: key = `${lang}-${len}`, value = { idx, completed[] }
+    const slotState = ref({});
+
+    const chain      = ref([]);
+    const inputWord  = ref('');
+    const fbMsg      = ref('');
+    const fbClass    = ref('');
+    const hintIdx    = ref(0);
+    const gaveUp     = ref(false);
+    const currentLevelIdx = ref(0);
+
+    let fbTimer = null;
+
+    const availableLens  = computed(() => AVAILABLE_LENS[lang.value]);
+    const levels         = computed(() => LEVELS[lang.value]?.[wordLen.value] || []);
+    const level          = computed(() => levels.value[currentLevelIdx.value] || levels.value[0]);
+    const isRTL          = computed(() => lang.value === 'he' || lang.value === 'ar');
+    const langLabel      = computed(() => ({ en:'English', es:'Spanish', he:'Hebrew', ar:'Arabic' })[lang.value]);
+    const steps          = computed(() => chain.value.length - 1);
+    const solved         = computed(() => chain.value.length > 1 && chain.value[chain.value.length-1] === level.value?.end);
+    const slotKey        = computed(() => `${lang.value}-${wordLen.value}`);
+    const slotData       = computed(() => slotState.value[slotKey.value] || { idx:0, completed:[] });
+    const slotCompleted  = computed(() => slotData.value.completed);
+    const allDone        = computed(() => levels.value.length > 0 && slotCompleted.value.length >= levels.value.length);
+
+    function setFb(msg, cls, dur=2200) {
+      if (fbTimer) clearTimeout(fbTimer);
+      fbMsg.value = msg; fbClass.value = cls;
+      if (dur) fbTimer = setTimeout(() => { fbMsg.value = ''; fbClass.value = ''; }, dur);
+    }
+    function clearFb() { if (fbTimer) clearTimeout(fbTimer); fbMsg.value = ''; fbClass.value = ''; }
+
+    function initLevel() {
+      chain.value = level.value ? [level.value.start] : [];
+      inputWord.value = '';
+      hintIdx.value = 0;
+      gaveUp.value = false;
+      clearFb();
+    }
+
+    function saveSlot() {
+      const k = slotKey.value;
+      const s = slotState.value[k] || { idx: 0, completed: [] };
+      slotState.value = { ...slotState.value, [k]: { ...s, idx: currentLevelIdx.value } };
+    }
+
+    function loadSlot() {
+      const d = slotData.value;
+      currentLevelIdx.value = Math.min(d.idx, Math.max(0, levels.value.length - 1));
+    }
+
+    function switchLang(l) {
+      saveSlot();
+      lang.value = l;
+      if (!AVAILABLE_LENS[l].includes(wordLen.value)) wordLen.value = AVAILABLE_LENS[l][0];
+      loadSlot();
+      initLevel();
+      persist();
+    }
+
+    function switchLen(n) {
+      saveSlot();
+      wordLen.value = n;
+      loadSlot();
+      initLevel();
+      persist();
+    }
+
+    function letterInfo(wi) {
+      const word = chain.value[wi];
+      const prev = wi > 0 ? chain.value[wi-1] : null;
+      if (!prev) return [...word].map(ch => ({ ch, changed: false }));
+      const nw = normWord(word, lang.value), np = normWord(prev, lang.value);
+      return [...word].map((ch, i) => ({ ch, changed: nw[i] !== np[i] }));
+    }
+
+    function inDict(raw, l, len) {
+      const dict = DICT[l]?.[len];
+      if (!dict) return false;
+      if (l === 'en') return dict.has(raw.toLowerCase());
+      // Hebrew/Arabic: check raw form, then normalized (finals-collapsed) form
+      if (dict.has(raw)) return true;
+      const norm = normWord(raw, l);
+      return [...dict].some(w => normWord(w, l) === norm);
+    }
+
+    function addWord() {
+      const raw = inputWord.value.trim();
+      if (!raw) return;
+      const word = (lang.value === 'en') ? raw.toUpperCase() : raw;
+
+      const prev = chain.value[chain.value.length - 1];
+      if ([...word].length !== wordLen.value) {
+        setFb(`Must be ${wordLen.value} letters`, 'err'); return;
+      }
+      if (!inDict(raw, lang.value, wordLen.value)) {
+        setFb('Word not recognised', 'err'); return;
+      }
+      const d = diffCount(prev, word, lang.value);
+      if (d === 0) { setFb('Same as the last word', 'err'); return; }
+      if (d > 1)   { setFb('Change only one letter at a time', 'err'); return; }
+      if (chain.value.some(w => normWord(w, lang.value) === normWord(word, lang.value) ||
+                                    (lang.value === 'en' && w.toUpperCase() === word.toUpperCase()))) {
+        setFb('Already in your chain', 'warn'); return;
+      }
+
+      chain.value = [...chain.value, word];
+      inputWord.value = '';
+      clearFb();
+
+      if (word === level.value.end) {
+        markComplete();
+        persist();
+      }
+    }
+
+    function undo() {
+      if (chain.value.length <= 1 || solved.value) return;
+      chain.value = chain.value.slice(0, -1);
+      clearFb();
+    }
+
+    function giveHint() {
+      if (hintIdx.value >= level.value.solution.length - 1) return;
+      hintIdx.value++;
+      const word = level.value.solution[hintIdx.value];
+      setFb(`Step ${hintIdx.value}: try → ${word}`, 'hint', 0);
+    }
+
+    function doGiveUp() {
+      gaveUp.value = true;
+      clearFb();
+    }
+
+    function markComplete() {
+      const k = slotKey.value;
+      const s = slotState.value[k] || { idx: 0, completed: [] };
+      if (!s.completed.includes(currentLevelIdx.value)) {
+        slotState.value = { ...slotState.value, [k]: { ...s, completed: [...s.completed, currentLevelIdx.value] } };
+      }
+    }
+
+    function nextLevel() {
+      markComplete();
+      const k = slotKey.value;
+      const next = currentLevelIdx.value + 1;
+      if (next < levels.value.length) {
+        currentLevelIdx.value = next;
+        slotState.value = { ...slotState.value, [k]: { ...slotData.value, idx: next } };
+      }
+      initLevel();
+      persist();
+    }
+
+    function restartSlot() {
+      const k = slotKey.value;
+      slotState.value = { ...slotState.value, [k]: { idx: 0, completed: [] } };
+      currentLevelIdx.value = 0;
+      initLevel();
+      persist();
+    }
+
+    function persist() {
+      saveState({ version:2, lang: lang.value, wordLen: wordLen.value, slotState: slotState.value });
+    }
+
+    onMounted(() => {
+      const saved = loadState();
+      if (saved && saved.version === 2) {
+        if (saved.lang)    lang.value    = saved.lang;
+        if (saved.wordLen) wordLen.value = saved.wordLen;
+        if (saved.slotState) slotState.value = saved.slotState;
+      }
+      loadSlot();
+      initLevel();
+    });
+
+    return {
+      lang, wordLen, availableLens, LANGS,
+      levels, level, langLabel, isRTL,
+      currentLevelIdx, slotCompleted, allDone,
+      chain, inputWord, fbMsg, fbClass, hintIdx, gaveUp, steps, solved,
+      letterInfo, addWord, undo, giveHint, doGiveUp, nextLevel, restartSlot,
+      switchLang, switchLen,
+    };
+  }
+}).mount('#app');
+
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
+</script>
+</body>
+</html>
