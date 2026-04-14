@@ -331,10 +331,18 @@ body {
 }
 .ref-toggle:hover { color: #fbbf24; border-color: #fbbf24; }
 
+.ref-section-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #6e7681;
+  margin: 14px 0 6px;
+  text-transform: uppercase;
+}
+.ref-section-label:first-child { margin-top: 14px; }
 .ref-table {
-  margin-top: 14px;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
   gap: 6px;
 }
 .ref-row {
@@ -354,9 +362,11 @@ body {
   flex-shrink: 0;
 }
 .ref-code {
-  font-size: 0.72rem;
-  color: #8b949e;
-  letter-spacing: 0.1em;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #e6edf3;
+  letter-spacing: 0.15em;
+  white-space: nowrap;
 }
 
 /* ── Progress summary (bonus levels) ────────────────────────────── */
@@ -435,7 +445,7 @@ body {
 
 @media (max-width: 480px) {
   .page-title { font-size: 1.2rem; }
-  .ref-table { grid-template-columns: repeat(auto-fill, minmax(68px, 1fr)); }
+  .ref-table { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); }
   .lamp { width: 80px; height: 80px; }
 }
 </style>
@@ -617,12 +627,22 @@ body {
       <button class="ref-toggle" @click="showRef = !showRef">
         <span>{{ showRef ? '▾' : '▸' }}</span> {{ ui.refTitle }}
       </button>
-      <div class="ref-table" v-if="showRef">
-        <div class="ref-row" v-for="entry in MORSE_TABLE" :key="entry.ch">
-          <span class="ref-letter">{{ entry.ch }}</span>
-          <span class="ref-code">{{ entry.display }}</span>
+      <template v-if="showRef">
+        <div class="ref-section-label">Letters</div>
+        <div class="ref-table">
+          <div class="ref-row" v-for="entry in MORSE_LETTERS" :key="entry.ch">
+            <span class="ref-letter">{{ entry.ch }}</span>
+            <span class="ref-code">{{ entry.display }}</span>
+          </div>
         </div>
-      </div>
+        <div class="ref-section-label">Numbers</div>
+        <div class="ref-table">
+          <div class="ref-row" v-for="entry in MORSE_NUMBERS" :key="entry.ch">
+            <span class="ref-letter">{{ entry.ch }}</span>
+            <span class="ref-code">{{ entry.display }}</span>
+          </div>
+        </div>
+      </template>
     </div>
 
   </div><!-- /game-wrap -->
@@ -643,11 +663,13 @@ const MORSE_MAP = {
   '5':'.....','6':'-....','7':'--...','8':'---..','9':'----.',
 };
 
-const MORSE_TABLE = Object.entries(MORSE_MAP).map(([ch, code]) => ({
-  ch,
-  code,
-  display: [...code].map(c => c === '.' ? '·' : '−').join(' ')
-}));
+function toDisplay(code) { return [...code].map(c => c === '.' ? '·' : '−').join(' '); }
+const MORSE_LETTERS = Object.entries(MORSE_MAP)
+  .filter(([ch]) => isNaN(ch))
+  .map(([ch, code]) => ({ ch, display: toDisplay(code) }));
+const MORSE_NUMBERS = Object.entries(MORSE_MAP)
+  .filter(([ch]) => !isNaN(ch))
+  .map(([ch, code]) => ({ ch, display: toDisplay(code) }));
 
 /* Encode message to sequence of timing events
    k: 'd'=dit, 'h'=dah, 's'=symbol-gap, 'l'=letter-gap, 'w'=word-gap
@@ -1025,7 +1047,7 @@ createApp({
       lampOn, playing, traceSyms,
       userAnswer, answered, feedbackMsg, fbClass, hintLevel,
       showRef,
-      CAMPAIGN, MORSE_TABLE,
+      CAMPAIGN, MORSE_LETTERS, MORSE_NUMBERS,
       currentMessage,
       play, stop, setSpeed, setDifficulty,
       checkAnswer, giveHint,
