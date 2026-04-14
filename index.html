@@ -78,6 +78,7 @@ header {
 .card.outlines:hover    { border-color: #34d399; box-shadow: 0 12px 40px rgba(52,211,153,0.15); }
 .card.wordsearch:hover  { border-color: #fb923c; box-shadow: 0 12px 40px rgba(251,146,60,0.15); }
 .card.morse:hover       { border-color: #fbbf24; box-shadow: 0 12px 40px rgba(251,191,36,0.15); }
+.card.wordladder:hover  { border-color: #22d3ee; box-shadow: 0 12px 40px rgba(34,211,238,0.15); }
 
 /* ── Card header ─────────────────────────────────────────────────────── */
 .card-header { display: flex; align-items: center; gap: 14px; }
@@ -95,6 +96,7 @@ header {
 .outlines .card-icon  { background: #0d2a1e; }
 .wordsearch .card-icon { background: #1f1010; }
 .morse      .card-icon { background: #1c1a10; }
+.wordladder .card-icon { background: #0c1e24; }
 
 .card-title {
   font-size: 1.5rem;
@@ -133,6 +135,12 @@ header {
 }
 .morse .card-title {
   background: linear-gradient(135deg, #fbbf24, #fde68a);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.wordladder .card-title {
+  background: linear-gradient(135deg, #22d3ee, #0ea5e9);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -195,6 +203,7 @@ header {
 .outlines    .rule-dot { background: #34d399; }
 .wordsearch  .rule-dot { background: #fb923c; }
 .morse       .rule-dot { background: #fbbf24; }
+.wordladder  .rule-dot { background: #22d3ee; }
 
 /* ── Play button ─────────────────────────────────────────────────────── */
 .play-btn {
@@ -222,6 +231,7 @@ header {
 .outlines    .play-btn { background: #0d3d2a; color: #34d399; border: 1px solid #34d399; }
 .wordsearch  .play-btn { background: #7c2d00; color: #fb923c; border: 1px solid #fb923c; }
 .morse       .play-btn { background: #92400e; color: #fbbf24; border: 1px solid #fbbf24; }
+.wordladder  .play-btn { background: #0c2233; color: #22d3ee; border: 1px solid #22d3ee; }
 
 .play-arrow { font-size: 1rem; transition: transform 0.15s; }
 .play-btn:hover .play-arrow { transform: translateX(3px); }
@@ -501,6 +511,54 @@ footer {
     </div>
 
     <div class="play-btn">Play Morse Code <span class="play-arrow">→</span></div>
+  </a>
+
+  <!-- ── Word Ladder ─────────────────────────────────────────── -->
+  <a class="card wordladder" href="wordladder.html">
+    <div class="card-header">
+      <div class="card-icon">🪜</div>
+      <div class="card-title">WORD LADDER</div>
+    </div>
+
+    <!-- Mini preview: CAT → DOG ladder -->
+    <div class="preview" style="grid-template-columns: 1fr; padding: 14px 20px;">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+        <div style="display:flex;gap:4px;">
+          <div style="width:28px;height:32px;border-radius:5px;background:#0d2218;border:2px solid #22c55e;display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:800;color:#22c55e">C</div>
+          <div style="width:28px;height:32px;border-radius:5px;background:#0d2218;border:2px solid #22c55e;display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:800;color:#22c55e">A</div>
+          <div style="width:28px;height:32px;border-radius:5px;background:#0d2218;border:2px solid #22c55e;display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:800;color:#22c55e">T</div>
+        </div>
+        <div style="color:#30363d;font-size:0.7rem">↓</div>
+        <div style="display:flex;gap:4px;">
+          <div style="width:28px;height:32px;border-radius:5px;background:#161b22;border:2px solid #30363d;display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:800;color:#c9d1d9">C</div>
+          <div style="width:28px;height:32px;border-radius:5px;background:#0c2233;border:2px solid #22d3ee;display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:800;color:#22d3ee">O</div>
+          <div style="width:28px;height:32px;border-radius:5px;background:#161b22;border:2px solid #30363d;display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:800;color:#c9d1d9">T</div>
+        </div>
+        <div style="color:#30363d;font-size:0.7rem">↓</div>
+        <div style="display:flex;gap:4px;">
+          <div style="width:28px;height:32px;border-radius:5px;background:#161b22;border:2px solid #30363d;display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:800;color:#c9d1d9">C</div>
+          <div style="width:28px;height:32px;border-radius:5px;background:#161b22;border:2px solid #30363d;display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:800;color:#c9d1d9">O</div>
+          <div style="width:28px;height:32px;border-radius:5px;background:#0c2233;border:2px solid #22d3ee;display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:800;color:#22d3ee">G</div>
+        </div>
+        <div style="color:#30363d;font-size:0.7rem">↓</div>
+        <div style="display:flex;gap:4px;">
+          <div style="width:28px;height:32px;border-radius:5px;background:#0c2233;border:2px solid #22d3ee;display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:800;color:#7dd3fc">D</div>
+          <div style="width:28px;height:32px;border-radius:5px;background:#0c2233;border:2px solid #22d3ee;display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:800;color:#7dd3fc">O</div>
+          <div style="width:28px;height:32px;border-radius:5px;background:#0c2233;border:2px solid #22d3ee;display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:800;color:#7dd3fc">G</div>
+        </div>
+      </div>
+    </div>
+
+    <p class="card-tagline">Transform one word into another — one letter at a time. Every step must be a valid word.</p>
+
+    <div class="card-rules">
+      <div class="rule"><div class="rule-dot"></div><span>Change exactly one letter per step</span></div>
+      <div class="rule"><div class="rule-dot"></div><span>Every word in your chain must be valid</span></div>
+      <div class="rule"><div class="rule-dot"></div><span>8 levels · try to match or beat par</span></div>
+      <div class="rule"><div class="rule-dot"></div><span>Hints reveal the next step if you're stuck</span></div>
+    </div>
+
+    <div class="play-btn">Play Word Ladder <span class="play-arrow">→</span></div>
   </a>
 
 </div>

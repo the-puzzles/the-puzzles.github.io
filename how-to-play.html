@@ -278,6 +278,88 @@ kbd {
 .chromino .play-link { background: #1f6feb; color: #fff; }
 .tessera  .play-link { background: #9a5c00; color: #ffd200; border: 1px solid #f7971e; }
 .colorku  .play-link { background: #5b21b6; color: #e9d5ff; border: 1px solid #c084fc; }
+.outlines  .play-link { background: #064e3b; color: #6ee7b7; border: 1px solid #34d399; }
+.wordsearch .play-link { background: #7c2d12; color: #fed7aa; border: 1px solid #fb923c; }
+.morse    .play-link { background: #713f12; color: #fef3c7; border: 1px solid #fbbf24; }
+.wordladder .play-link { background: #164e63; color: #a5f3fc; border: 1px solid #22d3ee; }
+
+.outlines .section-title {
+  background: linear-gradient(135deg, #34d399, #6ee7b7);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.wordsearch .section-title {
+  background: linear-gradient(135deg, #fb923c, #fde68a);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.morse .section-title {
+  background: linear-gradient(135deg, #fbbf24, #fde68a);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.wordladder .section-title {
+  background: linear-gradient(135deg, #22d3ee, #a5f3fc);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+
+.outlines  .step-num { background: #052e16; color: #34d399; }
+.wordsearch .step-num { background: #431407; color: #fb923c; }
+.morse    .step-num { background: #3d1f00; color: #fbbf24; }
+.wordladder .step-num { background: #082f49; color: #22d3ee; }
+
+/* ── Morse lamp demo ──────────────────────────────────────────────── */
+.lamp-demo {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.lamp-demo-lamp {
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  border: 2px solid #444c56;
+  background: #21262d;
+  flex-shrink: 0;
+}
+.lamp-demo-lamp.on {
+  background: #fbbf24;
+  border-color: #f59e0b;
+  box-shadow: 0 0 24px 6px rgba(251,191,36,0.5);
+}
+.lamp-demo-symbols {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #fbbf24;
+  letter-spacing: 4px;
+}
+
+/* ── Word Ladder demo ─────────────────────────────────────────────── */
+.ladder-demo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+}
+.ladder-rung {
+  display: flex;
+  gap: 4px;
+}
+.ladder-cell {
+  width: 32px; height: 32px;
+  border-radius: 6px;
+  background: #21262d;
+  border: 1px solid #30363d;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #c9d1d9;
+  font-family: monospace;
+}
+.ladder-cell.changed {
+  background: #0e4429;
+  border-color: #22d3ee;
+  color: #22d3ee;
+}
+.ladder-cell.start { border-color: #6e7681; }
+.ladder-cell.end   { border-color: #22d3ee; background: #082f49; color: #22d3ee; }
 
 /* ── Mobile ───────────────────────────────────────────────────────── */
 @media (max-width: 540px) {
@@ -295,7 +377,7 @@ kbd {
 
 <header>
   <h1>How to Play</h1>
-  <p class="subtitle">Rules and controls for all three puzzle games</p>
+  <p class="subtitle">Rules and controls for all puzzle games</p>
 </header>
 
 <div class="sections">
@@ -516,6 +598,184 @@ kbd {
     </div>
   </div>
 
+  <!-- ── OUTLINES ─────────────────────────────────────────────────── -->
+  <div class="section outlines">
+    <div class="section-header">
+      <div class="section-icon">🌍</div>
+      <div class="section-title">OUTLINES</div>
+    </div>
+    <div class="section-body">
+      <p class="tagline">A country silhouette appears on the world map. Type its name before the timer runs out. How many countries do you know?</p>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-text">A highlighted country outline appears on the map. Type your guess in the text box.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-text">Press <kbd>Enter</kbd> to submit. Correct guesses reveal the country name and score points.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-text">Use <em>Skip</em> to pass a country you don't know. Skipped countries don't count against you.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-text">Progress through all countries — the map fills in as you identify each one.</div>
+        </div>
+      </div>
+
+      <div class="rule-block">
+        <strong>Tip:</strong> common abbreviations and alternate spellings are accepted (e.g. "USA", "UK", "Czechia" or "Czech Republic").
+      </div>
+
+      <a class="play-link" href="outlines.html">Play Outlines →</a>
+    </div>
+  </div>
+
+  <!-- ── WORD SEARCH ───────────────────────────────────────────────── -->
+  <div class="section wordsearch">
+    <div class="section-header">
+      <div class="section-icon">🔍</div>
+      <div class="section-title">WORD SEARCH</div>
+    </div>
+    <div class="section-body">
+      <p class="tagline">A grid of letters hides a set of words. Find them all — words can run in any of eight directions: across, down, or diagonal, forwards or backwards.</p>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-text">Scan the grid for the first and last letter of a word on the list to the right.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-text"><em>Click</em> the starting letter, then click the ending letter to highlight a word. On mobile, <em>tap and drag</em> across the letters.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-text">Correct words light up and are crossed off the list. Find all words to complete the puzzle.</div>
+        </div>
+      </div>
+
+      <div class="rule-block">
+        <strong>Directions:</strong> horizontal, vertical, and all four diagonals — each word can run either forwards or backwards along its line.
+      </div>
+
+      <a class="play-link" href="wordsearch.html">Play Word Search →</a>
+    </div>
+  </div>
+
+  <!-- ── MORSE CODE ────────────────────────────────────────────────── -->
+  <div class="section morse">
+    <div class="section-header">
+      <div class="section-icon">📡</div>
+      <div class="section-title">MORSE CODE</div>
+    </div>
+    <div class="section-body">
+      <p class="tagline">Listen to a Morse code sequence and decode what letter or word is being transmitted. A glowing lamp flashes the signal — can you read it?</p>
+
+      <div class="lamp-demo">
+        <div class="lamp-demo-lamp on"></div>
+        <div class="lamp-demo-lamp"></div>
+        <div class="lamp-demo-lamp on"></div>
+        <div class="lamp-demo-lamp on"></div>
+        <div class="lamp-demo-lamp on"></div>
+        <div style="margin-left:8px">
+          <div class="lamp-demo-symbols">· − − −</div>
+          <div style="font-size:0.75rem;color:#6e7681;margin-top:4px">Easy mode shows the dots and dashes</div>
+        </div>
+      </div>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-text">Press <em>Play</em> to flash the lamp. Watch the pattern of short (·) and long (−) flashes.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-text">Use the reference table at the bottom to look up the letter for each symbol sequence.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-text">Type your answer and press <em>Check</em>. Decode every letter in the word to advance.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-text">Switch to <em>Hard</em> mode once you know the alphabet — no dot/dash trace, just the lamp.</div>
+        </div>
+      </div>
+
+      <div class="rule-block">
+        <strong>Easy mode:</strong> dot/dash symbols appear as the lamp flashes — great for learning.<br>
+        <strong>Hard mode:</strong> only the lamp is shown — tests your real Morse recall.<br>
+        <strong>Speed:</strong> choose Slow / Normal / Fast to adjust the flash rate.
+      </div>
+
+      <a class="play-link" href="morse.html">Play Morse Code →</a>
+    </div>
+  </div>
+
+  <!-- ── WORD LADDER ───────────────────────────────────────────────── -->
+  <div class="section wordladder">
+    <div class="section-header">
+      <div class="section-icon">🪜</div>
+      <div class="section-title">WORD LADDER</div>
+    </div>
+    <div class="section-body">
+      <p class="tagline">Transform one word into another, changing exactly one letter at a time. Every step must be a real word — find the shortest path down the ladder.</p>
+
+      <div class="demo" style="align-items:center;gap:24px">
+        <div class="ladder-demo">
+          <div class="ladder-rung">
+            <div class="ladder-cell start">C</div><div class="ladder-cell start">A</div><div class="ladder-cell start">T</div>
+          </div>
+          <div class="ladder-rung">
+            <div class="ladder-cell changed">C</div><div class="ladder-cell">A</div><div class="ladder-cell">T</div>
+          </div>
+          <div class="ladder-rung">
+            <div class="ladder-cell">C</div><div class="ladder-cell changed">O</div><div class="ladder-cell">T</div>
+          </div>
+          <div class="ladder-rung">
+            <div class="ladder-cell end">D</div><div class="ladder-cell end">O</div><div class="ladder-cell end">G</div>
+          </div>
+        </div>
+        <div class="demo-caption">
+          <strong>CAT → DOG</strong><br>
+          CAT → <strong style="color:#22d3ee">C</strong>OT → D<strong style="color:#22d3ee">O</strong>T → DO<strong style="color:#22d3ee">G</strong><br>
+          One letter changes per step.
+        </div>
+      </div>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-text">Read the <em>start</em> and <em>target</em> words at the top of the ladder.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-text">Type a word that differs from the previous rung by exactly <em>one letter</em>. It must be a real word.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-text">Keep stepping until you reach the target word. Fewer steps is better!</div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-text">Use <em>Hint</em> if you're stuck — it reveals one suggested next word. <em>Give Up</em> shows the full solution.</div>
+        </div>
+      </div>
+
+      <div class="rule-block">
+        <strong>Languages:</strong> English, Hebrew, Arabic, Spanish — switch with the flag buttons.<br>
+        <strong>Difficulty:</strong> 3 / 4 / 5 letters — shorter words are easier to transform.<br>
+        <strong>Progress</strong> is saved per language and word length.
+      </div>
+
+      <a class="play-link" href="wordladder.html">Play Word Ladder →</a>
+    </div>
+  </div>
+
   <!-- ── CONTROLS ────────────────────────────────────────────────── -->
   <div class="section controls">
     <div class="section-header">
@@ -562,14 +822,54 @@ kbd {
 
       <div class="divider" style="height:1px;background:#21262d"></div>
 
-      <div style="font-size:0.8rem;color:#6e7681;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px">Mobile</div>
+      <div style="font-size:0.8rem;color:#6e7681;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px">Word Search</div>
+      <div class="controls-grid">
+        <div class="ctrl-label">Click start → click end</div>
+        <div class="ctrl-desc">Select a word by clicking its first and last letter</div>
+        <div class="ctrl-label">Tap and drag (mobile)</div>
+        <div class="ctrl-desc">Drag across letters to trace a word</div>
+      </div>
+
+      <div class="divider" style="height:1px;background:#21262d"></div>
+
+      <div style="font-size:0.8rem;color:#6e7681;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px">Morse Code</div>
+      <div class="controls-grid">
+        <div class="ctrl-label">Play button</div>
+        <div class="ctrl-desc">Flash the lamp for the current letter</div>
+        <div class="ctrl-label">Easy / Hard toggle</div>
+        <div class="ctrl-desc">Easy shows dot/dash trace; Hard shows lamp only</div>
+        <div class="ctrl-label">Slow / Normal / Fast</div>
+        <div class="ctrl-desc">Adjust the flash speed</div>
+        <div class="ctrl-label"><kbd>Enter</kbd></div>
+        <div class="ctrl-desc">Submit your answer</div>
+      </div>
+
+      <div class="divider" style="height:1px;background:#21262d"></div>
+
+      <div style="font-size:0.8rem;color:#6e7681;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px">Word Ladder</div>
+      <div class="controls-grid">
+        <div class="ctrl-label">Type a word → Enter</div>
+        <div class="ctrl-desc">Submit your next rung (must differ by exactly one letter)</div>
+        <div class="ctrl-label">Flag buttons</div>
+        <div class="ctrl-desc">Switch language (🇺🇸 EN / 🇮🇱 HE / 🇸🇦 AR / 🇪🇸 ES)</div>
+        <div class="ctrl-label">3 / 4 / 5 buttons</div>
+        <div class="ctrl-desc">Switch word length difficulty</div>
+        <div class="ctrl-label">Hint button</div>
+        <div class="ctrl-desc">Reveal one suggested next word</div>
+        <div class="ctrl-label">Give Up</div>
+        <div class="ctrl-desc">Show the full solution path</div>
+      </div>
+
+      <div class="divider" style="height:1px;background:#21262d"></div>
+
+      <div style="font-size:0.8rem;color:#6e7681;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px">Mobile (all games)</div>
       <div class="controls-grid">
         <div class="ctrl-label">Tap to select</div>
         <div class="ctrl-desc">Tap a shape or color, then tap the board</div>
-        <div class="ctrl-label">Drag (Chromino / Tessera)</div>
-        <div class="ctrl-desc">Drag a shape directly onto the board</div>
-        <div class="ctrl-label">Swipe on shape</div>
-        <div class="ctrl-desc">Drag triggers rotation preview mid-air</div>
+        <div class="ctrl-label">Drag shape to board</div>
+        <div class="ctrl-desc">Drag a shape directly onto the board (Chromino / Tessera)</div>
+        <div class="ctrl-label">Tap and drag (Word Search)</div>
+        <div class="ctrl-desc">Drag across letters to trace a word</div>
       </div>
 
     </div>
