@@ -154,6 +154,11 @@ h1 {
   background: rgba(168, 85, 247, 0.28);
   color: #c084fc;
 }
+.grid-cell.hint-start {
+  background: rgba(251, 191, 36, 0.28);
+  color: #fbbf24;
+  box-shadow: inset 0 0 0 2px #fbbf24;
+}
 
 /* ── Word list ───────────────────────────────────────────────────── */
 .word-list {
@@ -202,6 +207,41 @@ h1 {
   background: #1a0d2a;
   border: 1px solid #7c3aed;
   color: #c084fc;
+}
+
+/* ── Hint button ─────────────────────────────────────────────────── */
+.hint-area {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.hint-btn {
+  background: #1a1200;
+  border: 1px solid #78350f;
+  color: #fbbf24;
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+.hint-btn:hover { background: #261a00; }
+.hint-btn:disabled { opacity: 0.35; cursor: default; }
+.hint-pips { display: flex; gap: 4px; }
+.hint-pip {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #78350f;
+}
+.hint-pip.used { background: #fbbf24; }
+.mystery-dir {
+  margin-top: 4px;
+  font-size: 1.4rem;
+  color: #fbbf24;
+  letter-spacing: 0.1em;
 }
 .phase-msg.won {
   background: #0d2a0d;
@@ -318,7 +358,8 @@ h1 {
           :class="{
             found: isCellFound(r, c) && !isCellMysteryFound(r, c),
             'mystery-found': isCellMysteryFound(r, c),
-            selecting: isCellSelecting(r, c)
+            selecting: isCellSelecting(r, c),
+            'hint-start': isCellHintStart(r, c)
           }"
           :style="{ width: cellSize+'px', height: cellSize+'px', fontSize: Math.floor(cellSize*0.5)+'px' }">
           {{ cell }}
@@ -341,6 +382,18 @@ h1 {
         </div>
         <div v-else class="word-item mystery-done">
           {{ placedWords[mysteryIdx] ? placedWords[mysteryIdx].word : '' }}
+        </div>
+        <!-- Direction arrow (hint 3) -->
+        <div v-if="phase === 'hunt' && hintsUsed >= 3" class="mystery-dir">{{ mysteryDir }}</div>
+      </div>
+
+      <!-- Hint button — only during hunt phase -->
+      <div v-if="phase === 'hunt'" class="hint-area">
+        <button class="hint-btn" :disabled="hintsUsed >= 3" @click="useHint">
+          💡 {{ UI.hint }}
+        </button>
+        <div class="hint-pips">
+          <div v-for="n in 3" :key="n" class="hint-pip" :class="{used: hintsUsed >= n}"></div>
         </div>
       </div>
 
@@ -533,6 +586,7 @@ createApp({
     const mysteryFound = ref(false);
     const phase        = ref('normal'); // 'normal' | 'hunt' | 'won'
     const showOverlay  = ref(false);
+    const hintsUsed    = ref(0); // 0–3; each hint reveals more about the mystery word
 
     const selStart   = ref(null);
     const selCurrent = ref(null);
@@ -575,7 +629,8 @@ createApp({
         overlayTitle: { en:'🎉 Solved!', he:'🎉 כל הכבוד!', es:'🎉 ¡Resuelto!', ar:'🎉 أحسنت!' },
         overlaySub:   { en:'You found all hidden words including the mystery word!', he:'מצאתם את כל המילות הנסתרות כולל המילה המסתורית!', es:'¡Encontraste todas las palabras, incluso la misteriosa!', ar:'وجدت كل الكلمات المخفية بما فيها الكلمة الغامضة!' },
         newPuzzle:    { en:'New Puzzle →', he:'פאזל חדש →', es:'Nuevo juego →', ar:'لعبة جديدة →' },
-        confirmReset: { en:'Reset current puzzle?', he:'לאפס את הפאזל הנוכחי?', es:'¿Reiniciar el puzzle actual?', ar:'هل تريد إعادة تعيين اللغز؟' }
+        confirmReset: { en:'Reset current puzzle?', he:'לאפס את הפאזל הנוכחי?', es:'¿Reiniciar el puzzle actual?', ar:'هل تريد إعادة تعيين اللغز؟' },
+        hint:         { en:'Hint', he:'רמז', es:'Pista', ar:'تلميح' }
       };
       return Object.fromEntries(Object.entries(T).map(([k, v]) => [k, v[l] || v.en]));
     });
@@ -586,10 +641,21 @@ createApp({
         .filter((_, i) => i !== mysteryIdx.value)
     );
 
+    // Hint 1: reveal first letter; rest remain blanks
     const mysteryBlanks = computed(() => {
       if (mysteryIdx.value < 0 || !placedWords.value[mysteryIdx.value]) return '???';
       const word = placedWords.value[mysteryIdx.value].word;
-      return [...word].map(() => '_').join(' ');
+      return [...word].map((ch, i) => (hintsUsed.value >= 1 && i === 0) ? ch : '_').join(' ');
+    });
+
+    // Hint 3: direction arrow for the mystery word
+    const mysteryDir = computed(() => {
+      if (hintsUsed.value < 3 || mysteryIdx.value < 0) return '';
+      const pw = placedWords.value[mysteryIdx.value];
+      if (!pw || pw.cells.length < 2) return '';
+      const dr = pw.cells[1][0] - pw.cells[0][0];
+      const dc = pw.cells[1][1] - pw.cells[0][1];
+      return ({ '0,1':'→','0,-1':'←','1,0':'↓','-1,0':'↑','1,1':'↘','1,-1':'↙','-1,1':'↗','-1,-1':'↖' })[dr+','+dc] || '';
     });
 
     // ── Cell state helpers ─────────────────────────────────────────────
@@ -606,6 +672,14 @@ createApp({
       if (!mysteryFound.value || mysteryIdx.value < 0) return false;
       const pw = placedWords.value[mysteryIdx.value];
       return pw && pw.cells.some(([pr, pc]) => pr === r && pc === c);
+    }
+
+    // Hint 2: highlight the mystery word's first cell during hunt phase
+    function isCellHintStart(r, c) {
+      if (hintsUsed.value < 2 || phase.value !== 'hunt') return false;
+      const pw = placedWords.value[mysteryIdx.value];
+      if (!pw) return false;
+      return pw.cells[0][0] === r && pw.cells[0][1] === c;
     }
 
     function isCellSelecting(r, c) {
@@ -724,6 +798,12 @@ createApp({
       category.value = id;
       if (!loadSlot(lang.value, id, difficulty.value)) newPuzzle();
     }
+    function useHint() {
+      if (hintsUsed.value >= 3 || phase.value !== 'hunt') return;
+      hintsUsed.value++;
+      saveState();
+    }
+
     function setDifficulty(d) {
       saveState();
       difficulty.value = d;
@@ -738,6 +818,7 @@ createApp({
       mysteryIdx.value = result.mysteryIdx;
       foundIndices.value = [];
       mysteryFound.value = false;
+      hintsUsed.value = 0;
       phase.value = 'normal';
       showOverlay.value = false;
       selStart.value = null; selCurrent.value = null; selCells.value = [];
@@ -752,7 +833,8 @@ createApp({
           version: 2,
           grid: grid.value, placedWords: placedWords.value,
           mysteryIdx: mysteryIdx.value, foundIndices: foundIndices.value,
-          mysteryFound: mysteryFound.value, phase: phase.value
+          mysteryFound: mysteryFound.value, phase: phase.value,
+          hintsUsed: hintsUsed.value
         }));
         localStorage.setItem(LAST_KEY, JSON.stringify({
           lang: lang.value, category: category.value, difficulty: difficulty.value
@@ -772,6 +854,7 @@ createApp({
         foundIndices.value = s.foundIndices || [];
         mysteryFound.value = s.mysteryFound || false;
         phase.value = s.phase || 'normal';
+        hintsUsed.value = s.hintsUsed || 0;
         return true;
       } catch { return false; }
     }
@@ -805,12 +888,12 @@ createApp({
 
     return {
       lang, category, difficulty, grid, placedWords, mysteryIdx, foundIndices,
-      mysteryFound, phase, showOverlay,
-      isRTL, cellSize, categories, diffButtons, UI, listedWords, mysteryBlanks,
-      isCellFound, isCellMysteryFound, isCellSelecting,
+      mysteryFound, phase, showOverlay, hintsUsed,
+      isRTL, cellSize, categories, diffButtons, UI, listedWords, mysteryBlanks, mysteryDir,
+      isCellFound, isCellMysteryFound, isCellSelecting, isCellHintStart,
       startSelect, moveSelect, endSelect,
       touchStart, touchMove, touchEnd,
-      setLang, selectCategory, setDifficulty, newPuzzle, resetProgress
+      setLang, selectCategory, setDifficulty, useHint, newPuzzle, resetProgress
     };
   }
 }).mount('#app');
