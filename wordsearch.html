@@ -282,6 +282,14 @@ h1 {
   <h1>{{ UI.title }}</h1>
   <p class="tagline">{{ UI.tagline }}</p>
 
+  <!-- Difficulty selector -->
+  <div class="cat-bar" style="margin-bottom:8px">
+    <button v-for="d in diffButtons" :key="d.id" class="cat-btn"
+            :class="{active: difficulty===d.id}" @click="setDifficulty(d.id)">
+      {{ d.label }}
+    </button>
+  </div>
+
   <!-- Category selector -->
   <div class="cat-bar">
     <button v-for="cat in categories" :key="cat.id" class="cat-btn" :class="{active: category===cat.id}" @click="selectCategory(cat.id)">
@@ -419,10 +427,17 @@ const CATEGORIES = [
   { id: 'body',    label: { en: '🫀 Body',     he: '🫀 גוף',    es: '🫀 Cuerpo',      ar: '🫀 جسم'     } }
 ];
 
-const ROWS = 12, COLS = 12;
-const DIRS = [[0,1],[0,-1],[1,0],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1]];
-const LAST_KEY = 'ws-last'; // remembers which (lang, category) was active
-function slotKey(l, cat) { return 'ws-' + l + '-' + cat; }
+// Easy  : small grid, horizontal+vertical only → easier to scan
+// Medium: medium grid, all 8 directions
+// Hard  : full grid, all 8 directions
+const DIFF_CONFIG = {
+  easy:   { rows: 8,  cols: 8,  words: 5, dirs: [[0,1],[0,-1],[1,0],[-1,0]],                                 desktopCell: 46 },
+  medium: { rows: 10, cols: 10, words: 6, dirs: [[0,1],[0,-1],[1,0],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1]],     desktopCell: 38 },
+  hard:   { rows: 12, cols: 12, words: 8, dirs: [[0,1],[0,-1],[1,0],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1]],     desktopCell: 32 }
+};
+
+const LAST_KEY = 'ws-last'; // remembers last active (lang, category, difficulty)
+function slotKey(l, cat, diff) { return 'ws-' + l + '-' + cat + '-' + diff; }
 
 // Hebrew final-form → base-form map
 const HE_FINALS = {'ם':'מ','ן':'נ','ף':'פ','ך':'כ','ץ':'צ'};
@@ -440,8 +455,8 @@ function shuffle(arr) {
   return a;
 }
 
-function emptyGrid() {
-  return Array.from({ length: ROWS }, () => Array(COLS).fill(''));
+function emptyGrid(rows, cols) {
+  return Array.from({ length: rows }, () => Array(cols).fill(''));
 }
 
 // Noise alphabets — Hebrew uses only base (non-final) forms
@@ -452,22 +467,22 @@ const ALPHABET = {
   ar: 'ابتثجحخدذرزسشصضطظعغفقكلمنهويأ'
 };
 
-function fillNoise(grid, lang) {
+function fillNoise(grid, lang, rows, cols) {
   const alpha = [...(ALPHABET[lang] || ALPHABET.en)];
-  for (let r = 0; r < ROWS; r++)
-    for (let c = 0; c < COLS; c++)
+  for (let r = 0; r < rows; r++)
+    for (let c = 0; c < cols; c++)
       if (!grid[r][c])
         grid[r][c] = alpha[Math.floor(Math.random() * alpha.length)];
   return grid;
 }
 
-function tryPlaceWord(grid, word, retries = 40) {
+function tryPlaceWord(grid, word, rows, cols, dirs, retries = 40) {
   const letters = [...word];
   for (let attempt = 0; attempt < retries; attempt++) {
-    const [dr, dc] = DIRS[Math.floor(Math.random() * DIRS.length)];
-    const maxR = dr === 0 ? ROWS - 1 : dr > 0 ? ROWS - letters.length : letters.length - 1;
+    const [dr, dc] = dirs[Math.floor(Math.random() * dirs.length)];
+    const maxR = dr === 0 ? rows - 1 : dr > 0 ? rows - letters.length : letters.length - 1;
     const minR = dr < 0 ? letters.length - 1 : 0;
-    const maxC = dc === 0 ? COLS - 1 : dc > 0 ? COLS - letters.length : letters.length - 1;
+    const maxC = dc === 0 ? cols - 1 : dc > 0 ? cols - letters.length : letters.length - 1;
     const minC = dc < 0 ? letters.length - 1 : 0;
     if (minR > maxR || minC > maxC) continue;
     const r0 = minR + Math.floor(Math.random() * (maxR - minR + 1));
@@ -489,17 +504,18 @@ function tryPlaceWord(grid, word, retries = 40) {
   return null;
 }
 
-function generatePuzzle(lang, category) {
-  const wordList = shuffle(WORD_BANK[category][lang] || WORD_BANK[category].en).slice(0, 8);
-  const grid = emptyGrid();
+function generatePuzzle(lang, category, diff) {
+  const { rows, cols, words: numWords, dirs } = DIFF_CONFIG[diff];
+  const wordList = shuffle(WORD_BANK[category][lang] || WORD_BANK[category].en).slice(0, numWords);
+  const grid = emptyGrid(rows, cols);
   const placed = [];
   for (const word of wordList) {
     // Normalize Hebrew final forms for the grid only; keep original for the word list
     const gridWord = lang === 'he' ? normalizeHebrew(word) : word;
-    const result = tryPlaceWord(grid, gridWord, 60);
+    const result = tryPlaceWord(grid, gridWord, rows, cols, dirs, 60);
     if (result) placed.push({ word, cells: result.cells }); // word = display form
   }
-  fillNoise(grid, lang);
+  fillNoise(grid, lang, rows, cols);
   const mysteryIdx = placed.length > 0 ? Math.floor(Math.random() * placed.length) : -1;
   return { grid, placedWords: placed, mysteryIdx };
 }
@@ -507,27 +523,40 @@ function generatePuzzle(lang, category) {
 // ── Vue App ───────────────────────────────────────────────────────────────
 createApp({
   setup() {
-    const lang = ref('en');
-    const category = ref('animals');
-    const grid = ref(emptyGrid());
-    const placedWords = ref([]);
-    const mysteryIdx = ref(-1);
+    const lang       = ref('en');
+    const category   = ref('animals');
+    const difficulty = ref('medium');
+    const grid       = ref(emptyGrid(10, 10));
+    const placedWords  = ref([]);
+    const mysteryIdx   = ref(-1);
     const foundIndices = ref([]);
     const mysteryFound = ref(false);
-    const phase = ref('normal'); // 'normal' | 'hunt' | 'won'
-    const showOverlay = ref(false);
+    const phase        = ref('normal'); // 'normal' | 'hunt' | 'won'
+    const showOverlay  = ref(false);
 
-    const selStart = ref(null);
+    const selStart   = ref(null);
     const selCurrent = ref(null);
-    const selCells = ref([]);
+    const selCells   = ref([]);
 
     const windowWidth = ref(window.innerWidth);
 
     const isRTL = computed(() => lang.value === 'he' || lang.value === 'ar');
 
+    const cfg = computed(() => DIFF_CONFIG[difficulty.value]);
+
     const cellSize = computed(() => {
-      if (windowWidth.value < 500) return Math.max(22, Math.floor((windowWidth.value - 64) / COLS));
-      return 36;
+      const { cols, desktopCell } = cfg.value;
+      if (windowWidth.value < 500) return Math.max(20, Math.floor((windowWidth.value - 64) / cols));
+      return desktopCell;
+    });
+
+    const diffButtons = computed(() => {
+      const l = lang.value;
+      return [
+        { id: 'easy',   label: ({ en:'Easy',   he:'קל',     es:'Facil',   ar:'سهل'   })[l] || 'Easy'   },
+        { id: 'medium', label: ({ en:'Medium', he:'בינוני', es:'Medio',   ar:'متوسط' })[l] || 'Medium' },
+        { id: 'hard',   label: ({ en:'Hard',   he:'קשה',    es:'Dificil', ar:'صعب'   })[l] || 'Hard'   },
+      ];
     });
 
     const categories = CATEGORIES;
@@ -684,21 +713,26 @@ createApp({
       selStart.value = null; selCurrent.value = null; selCells.value = [];
     }
 
-    // ── Language & category ────────────────────────────────────────────
+    // ── Language / category / difficulty ──────────────────────────────
     function setLang(l) {
-      saveState();               // persist current slot before switching
+      saveState();
       lang.value = l;
-      if (!loadSlot(l, category.value)) newPuzzle();
+      if (!loadSlot(l, category.value, difficulty.value)) newPuzzle();
     }
     function selectCategory(id) {
-      saveState();               // persist current slot before switching
+      saveState();
       category.value = id;
-      if (!loadSlot(lang.value, id)) newPuzzle();
+      if (!loadSlot(lang.value, id, difficulty.value)) newPuzzle();
+    }
+    function setDifficulty(d) {
+      saveState();
+      difficulty.value = d;
+      if (!loadSlot(lang.value, category.value, d)) newPuzzle();
     }
 
     // ── Puzzle generation ──────────────────────────────────────────────
     function newPuzzle() {
-      const result = generatePuzzle(lang.value, category.value);
+      const result = generatePuzzle(lang.value, category.value, difficulty.value);
       grid.value = result.grid;
       placedWords.value = result.placedWords;
       mysteryIdx.value = result.mysteryIdx;
@@ -711,23 +745,24 @@ createApp({
     }
 
     // ── State persistence ──────────────────────────────────────────────
-    // Each (lang, category) combo has its own slot so switching never loses progress.
+    // Each (lang, category, difficulty) combo has its own slot.
     function saveState() {
       try {
-        localStorage.setItem(slotKey(lang.value, category.value), JSON.stringify({
+        localStorage.setItem(slotKey(lang.value, category.value, difficulty.value), JSON.stringify({
           version: 2,
           grid: grid.value, placedWords: placedWords.value,
           mysteryIdx: mysteryIdx.value, foundIndices: foundIndices.value,
           mysteryFound: mysteryFound.value, phase: phase.value
         }));
-        // Remember which slot was last active so we restore it on next visit
-        localStorage.setItem(LAST_KEY, JSON.stringify({ lang: lang.value, category: category.value }));
+        localStorage.setItem(LAST_KEY, JSON.stringify({
+          lang: lang.value, category: category.value, difficulty: difficulty.value
+        }));
       } catch {}
     }
 
-    function loadSlot(l, cat) {
+    function loadSlot(l, cat, diff) {
       try {
-        const raw = localStorage.getItem(slotKey(l, cat));
+        const raw = localStorage.getItem(slotKey(l, cat, diff));
         if (!raw) return false;
         const s = JSON.parse(raw);
         if (s.version !== 2) return false;
@@ -743,7 +778,7 @@ createApp({
 
     function resetProgress() {
       if (!confirm(UI.value.confirmReset)) return;
-      localStorage.removeItem(slotKey(lang.value, category.value));
+      localStorage.removeItem(slotKey(lang.value, category.value, difficulty.value));
       newPuzzle();
     }
 
@@ -753,13 +788,13 @@ createApp({
     // ── Lifecycle ──────────────────────────────────────────────────────
     onMounted(() => {
       window.addEventListener('resize', onResize);
-      // Restore the last active (lang, category), then load that slot (or generate fresh)
       try {
         const last = JSON.parse(localStorage.getItem(LAST_KEY) || '{}');
-        if (last.lang)     lang.value     = last.lang;
-        if (last.category) category.value = last.category;
+        if (last.lang)       lang.value       = last.lang;
+        if (last.category)   category.value   = last.category;
+        if (last.difficulty) difficulty.value = last.difficulty;
       } catch {}
-      if (!loadSlot(lang.value, category.value)) newPuzzle();
+      if (!loadSlot(lang.value, category.value, difficulty.value)) newPuzzle();
     });
     onUnmounted(() => window.removeEventListener('resize', onResize));
 
@@ -769,13 +804,13 @@ createApp({
     });
 
     return {
-      lang, category, grid, placedWords, mysteryIdx, foundIndices,
+      lang, category, difficulty, grid, placedWords, mysteryIdx, foundIndices,
       mysteryFound, phase, showOverlay,
-      isRTL, cellSize, categories, UI, listedWords, mysteryBlanks,
+      isRTL, cellSize, categories, diffButtons, UI, listedWords, mysteryBlanks,
       isCellFound, isCellMysteryFound, isCellSelecting,
       startSelect, moveSelect, endSelect,
       touchStart, touchMove, touchEnd,
-      setLang, selectCategory, newPuzzle, resetProgress
+      setLang, selectCategory, setDifficulty, newPuzzle, resetProgress
     };
   }
 }).mount('#app');
