@@ -582,7 +582,8 @@ createApp({
     const grid       = ref(emptyGrid(10, 10));
     const placedWords  = ref([]);
     const mysteryIdx   = ref(-1);
-    const foundIndices = ref([]);
+    const foundIndices  = ref([]);
+    const foundCellsMap = ref({});   // index → actual cells the user selected
     const mysteryFound = ref(false);
     const phase        = ref('normal'); // 'normal' | 'hunt' | 'won'
     const showOverlay  = ref(false);
@@ -663,7 +664,8 @@ createApp({
       for (let i = 0; i < placedWords.value.length; i++) {
         if (i === mysteryIdx.value) continue;
         if (!foundIndices.value.includes(i)) continue;
-        if (placedWords.value[i].cells.some(([pr, pc]) => pr === r && pc === c)) return true;
+        const cells = foundCellsMap.value[i] ?? placedWords.value[i].cells;
+        if (cells.some(([pr, pc]) => pr === r && pc === c)) return true;
       }
       return false;
     }
@@ -715,7 +717,7 @@ createApp({
         .map(([r, c]) => r + ',' + c).join('|');
     }
 
-    function markFound(i) {
+    function markFound(i, actualCells) {
       if (i === mysteryIdx.value) {
         if (!mysteryFound.value) {
           mysteryFound.value = true;
@@ -725,6 +727,7 @@ createApp({
         }
       } else {
         if (!foundIndices.value.includes(i)) {
+          foundCellsMap.value = { ...foundCellsMap.value, [i]: actualCells };
           foundIndices.value = [...foundIndices.value, i];
           const listedCount = placedWords.value.length - 1;
           if (foundIndices.value.length >= listedCount && phase.value === 'normal')
@@ -743,7 +746,7 @@ createApp({
         const pw = placedWords.value[i];
         if (pw.cells.length !== cells.length) continue;
         if (sortedKey(pw.cells) !== selKey) continue;
-        markFound(i);
+        markFound(i, cells);
         return;
       }
 
@@ -756,7 +759,7 @@ createApp({
         if (pw.cells.length !== cells.length) continue;
         const gridWord = lang.value === 'he' ? normalizeHebrew(pw.word) : pw.word;
         if (gridWord === spelled || gridWord === spelledRev) {
-          markFound(i);
+          markFound(i, cells);
           return;
         }
       }
@@ -836,8 +839,9 @@ createApp({
       grid.value = result.grid;
       placedWords.value = result.placedWords;
       mysteryIdx.value = result.mysteryIdx;
-      foundIndices.value = [];
-      mysteryFound.value = false;
+      foundIndices.value  = [];
+      foundCellsMap.value = {};
+      mysteryFound.value  = false;
       hintsUsed.value = 0;
       phase.value = 'normal';
       showOverlay.value = false;
@@ -853,6 +857,7 @@ createApp({
           version: 2,
           grid: grid.value, placedWords: placedWords.value,
           mysteryIdx: mysteryIdx.value, foundIndices: foundIndices.value,
+          foundCellsMap: foundCellsMap.value,
           mysteryFound: mysteryFound.value, phase: phase.value,
           hintsUsed: hintsUsed.value
         }));
@@ -871,8 +876,9 @@ createApp({
         grid.value = s.grid;
         placedWords.value = s.placedWords;
         mysteryIdx.value = s.mysteryIdx ?? -1;
-        foundIndices.value = s.foundIndices || [];
-        mysteryFound.value = s.mysteryFound || false;
+        foundIndices.value  = s.foundIndices  || [];
+        foundCellsMap.value = s.foundCellsMap || {};
+        mysteryFound.value  = s.mysteryFound  || false;
         phase.value = s.phase || 'normal';
         hintsUsed.value = s.hintsUsed || 0;
         return true;
