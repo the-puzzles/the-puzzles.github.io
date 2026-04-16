@@ -165,7 +165,7 @@ h1 {
   display: flex;
   align-items: center;
   gap: 7px;
-  touch-action: none;
+  touch-action: pan-x; /* allow horizontal tray scroll; vertical drag handled in JS */
 }
 .shape-card:active { cursor: grabbing; }
 .shape-card:hover:not(.placed) {
@@ -744,8 +744,9 @@ createApp({
     const isDragging = ref(false);
     const ghostX     = ref(0);
     const ghostY     = ref(0);
-    let touchStartX  = 0;
-    let touchStartY  = 0;
+    let touchStartX      = 0;
+    let touchStartY      = 0;
+    let pendingTapShapeId = null;
 
     // Responsive cell size
     const windowWidth = ref(window.innerWidth);
@@ -891,13 +892,26 @@ createApp({
       touchStartX = t.clientX;
       touchStartY = t.clientY;
       isDragging.value = false;
-      selectShape(shapeId);
+      pendingTapShapeId = shapeId;
     }
 
     function onDocTouchMove(e) {
-      if (!selectedShapeId.value) return;
       const t = e.touches[0];
-      const dist = Math.hypot(t.clientX - touchStartX, t.clientY - touchStartY);
+      const dx = Math.abs(t.clientX - touchStartX);
+      const dy = Math.abs(t.clientY - touchStartY);
+      const dist = Math.hypot(dx, dy);
+
+      if (pendingTapShapeId && dist > 8) {
+        if (dx > dy) {
+          pendingTapShapeId = null;
+          return;
+        }
+        selectShape(pendingTapShapeId);
+        pendingTapShapeId = null;
+        isDragging.value = true;
+      }
+
+      if (!selectedShapeId.value) return;
       if (!isDragging.value && dist > 8) isDragging.value = true;
       if (!isDragging.value) return;
       e.preventDefault();
@@ -917,7 +931,10 @@ createApp({
     }
 
     function onDocTouchEnd(e) {
-      // hoverRow/hoverCol already hold the centroid-adjusted anchor from the last touchmove
+      if (pendingTapShapeId) {
+        selectShape(pendingTapShapeId);
+        pendingTapShapeId = null;
+      }
       if (selectedShapeId.value && isDragging.value && hoverRow.value != null) {
         onCellClick(hoverRow.value, hoverCol.value);
       }
