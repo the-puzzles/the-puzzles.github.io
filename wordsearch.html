@@ -421,10 +421,10 @@ const { createApp, ref, computed, watchEffect, onMounted, onUnmounted } = Vue;
 // generatePuzzle() calls normalizeHebrew() on all he words at runtime.
 const WORD_BANK = {
   animals: {
-    en: ['CAT','DOG','LION','WOLF','BEAR','OWL','DEER','EAGLE','FOX','FROG','DUCK','FISH'],
-    he: ['חתול','כלב','אריה','זאב','דוב','ינשוף','איל','נשר','שועל','צפרדע','ברווז','דג'],
-    es: ['GATO','PERRO','LEON','LOBO','OSO','BUHO','CIERVO','AGUILA','ZORRO','RANA','PATO','PEZ'],
-    ar: ['قط','كلب','أسد','ذئب','دب','بوم','ظبي','نسر','ثعلب','ضفدع','بطة','سمك']
+    en: ['CAT','DOG','LION','WOLF','BEAR','OWL','DEER','EAGLE','FOX','FROG','DUCK','FISH','LLAMA','CHEETAH','LEOPARD','SHARK','CRAB','BEE','BEETLE','ANT','PANDA','KOALA','BAT'],
+    he: ['חתול','כלב','אריה','זאב','דוב','ינשוף','איל','נשר','שועל','צפרדע','ברווז','דג', 'למה', 'ציטה', 'נמר', 'כריש', 'סרטן', 'דבורה', 'חיפושית', 'נמלה', 'פנדה', 'קואלה', 'עטלף'],
+    es: ['GATO','PERRO','LEON','LOBO','OSO','BUHO','CIERVO','AGUILA','ZORRO','RANA','PATO','PEZ','LLAMA','GUEPARDO','LEOPARDO','TIBURON','CANGREJO','ABEJA','ESCARABAJO','HORMIGA','PANDA','KOALA','MURCIELAGO'],
+    ar: ['قط','كلب','أسد','ذئب','دب','بوم','ظبي','نسر','ثعلب','ضفدع','بطة','سمك','لاما','فهد','نمر','قرش','سرطان','نحلة','خنفساء','نملة','باندا','كوالا','خفاش']
   },
   colors: {
     en: ['RED','BLUE','GREEN','GOLD','PINK','GREY','TEAL','LIME','RUBY','CYAN','ROSE','NAVY'],
@@ -631,11 +631,11 @@ createApp({
         huntMsg:      { en:'All words found! Now hunt the mystery word…', he:'מצאתם את כל המילים! עכשיו חפשו את המילה הנסתרת...', es:'¡Todas encontradas! Busca la palabra misteriosa…', ar:'وجدت كل الكلمات! ابحث الآن عن الكلمة الغامضة…' },
         wonMsg:       { en:'You found them all! Well done!', he:'כל הכבוד! מצאתם את כולן!', es:'¡Las encontraste todas! ¡Bien hecho!', ar:'وجدتها جميعاً! أحسنت!' },
         overlayTitle: { en:'🎉 Solved!', he:'🎉 כל הכבוד!', es:'🎉 ¡Resuelto!', ar:'🎉 أحسنت!' },
-        overlaySub:   { en:'You found all hidden words including the mystery word!', he:'מצאתם את כל המילות הנסתרות כולל המילה המסתורית!', es:'¡Encontraste todas las palabras, incluso la misteriosa!', ar:'وجدت كل الكلمات المخفية بما فيها الكلمة الغامضة!' },
+        overlaySub:   { en:'You found all hidden words including the mystery word!', he:'מצאתם את כל המילים הנסתרות כולל המילה המסתורית!', es:'¡Encontraste todas las palabras, incluso la misteriosa!', ar:'وجدت كل الكلمات المخفية بما فيها الكلمة الغامضة!' },
         newPuzzle:    { en:'New Puzzle →', he:'פאזל חדש →', es:'Nuevo juego →', ar:'لعبة جديدة →' },
         confirmReset: { en:'Reset current puzzle?', he:'לאפס את הפאזל הנוכחי?', es:'¿Reiniciar el puzzle actual?', ar:'هل تريد إعادة تعيين اللغز؟' },
         hint:         { en:'Hint', he:'רמז', es:'Pista', ar:'تلميح' },
-        earlyMsg:     { en:'✨ Mystery word found early! Finish the list…', he:'✨ מצאתם את המילה הנסתרת! המשיכו לגלות את שאר המילות...', es:'✨ ¡Palabra misteriosa encontrada! Termina la lista…', ar:'✨ وجدت الكلمة الغامضة مبكراً! أكمل القائمة…' }
+        earlyMsg:     { en:'✨ Mystery word found early! Finish the list…', he:'✨ מצאתם את המילה הנסתרת! המשיכו לגלות את שאר המילים...', es:'✨ ¡Palabra misteriosa encontrada! Termina la lista…', ar:'✨ وجدت الكلمة الغامضة مبكراً! أكمل القائمة…' }
       };
       return Object.fromEntries(Object.entries(T).map(([k, v]) => [k, v[l] || v.en]));
     });
