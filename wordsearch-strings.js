@@ -27,10 +27,10 @@ const WORD_BANK = {
     ar: ['أرز','ذرة','حساء','كعكة','برقوق','زيتون','خبز','مانجو','بيتزا','ليمون','عنب','توفو','صويا','حمص','برتقال','كمثرى','عدس','أفوكادو','فلافل']
   },
   sports: {
-    en: ['SOCCER','TENNIS','BOXING','RUGBY','GOLF','SWIM','CYCLING','HOCKEY','POLO','CHESS','SURF','YOGA'],
-    he: ['כדורגל','טניס','אגרוף','רוגבי','גולף','שחייה','רכיבה','הוקי','פולו','שחמט','גלישה','יוגה'],
-    es: ['FUTBOL','TENIS','BOXEO','RUGBY','GOLF','NATACION','CICLISMO','HOCKEY','POLO','AJEDREZ','SURF','YOGA'],
-    ar: ['كرة','تنس','ملاكمة','ركبي','غولف','سباحة','دراجة','هوكي','بولو','شطرنج','تزلج','يوغا']
+    en: ['SOCCER','TENNIS','BOXING','RUGBY','GOLF','SWIMMING','CYCLING','HOCKEY','POLO','CHESS','SURFING','YOGA','CLIMBING'],
+    he: ['כדורגל','טניס','אגרוף','רוגבי','גולף','שחייה','רכיבה','הוקי','פולו','שחמט','גלישה','יוגה','טיפוס'],
+    es: ['FUTBOL','TENIS','BOXEO','RUGBY','GOLF','NATACION','CICLISMO','HOCKEY','POLO','AJEDREZ','SURF','YOGA','ESCALADA'],
+    ar: ['كرة','تنس','ملاكمة','ركبي','غولف','سباحة','دراجة','هوكي','بولو','شطرنج','تزلج','يوغا','تسلق']
   },
   nature: {
     en: ['RIVER','OCEAN','FOREST','DESERT','LAKE','VOLCANO','CAVE','GLACIER','CANYON','VALLEY','ISLAND','CLIFF'],
