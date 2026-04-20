@@ -377,7 +377,7 @@ h1 {
           {{ pw.word }}
         </div>
         <!-- Mystery word slot -->
-        <div v-if="phase !== 'won'" class="word-item mystery">
+        <div v-if="!mysteryFound" class="word-item mystery">
           {{ mysteryBlanks }}
         </div>
         <div v-else class="word-item mystery-done">
@@ -397,6 +397,7 @@ h1 {
         </div>
       </div>
 
+      <div v-if="mysteryFound && phase === 'normal'" class="phase-msg hunt" style="border-color:#c084fc;background:#1a0d2a;">{{ UI.earlyMsg }}</div>
       <div v-if="phase === 'hunt'" class="phase-msg hunt">{{ UI.huntMsg }}</div>
       <div v-if="phase === 'won'"  class="phase-msg won">{{ UI.wonMsg }}</div>
     </div>
@@ -589,6 +590,8 @@ createApp({
     const showOverlay  = ref(false);
     const hintsUsed    = ref(0); // 0–3; each hint reveals more about the mystery word
 
+    const showFireworks = ref(false);
+
     const selStart   = ref(null);
     const selCurrent = ref(null);
     const selCells   = ref([]);
@@ -631,7 +634,8 @@ createApp({
         overlaySub:   { en:'You found all hidden words including the mystery word!', he:'מצאתם את כל המילות הנסתרות כולל המילה המסתורית!', es:'¡Encontraste todas las palabras, incluso la misteriosa!', ar:'وجدت كل الكلمات المخفية بما فيها الكلمة الغامضة!' },
         newPuzzle:    { en:'New Puzzle →', he:'פאזל חדש →', es:'Nuevo juego →', ar:'لعبة جديدة →' },
         confirmReset: { en:'Reset current puzzle?', he:'לאפס את הפאזל הנוכחי?', es:'¿Reiniciar el puzzle actual?', ar:'هل تريد إعادة تعيين اللغز؟' },
-        hint:         { en:'Hint', he:'רמז', es:'Pista', ar:'تلميح' }
+        hint:         { en:'Hint', he:'רמז', es:'Pista', ar:'تلميح' },
+        earlyMsg:     { en:'✨ Mystery word found early! Finish the list…', he:'✨ מצאתם את המילה הנסתרת! המשיכו לגלות את שאר המילות...', es:'✨ ¡Palabra misteriosa encontrada! Termina la lista…', ar:'✨ وجدت الكلمة الغامضة مبكراً! أكمل القائمة…' }
       };
       return Object.fromEntries(Object.entries(T).map(([k, v]) => [k, v[l] || v.en]));
     });
@@ -717,12 +721,69 @@ createApp({
         .map(([r, c]) => r + ',' + c).join('|');
     }
 
+    function launchFireworks() {
+      const canvas = document.createElement('canvas');
+      canvas.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:50;';
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      document.body.appendChild(canvas);
+      showFireworks.value = true;
+
+      const ctx = canvas.getContext('2d');
+      const particles = [];
+      const cols = ['#fb923c','#f59e0b','#c084fc','#4ade80','#60a5fa','#f472b6','#fbbf24'];
+      function burst(x, y) {
+        for (let i = 0; i < 70; i++) {
+          const angle = Math.PI * 2 * i / 70;
+          const spd = 2 + Math.random() * 6;
+          particles.push({ x, y, vx: Math.cos(angle)*spd, vy: Math.sin(angle)*spd - 2,
+            alpha: 1, color: cols[Math.floor(Math.random()*cols.length)], r: 2 + Math.random()*3 });
+        }
+      }
+      const totalMs = 3600;
+      const end = Date.now() + totalMs;
+      let lastBurst = 0;
+      let animId;
+      function frame(now) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        if (now - lastBurst > 420 && Date.now() < end - 500) {
+          burst(canvas.width * (0.15 + Math.random() * 0.7), canvas.height * (0.1 + Math.random() * 0.45));
+          lastBurst = now;
+        }
+        for (const p of particles) {
+          p.x += p.vx; p.y += p.vy; p.vy += 0.12; p.alpha -= 0.016;
+          if (p.alpha <= 0) continue;
+          ctx.globalAlpha = p.alpha;
+          ctx.fillStyle = p.color;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+        particles.splice(0, particles.length, ...particles.filter(p => p.alpha > 0));
+        if (Date.now() < end || particles.length > 0) {
+          animId = requestAnimationFrame(frame);
+        } else {
+          document.body.removeChild(canvas);
+          showFireworks.value = false;
+        }
+      }
+      // kick off with first burst immediately
+      burst(canvas.width * 0.5, canvas.height * 0.3);
+      animId = requestAnimationFrame(frame);
+    }
+
     function markFound(i, actualCells) {
       if (i === mysteryIdx.value) {
         if (!mysteryFound.value) {
           mysteryFound.value = true;
-          phase.value = 'won';
-          showOverlay.value = true;
+          const listedCount = placedWords.value.length - 1;
+          if (foundIndices.value.length >= listedCount) {
+            phase.value = 'won';
+            showOverlay.value = true;
+          } else {
+            launchFireworks();
+          }
           saveState();
         }
       } else {
@@ -730,8 +791,14 @@ createApp({
           foundCellsMap.value = { ...foundCellsMap.value, [i]: actualCells };
           foundIndices.value = [...foundIndices.value, i];
           const listedCount = placedWords.value.length - 1;
-          if (foundIndices.value.length >= listedCount && phase.value === 'normal')
-            phase.value = 'hunt';
+          if (foundIndices.value.length >= listedCount) {
+            if (mysteryFound.value) {
+              phase.value = 'won';
+              showOverlay.value = true;
+            } else if (phase.value === 'normal') {
+              phase.value = 'hunt';
+            }
+          }
           saveState();
         }
       }
@@ -914,7 +981,7 @@ createApp({
 
     return {
       lang, category, difficulty, grid, placedWords, mysteryIdx, foundIndices,
-      mysteryFound, phase, showOverlay, hintsUsed,
+      mysteryFound, phase, showOverlay, hintsUsed, showFireworks,
       isRTL, cellSize, categories, diffButtons, UI, listedWords, mysteryBlanks, mysteryDir,
       isCellFound, isCellMysteryFound, isCellSelecting, isCellHintStart,
       startSelect, moveSelect, endSelect,
