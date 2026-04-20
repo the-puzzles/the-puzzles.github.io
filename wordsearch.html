@@ -780,6 +780,7 @@ createApp({
           const listedCount = placedWords.value.length - 1;
           if (foundIndices.value.length >= listedCount) {
             phase.value = 'won';
+            launchFireworks();
             showOverlay.value = true;
           } else {
             launchFireworks();
