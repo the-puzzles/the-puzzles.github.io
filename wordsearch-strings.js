@@ -15,10 +15,10 @@ const WORD_BANK = {
     ar: ['أحمر','أزرق','أخضر','ذهبي','وردي','رمادي','أبيض','أسود','أصفر','بني','زيتوني','فيروزي','فضي']
   },
   space: {
-    en: ['MOON','STAR','MARS','VENUS','COMET','ORBIT','NEBULA','SATURN','PULSAR','QUASAR','GALAXY','METEOR'],
-    he: ['ירח','כוכב','מאדים','נוגה','שביט','מסלול','ערפילית','שבתאי','פולסר','קוואזר','גלקסיה','מטאור'],
-    es: ['LUNA','ESTRELLA','MARTE','VENUS','COMETA','ORBITA','NEBULA','SATURNO','PULSAR','GALAXIA','METEORO','COSMOS'],
-    ar: ['قمر','نجم','مريخ','زهرة','مذنب','مدار','سديم','زحل','مجرة','كويكب','نيزك','كون']
+    en: ['MOON','STAR','MARS','NEPTUNE','SPACESHIP','VENUS','COMET','ORBIT','NEBULA','SATURN','PULSAR','QUASAR','GALAXY','METEOR','SATELLITE','ASTEROID','ECLIPSE','SUPERNOVA','TELESCOPE','JUPITER','ROCKET'],
+    he: ['ירח','כוכב','מאדים','נוגה','שביט','מסלול','ערפילית','שבתאי','פולסר','קוואזר','גלקסיה','מטאור','נפטון','חללית','לוויין','אסטרואיד','ליקוי','סופרנובה','טלסקופ','צדק','רקטה'],
+    es: ['LUNA','ESTRELLA','MARTE','VENUS','COMETA','ORBITA','NEBULA','SATURNO','PULSAR','GALAXIA','METEORO','COSMOS','NEPTUNO','NAVE','SATELITE','ASTEROIDE','ECLIPSE','SUPERNOVA','TELESCOPIO','JUPITER','COHETE'],
+    ar: ['قمر','نجم','مريخ','زهرة','مذنب','مدار','سديم','زحل','مجرة','كويكب','نيزك','كون','نبتون','مركبة','تابع','أستيرويد','خسوف','مستعر','تلسكوب','مشتري','صاروخ']
   },
   food: {
     en: ['RICE','CORN','SOUP','CAKE','FISH','PLUM','OLIVE','BREAD','MANGO','PIZZA','LEMON','GRAPE'],
