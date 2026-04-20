@@ -39,10 +39,10 @@ const WORD_BANK = {
     ar: ['نهر','محيط','غابة','صحراء','بحيرة','بركان','كهف','جليد','وادي','جزيرة','جبل','شلال']
   },
   cities: {
-    en: ['PARIS','ROME','TOKYO','CAIRO','DELHI','LIMA','OSLO','DUBAI','BERLIN','MIAMI','SYDNEY','SEOUL'],
-    he: ['פריז','רומא','טוקיו','קהיר','דלהי','לימה','אוסלו','דובאי','ברלין','מיאמי','סידני','סיאול'],
-    es: ['PARIS','ROMA','TOKIO','CAIRO','DELHI','LIMA','OSLO','DUBAI','BERLIN','MIAMI','SIDNEY','SEUL'],
-    ar: ['باريس','روما','طوكيو','القاهرة','دلهي','ليما','أوسلو','دبي','برلين','ميامي','سيدني','سيول']
+    en: ['PARIS','ROME','TOKYO','CAIRO','DELHI','LIMA','OSLO','DUBAI','BERLIN','MIAMI','SYDNEY','SEOUL','JERUSALEM','HAIFA','WASHINGTON','BARCELONA','STOCKHOLM','AQABA'],
+    he: ['פריז','רומא','טוקיו','קהיר','דלהי','לימה','אוסלו','דובאי','ברלין','מיאמי','סידני','סיאול','ירושלים','חיפה','וושינגטון','ברצלונה','סטוקהולם','עקבה'],
+    es: ['PARIS','ROMA','TOKIO','CAIRO','DELHI','LIMA','OSLO','DUBAI','BERLIN','MIAMI','SIDNEY','SEUL','JERUSALEN','HAIFA','WASHINGTON','BARCELONA','ESTOCOLMO','AQABA'],
+    ar: ['باريس','روما','طوكيو','القاهرة','دلهي','ليما','أوسلو','دبي','برلين','ميامي','سيدني','سيول','القدس','حيفا','واشنطن','برشلونة','ستوكهولم','العقبة']
   },
   body: {
     en: ['HEAD','EYE','EAR','NOSE','MOUTH','ARM','LEG','HAND','FOOT','HEART','BACK','KNEE'],
