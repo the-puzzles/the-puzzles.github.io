@@ -21,10 +21,10 @@ const WORD_BANK = {
     ar: ['قمر','نجم','مريخ','زهرة','مذنب','مدار','سديم','زحل','مجرة','كويكب','نيزك','كون','نبتون','مركبة','تابع','أستيرويد','خسوف','مستعر','تلسكوب','مشتري','صاروخ']
   },
   food: {
-    en: ['RICE','CORN','SOUP','CAKE','FISH','PLUM','OLIVE','BREAD','MANGO','PIZZA','LEMON','GRAPE'],
-    he: ['אורז','תירס','מרק','עוגה','דג','שזיף','זית','לחם','מנגו','פיצה','לימון','ענב'],
-    es: ['ARROZ','MAIZ','SOPA','PASTEL','CIRUELA','OLIVA','PAN','MANGO','PIZZA','LIMON','UVA','QUESO'],
-    ar: ['أرز','ذرة','حساء','كعكة','سمك','برقوق','زيتون','خبز','مانجو','بيتزا','ليمون','عنب']
+    en: ['RICE','CORN','SOUP','CAKE','PLUM','OLIVE','BREAD','MANGO','PIZZA','LEMON','GRAPE','TOFU','SOY','HUMMUS','ORANGE','PEAR','LENTILS','AVOCADO','FALAFEL'],
+    he: ['אורז','תירס','מרק','עוגה','שזיף','זית','לחם','מנגו','פיצה','לימון','ענב','טופו','סויה','חומוס','תפוז','אגס','עדשים','אבוקדו','פלאפל'],
+    es: ['ARROZ','MAIZ','SOPA','PASTEL','CIRUELA','OLIVA','PAN','MANGO','PIZZA','LIMON','UVA','QUESO','TOFU','SOJA','HUMMUS','NARANJA','PERA','LENTEJAS','AGUACATE','FALAFEL'],
+    ar: ['أرز','ذرة','حساء','كعكة','برقوق','زيتون','خبز','مانجو','بيتزا','ليمون','عنب','توفو','صويا','حمص','برتقال','كمثرى','عدس','أفوكادو','فلافل']
   },
   sports: {
     en: ['SOCCER','TENNIS','BOXING','RUGBY','GOLF','SWIM','CYCLING','HOCKEY','POLO','CHESS','SURF','YOGA'],
