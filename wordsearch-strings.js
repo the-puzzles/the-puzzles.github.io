@@ -9,10 +9,10 @@ const WORD_BANK = {
     ar: ['قط','كلب','أسد','ذئب','دب','بوم','ظبي','نسر','ثعلب','ضفدع','بطة','سمك','لاما','فهد','نمر','قرش','سرطان','نحلة','خنفساء','نملة','باندا','كوالا','خفاش']
   },
   colors: {
-    en: ['RED','BLUE','GREEN','GOLD','PINK','GREY','TEAL','LIME','RUBY','CYAN','ROSE','NAVY'],
-    he: ['אדום','כחול','ירוק','זהב','ורוד','אפור','טורקיז','ליים','רובי','ציאן','ורד','נייבי'],
-    es: ['ROJO','AZUL','VERDE','ORO','ROSA','GRIS','LILA','CIAN','RUBI','CORAL','LIMA','OCRE'],
-    ar: ['أحمر','أزرق','أخضر','ذهبي','وردي','رمادي','أبيض','أسود','أصفر','بني','زيتوني','فيروزي']
+    en: ['RED','BLUE','GREEN','GOLD','PINK','GREY','TEAL','LIME','RUBY','CYAN','ROSE','NAVY','YELLOW','BLACK','WHITE','SILVER'],
+    he: ['צהוב','שחור','לבן','אפור','כסף','אדום','כחול','ירוק','זהב','ורוד','טורקיז','ליים','רובי','ציאן','ורד','נייבי'],
+    es: ['ROJO','AZUL','VERDE','ORO','ROSA','GRIS','LILA','CIAN','RUBI','CORAL','LIMA','OCRE','AMARILLO','NEGRO','BLANCO','PLATA'],
+    ar: ['أحمر','أزرق','أخضر','ذهبي','وردي','رمادي','أبيض','أسود','أصفر','بني','زيتوني','فيروزي','فضي']
   },
   space: {
     en: ['MOON','STAR','MARS','VENUS','COMET','ORBIT','NEBULA','SATURN','PULSAR','QUASAR','GALAXY','METEOR'],
