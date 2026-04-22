@@ -710,12 +710,13 @@ createApp({
         }
       } else {
         if (!foundIndices.value.includes(i)) {
-          foundCellsMap.value = { ...foundCellsMap.value, [i]: actualCells };
+          foundCellsMap.value = { ...foundCellsMap.value, [i]: actualCells.map(c => [c[0], c[1]]) };
           foundIndices.value = [...foundIndices.value, i];
           const listedCount = placedWords.value.length - 1;
           if (foundIndices.value.length >= listedCount) {
             if (mysteryFound.value) {
               phase.value = 'won';
+              launchFireworks();
               showOverlay.value = true;
             } else if (phase.value === 'normal') {
               phase.value = 'hunt';
