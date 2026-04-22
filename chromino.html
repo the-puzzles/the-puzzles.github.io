@@ -944,7 +944,7 @@ createApp({
 
     // ── Keyboard ─────────────────────────────────────────────────────
     function handleKey(e) {
-      if      (e.key === 'r' || e.key === 'R') rotateShape();
+      if      ((e.key === 'r' || e.key === 'R') && !e.ctrlKey && !e.metaKey) { e.preventDefault(); rotateShape(); }
       else if (e.key === 'Escape')              selectedShapeId.value = null;
       else if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); undo(); }
     }
