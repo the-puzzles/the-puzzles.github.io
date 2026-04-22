@@ -589,8 +589,8 @@ createApp({
       for (let i = 0; i < placedWords.value.length; i++) {
         if (i === mysteryIdx.value) continue;
         if (!foundIndices.value.includes(i)) continue;
-        const cells = foundCellsMap.value[i] ?? placedWords.value[i].cells;
-        if (cells.some(([pr, pc]) => pr === r && pc === c)) return true;
+        const cells = foundCellsMap.value[i];
+        if (cells && cells.some(([pr, pc]) => pr === r && pc === c)) return true;
       }
       return false;
     }
