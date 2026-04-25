@@ -91,6 +91,7 @@ header {
 .card.colorku:hover   { border-color: #c084fc; box-shadow: 0 12px 40px rgba(192,132,252,0.15); }
 .card.outlines:hover    { border-color: #34d399; box-shadow: 0 12px 40px rgba(52,211,153,0.15); }
 .card.wordsearch:hover  { border-color: #fb923c; box-shadow: 0 12px 40px rgba(251,146,60,0.15); }
+.card.xo:hover          { border-color: #f43f5e; box-shadow: 0 12px 40px rgba(244,63,94,0.15); }
 .card.morse:hover       { border-color: #fbbf24; box-shadow: 0 12px 40px rgba(251,191,36,0.15); }
 .card.wordladder:hover  { border-color: #22d3ee; box-shadow: 0 12px 40px rgba(34,211,238,0.15); }
 .card.braille:hover     { border-color: #a78bfa; box-shadow: 0 12px 40px rgba(167,139,250,0.15); }
@@ -113,6 +114,7 @@ header {
 .morse      .card-icon { background: #1c1a10; }
 .wordladder .card-icon { background: #0c1e24; }
 .braille    .card-icon { background: #1e1528; }
+.xo         .card-icon { background: #1a0d0f; }
 
 .card-title {
   font-size: 1.5rem;
@@ -163,6 +165,12 @@ header {
 }
 .braille .card-title {
   background: linear-gradient(135deg, #a78bfa, #7c3aed);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.xo .card-title {
+  background: linear-gradient(135deg, #f43f5e, #fb923c);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -227,6 +235,7 @@ header {
 .morse       .rule-dot { background: #fbbf24; }
 .wordladder  .rule-dot { background: #22d3ee; }
 .braille     .rule-dot { background: #a78bfa; }
+.xo          .rule-dot { background: #f43f5e; }
 
 /* ── Play button ─────────────────────────────────────────────────────── */
 .play-btn {
@@ -256,6 +265,7 @@ header {
 .morse       .play-btn { background: #92400e; color: #fbbf24; border: 1px solid #fbbf24; }
 .wordladder  .play-btn { background: #0c2233; color: #22d3ee; border: 1px solid #22d3ee; }
 .braille     .play-btn { background: #2e1065; color: #a78bfa; border: 1px solid #a78bfa; }
+.xo          .play-btn { background: #1a0d0f; color: #f472b6; border: 1px solid #f43f5e; }
 
 .play-arrow { font-size: 1rem; transition: transform 0.15s; }
 .play-btn:hover .play-arrow { transform: translateX(3px); }
@@ -658,6 +668,46 @@ footer {
 
   </div><!-- /cards codes -->
 </div><!-- /category codes -->
+
+<!-- ── CLASSIC GAMES ──────────────────────────────────────────────── -->
+<div>
+  <div class="category-label">Classic Games</div>
+  <div class="cards">
+
+  <!-- ── X O ───────────────────────────────────────────────────── -->
+  <a class="card xo" href="xo.html">
+    <div class="card-header">
+      <div class="card-icon">✕</div>
+      <div class="card-title">X O</div>
+    </div>
+
+    <!-- Mini preview: 3×3 tic-tac-toe board -->
+    <div class="preview" style="grid-template-columns: repeat(3, 36px); gap: 2px; background: #21262d; padding: 2px; border-radius: 8px;">
+      <div class="preview-cell" style="background:#161b22; border-radius:4px; font-size:1.1rem; font-weight:900; color:#f472b6;">✕</div>
+      <div class="preview-cell" style="background:#161b22; border-radius:4px;"></div>
+      <div class="preview-cell" style="background:#161b22; border-radius:4px; font-size:1.1rem; font-weight:900; color:#60a5fa;">○</div>
+      <div class="preview-cell" style="background:#161b22; border-radius:4px;"></div>
+      <div class="preview-cell" style="background:#161b22; border-radius:4px; font-size:1.1rem; font-weight:900; color:#f472b6;">✕</div>
+      <div class="preview-cell" style="background:#161b22; border-radius:4px;"></div>
+      <div class="preview-cell" style="background:#161b22; border-radius:4px; font-size:1.1rem; font-weight:900; color:#60a5fa;">○</div>
+      <div class="preview-cell" style="background:#161b22; border-radius:4px;"></div>
+      <div class="preview-cell" style="background:#1a1624; border-radius:4px; font-size:1.1rem; font-weight:900; color:#fb7185; text-shadow:0 0 8px rgba(244,63,94,0.6)">✕</div>
+    </div>
+
+    <p class="card-tagline">Classic Tic-Tac-Toe in 4 languages. Play against a friend or challenge the computer — Easy or Hard (unbeatable minimax AI).</p>
+
+    <div class="card-rules">
+      <div class="rule"><div class="rule-dot"></div><span>Get three in a row to win</span></div>
+      <div class="rule"><div class="rule-dot"></div><span>2-player mode or vs computer</span></div>
+      <div class="rule"><div class="rule-dot"></div><span>Easy (random) · Medium (blocks & wins) · Hard (unbeatable)</span></div>
+      <div class="rule"><div class="rule-dot"></div><span>Score tracking across games</span></div>
+    </div>
+
+    <div class="play-btn">Play X O <span class="play-arrow">→</span></div>
+  </a>
+
+  </div><!-- /cards classic -->
+</div><!-- /category classic -->
 
 </div><!-- /categories -->
 
