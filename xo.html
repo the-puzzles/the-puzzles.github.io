@@ -275,7 +275,8 @@ h1 {
   <div class="mode-bar">
     <button class="mode-btn" :class="{active: mode==='2p'}"     @click="setMode('2p')">{{ UI.mode2p }}</button>
     <button class="mode-btn" :class="{active: mode==='easy'}"   @click="setMode('easy')">{{ UI.modeEasy }}</button>
-<button class="mode-btn" :class="{active: mode==='hard'}"   @click="setMode('hard')">{{ UI.modeHard }}</button>
+    <button class="mode-btn" :class="{active: mode==='medium'}" @click="setMode('medium')">{{ UI.modeMedium }}</button>
+    <button class="mode-btn" :class="{active: mode==='hard'}"   @click="setMode('hard')">{{ UI.modeHard }}</button>
   </div>
 
   <!-- Score -->
@@ -331,12 +332,13 @@ const { createApp, ref, computed } = Vue;
 const STRINGS = {
   back:        { en: '← All Games',   he: 'כל המשחקים →',   es: '← Todos los juegos',   ar: 'كل الألعاب →' },
   title:       { en: '✕ ○',           he: 'איקס עיגול',      es: '✕ ○',                  ar: '✕ ○' },
-  tagline:     { en: 'Two players or vs the computer — Easy or Hard',
-                 he: 'שני שחקנים או מול המחשב — קל או קשה',
-                 es: 'Dos jugadores o contra la máquina — Fácil o Difícil',
-                 ar: 'لاعبان أو ضد الحاسوب — سهل أو صعب' },
+  tagline:     { en: 'Two players or vs the computer — Easy, Medium or Hard',
+                 he: 'שני שחקנים או מול המחשב — קל, בינוני או קשה',
+                 es: 'Dos jugadores o contra la máquina — Fácil, Medio o Difícil',
+                 ar: 'لاعبان أو ضد الحاسوب — سهل أو متوسط أو صعب' },
   mode2p:      { en: '👥 2 Players',  he: '👥 2 שחקנים',    es: '👥 2 Jugadores',        ar: '👥 لاعبان' },
   modeEasy:    { en: '🤖 Easy',       he: '🤖 מחשב קל',      es: '🤖 Fácil',              ar: '🤖 سهل' },
+  modeMedium:  { en: '🤖 Medium',     he: '🤖 מחשב בינוני',  es: '🤖 Medio',              ar: '🤖 متوسط' },
   modeHard:    { en: '🤖 Hard',       he: '🤖 מחשב קשה',     es: '🤖 Difícil',            ar: '🤖 صعب' },
   turnX:       { en: "X's turn",      he: 'תור X',           es: 'Turno de X',            ar: 'دور X' },
   turnO:       { en: "O's turn",      he: 'תור O',           es: 'Turno de O',            ar: 'دور O' },
@@ -395,6 +397,22 @@ function getBestMove(board) {
 function getRandomMove(board) {
   const empty = board.reduce((a, c, i) => (c === null ? [...a, i] : a), []);
   return empty.length ? empty[Math.floor(Math.random() * empty.length)] : -1;
+}
+
+// Medium: take a win or block a loss, otherwise random
+function getMediumMove(board) {
+  const findThreat = (mark) => {
+    for (const [a, b, c] of WIN_LINES) {
+      const cells = [a, b, c];
+      const marks = cells.filter(i => board[i] === mark).length;
+      const empty = cells.find(i => board[i] === null);
+      if (marks === 2 && empty !== undefined) return empty;
+    }
+    return -1;
+  };
+  const win   = findThreat('O'); if (win   >= 0) return win;
+  const block = findThreat('X'); if (block >= 0) return block;
+  return getRandomMove(board);
 }
 
 const SAVE_KEY = 'xo-save';
@@ -464,8 +482,9 @@ createApp({
         aiThink.value = true;
         setTimeout(() => {
           aiThink.value = false;
-          const move = mode.value === 'hard' ? getBestMove([...board.value])
-                     :                        getRandomMove([...board.value]);
+          const move = mode.value === 'hard'   ? getBestMove([...board.value])
+                     : mode.value === 'medium' ? getMediumMove([...board.value])
+                     :                           getRandomMove([...board.value]);
           if (move >= 0) makeMove(move);
         }, 380);
       }
