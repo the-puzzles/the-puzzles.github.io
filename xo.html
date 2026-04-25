@@ -415,6 +415,54 @@ function getMediumMove(board) {
   return getRandomMove(board);
 }
 
+const PALETTES = {
+  X: ['#f43f5e','#f472b6','#fb7185','#fda4af','#fbbf24','#fb923c'],
+  O: ['#3b82f6','#60a5fa','#93c5fd','#38bdf8','#06b6d4','#a5f3fc'],
+};
+
+function launchFireworks(player) {
+  const canvas = document.createElement('canvas');
+  canvas.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:200;';
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
+  document.body.appendChild(canvas);
+  const ctx = canvas.getContext('2d');
+  const cols = PALETTES[player] || PALETTES.X;
+  const particles = [];
+
+  function burst(x, y) {
+    for (let i = 0; i < 65; i++) {
+      const angle = Math.PI * 2 * i / 65;
+      const spd   = 2 + Math.random() * 6;
+      particles.push({ x, y, vx: Math.cos(angle) * spd, vy: Math.sin(angle) * spd - 2,
+        alpha: 1, color: cols[Math.floor(Math.random() * cols.length)], r: 2 + Math.random() * 3 });
+    }
+  }
+
+  const end = Date.now() + 3000;
+  let lastBurst = 0;
+  function frame(now) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (now - lastBurst > 420 && Date.now() < end - 500) {
+      burst(canvas.width * (0.2 + Math.random() * 0.6), canvas.height * (0.1 + Math.random() * 0.4));
+      lastBurst = now;
+    }
+    for (const p of particles) {
+      p.x += p.vx; p.y += p.vy; p.vy += 0.12; p.alpha -= 0.016;
+      if (p.alpha <= 0) continue;
+      ctx.globalAlpha = p.alpha;
+      ctx.fillStyle = p.color;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    particles.splice(0, particles.length, ...particles.filter(p => p.alpha > 0));
+    if (Date.now() < end || particles.length > 0) requestAnimationFrame(frame);
+    else document.body.removeChild(canvas);
+  }
+  burst(canvas.width * 0.5, canvas.height * 0.35);
+  requestAnimationFrame(frame);
+}
+
 const SAVE_KEY = 'xo-save';
 
 createApp({
@@ -466,6 +514,7 @@ createApp({
         winLine.value = result.line;
         phase.value = 'won';
         scores.value = { ...scores.value, [current.value]: scores.value[current.value] + 1 };
+        launchFireworks(current.value);
         save();
         return;
       }
