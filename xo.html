@@ -11,6 +11,8 @@
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
+:root { --cell: clamp(92px, calc((100vw - 48px) / 3), 124px); }
+
 body {
   font-family: 'Segoe UI', system-ui, sans-serif;
   background: #0d1117;
@@ -19,7 +21,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 20px 16px 48px;
+  padding: 16px 16px 48px;
   user-select: none;
   -webkit-user-select: none;
 }
@@ -27,11 +29,11 @@ body {
 /* ── Top bar ─────────────────────────────────────────────────────── */
 .top-bar {
   width: 100%;
-  max-width: 420px;
+  max-width: 480px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 28px;
+  margin-bottom: 20px;
 }
 .back-link {
   color: #6e7681;
@@ -58,64 +60,51 @@ body {
 
 /* ── Title ───────────────────────────────────────────────────────── */
 h1 {
-  font-size: 2.4rem;
+  font-size: 3.2rem;
   font-weight: 900;
-  letter-spacing: 0.1em;
-  background: linear-gradient(135deg, #f43f5e, #fb923c);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin-bottom: 6px;
-  text-align: center;
-}
-.tagline {
-  color: #6e7681;
-  font-size: 0.88rem;
+  letter-spacing: 0.18em;
   margin-bottom: 24px;
   text-align: center;
-  max-width: 360px;
+  line-height: 1;
 }
-
-/* ── Mode bar ────────────────────────────────────────────────────── */
-.mode-bar {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-.mode-btn {
-  background: #161b22;
-  border: 1px solid #30363d;
-  color: #8b949e;
-  border-radius: 8px;
-  padding: 8px 16px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  font-family: inherit;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-.mode-btn:hover:not(.active) { border-color: #6e7681; color: #c9d1d9; }
-.mode-btn.active { background: #1a0d0f; border-color: #f43f5e; color: #f472b6; }
+h1 .x { color: #f472b6; }
+h1 .o { color: #60a5fa; }
 
 /* ── Score ───────────────────────────────────────────────────────── */
 .score-bar {
   display: flex;
+  width: calc(var(--cell) * 3);
   background: #161b22;
   border: 1px solid #21262d;
-  border-radius: 12px;
+  border-radius: 14px;
   overflow: hidden;
-  margin-bottom: 20px;
+  margin-bottom: 14px;
 }
 .score-item {
-  padding: 10px 32px;
+  flex: 1;
+  padding: 12px 8px 14px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 3px;
+  gap: 4px;
+  position: relative;
+  transition: background 0.2s;
 }
 .score-item + .score-item { border-left: 1px solid #21262d; }
+.score-item::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 12px; right: 12px;
+  height: 3px;
+  border-radius: 2px 2px 0 0;
+  transform: scaleX(0);
+  transition: transform 0.25s ease;
+}
+.score-x.active  { background: rgba(244,63,94,0.06); }
+.score-x.active::after { background: #f472b6; transform: scaleX(1); }
+.score-o.active  { background: rgba(96,165,250,0.06); }
+.score-o.active::after { background: #60a5fa; transform: scaleX(1); }
+
 .score-label {
   font-size: 0.68rem;
   color: #6e7681;
@@ -124,7 +113,7 @@ h1 {
   font-weight: 700;
 }
 .score-val {
-  font-size: 1.6rem;
+  font-size: 2rem;
   font-weight: 800;
   line-height: 1;
   min-width: 1.2ch;
@@ -136,51 +125,63 @@ h1 {
 
 /* ── Status ──────────────────────────────────────────────────────── */
 .status {
-  height: 2rem;
-  font-size: 1.05rem;
-  font-weight: 600;
+  height: 2.2rem;
+  font-size: 1.1rem;
+  font-weight: 700;
   color: #c9d1d9;
-  margin-bottom: 20px;
+  margin-bottom: 14px;
   text-align: center;
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
+  letter-spacing: 0.01em;
 }
 .status.won-x { color: #f472b6; }
 .status.won-o { color: #60a5fa; }
 .status.draw  { color: #8b949e; }
 
+.turn-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  animation: pulse 1.4s ease infinite;
+}
+.turn-dot.dot-x { background: #f472b6; }
+.turn-dot.dot-o { background: #60a5fa; }
+@keyframes pulse {
+  0%, 100% { opacity: 1;   transform: scale(1);   }
+  50%       { opacity: 0.4; transform: scale(0.65); }
+}
+
 /* ── Board ───────────────────────────────────────────────────────── */
 .board {
   display: grid;
-  grid-template-columns: repeat(3, 112px);
-  grid-template-rows:    repeat(3, 112px);
-  gap: 4px;
-  background: #21262d;
-  border-radius: 14px;
-  padding: 4px;
-  margin-bottom: 28px;
+  grid-template-columns: repeat(3, var(--cell));
+  grid-template-rows:    repeat(3, var(--cell));
+  margin-bottom: 24px;
 }
 .cell {
-  background: #161b22;
-  border-radius: 8px;
+  background: transparent;
+  border-right:  3px solid #2d333b;
+  border-bottom: 3px solid #2d333b;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 3.2rem;
+  font-size: calc(var(--cell) * 0.5);
   font-weight: 900;
   cursor: default;
-  transition: background 0.12s;
+  transition: background 0.1s;
   position: relative;
   overflow: hidden;
 }
-.cell.clickable { cursor: pointer; }
-.cell.clickable:hover { background: #1c2128; }
+.cell:nth-child(3n)  { border-right: none; }
+.cell:nth-child(n+7) { border-bottom: none; }
 
-.mark {
-  display: block;
-  line-height: 1;
-}
+.cell.clickable { cursor: pointer; }
+.cell.clickable:hover { background: rgba(255,255,255,0.04); }
+
+.mark { display: block; line-height: 1; }
 .mark-x { color: #f472b6; }
 .mark-o { color: #60a5fa; }
 
@@ -188,70 +189,83 @@ h1 {
 .cell.clickable:hover::after {
   content: attr(data-preview);
   position: absolute;
-  font-size: 3.2rem;
+  font-size: calc(var(--cell) * 0.5);
   font-weight: 900;
-  opacity: 0.18;
+  opacity: 0.15;
   line-height: 1;
 }
 .cell.preview-x:hover::after { color: #f472b6; }
 .cell.preview-o:hover::after { color: #60a5fa; }
 
-.cell.winning { background: #1a1624; }
-.cell.winning .mark-x { color: #fb7185; text-shadow: 0 0 20px rgba(244,63,94,0.6); }
-.cell.winning .mark-o { color: #93c5fd; text-shadow: 0 0 20px rgba(96,165,250,0.6); }
+.cell.winning { background: rgba(255,255,255,0.04); }
+.cell.winning .mark-x { color: #fb7185; text-shadow: 0 0 28px rgba(244,63,94,0.75); }
+.cell.winning .mark-o { color: #93c5fd; text-shadow: 0 0 28px rgba(96,165,250,0.75); }
 
 /* pop-in animation */
 @keyframes popIn {
-  0%   { transform: scale(0.4); opacity: 0; }
-  65%  { transform: scale(1.15); }
-  100% { transform: scale(1); opacity: 1; }
+  0%   { transform: scale(0.3); opacity: 0; }
+  65%  { transform: scale(1.2); }
+  100% { transform: scale(1);   opacity: 1; }
 }
-.pop-enter-active { animation: popIn 0.2s ease-out; }
+.pop-enter-active { animation: popIn 0.22s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+/* ── Mode bar ────────────────────────────────────────────────────── */
+.mode-bar {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  justify-content: center;
+  width: calc(var(--cell) * 3);
+}
+.mode-btn {
+  background: #161b22;
+  border: 1px solid #30363d;
+  color: #8b949e;
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.mode-btn:hover:not(.active) { border-color: #6e7681; color: #c9d1d9; }
+.mode-btn.active { background: #1a0d0f; border-color: #f43f5e; color: #f472b6; }
 
 /* ── Buttons ─────────────────────────────────────────────────────── */
 .btn-row {
   display: flex;
-  gap: 12px;
+  gap: 10px;
 }
 .new-game-btn {
   background: #1a0d0f;
   border: 1px solid #f43f5e;
   color: #f472b6;
   border-radius: 10px;
-  padding: 12px 32px;
+  padding: 11px 40px;
   font-size: 0.92rem;
   font-weight: 700;
   font-family: inherit;
   cursor: pointer;
-  transition: opacity 0.15s, transform 0.1s;
+  transition: opacity 0.15s, transform 0.1s, box-shadow 0.15s;
   letter-spacing: 0.04em;
 }
-.new-game-btn:hover  { opacity: 0.85; transform: translateY(-1px); }
-.new-game-btn:active { transform: translateY(0); }
+.new-game-btn:hover  { opacity: 0.85; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(244,63,94,0.2); }
+.new-game-btn:active { transform: translateY(0); box-shadow: none; }
 
 .reset-scores-btn {
   background: none;
   border: 1px solid #30363d;
   color: #6e7681;
   border-radius: 10px;
-  padding: 12px 16px;
-  font-size: 0.82rem;
+  padding: 11px 14px;
+  font-size: 0.9rem;
   font-family: inherit;
   cursor: pointer;
   transition: color 0.15s, border-color 0.15s;
 }
 .reset-scores-btn:hover { color: #c9d1d9; border-color: #6e7681; }
-
-/* ── Mobile ──────────────────────────────────────────────────────── */
-@media (max-width: 420px) {
-  .board {
-    grid-template-columns: repeat(3, 96px);
-    grid-template-rows:    repeat(3, 96px);
-  }
-  .cell { font-size: 2.8rem; }
-  .cell.clickable:hover::after { font-size: 2.8rem; }
-  .score-item { padding: 10px 20px; }
-}
 </style>
 </head>
 <body>
@@ -268,20 +282,11 @@ h1 {
     </div>
   </div>
 
-  <h1>{{ UI.title }}</h1>
-  <p class="tagline">{{ UI.tagline }}</p>
-
-  <!-- Mode selector -->
-  <div class="mode-bar">
-    <button class="mode-btn" :class="{active: mode==='2p'}"     @click="setMode('2p')">{{ UI.mode2p }}</button>
-    <button class="mode-btn" :class="{active: mode==='easy'}"   @click="setMode('easy')">{{ UI.modeEasy }}</button>
-    <button class="mode-btn" :class="{active: mode==='medium'}" @click="setMode('medium')">{{ UI.modeMedium }}</button>
-    <button class="mode-btn" :class="{active: mode==='hard'}"   @click="setMode('hard')">{{ UI.modeHard }}</button>
-  </div>
+  <h1><span class="x">✕</span> <span class="o">○</span></h1>
 
   <!-- Score -->
   <div class="score-bar">
-    <div class="score-item score-x">
+    <div class="score-item score-x" :class="{active: phase === 'playing' && current === 'X' && !aiThink}">
       <div class="score-label">X</div>
       <div class="score-val">{{ scores.X }}</div>
     </div>
@@ -289,14 +294,17 @@ h1 {
       <div class="score-label">{{ UI.draws }}</div>
       <div class="score-val">{{ scores.draw }}</div>
     </div>
-    <div class="score-item score-o">
+    <div class="score-item score-o" :class="{active: phase === 'playing' && current === 'O' && !aiThink}">
       <div class="score-label">O</div>
       <div class="score-val">{{ scores.O }}</div>
     </div>
   </div>
 
   <!-- Status -->
-  <div class="status" :class="statusClass">{{ statusMsg }}</div>
+  <div class="status" :class="statusClass">
+    <span v-if="phase === 'playing' && !aiThink" class="turn-dot" :class="current === 'X' ? 'dot-x' : 'dot-o'"></span>
+    {{ statusMsg }}
+  </div>
 
   <!-- Board -->
   <div class="board">
@@ -318,6 +326,14 @@ h1 {
     </div>
   </div>
 
+  <!-- Mode selector -->
+  <div class="mode-bar">
+    <button class="mode-btn" :class="{active: mode==='2p'}"     @click="setMode('2p')">{{ UI.mode2p }}</button>
+    <button class="mode-btn" :class="{active: mode==='easy'}"   @click="setMode('easy')">{{ UI.modeEasy }}</button>
+    <button class="mode-btn" :class="{active: mode==='medium'}" @click="setMode('medium')">{{ UI.modeMedium }}</button>
+    <button class="mode-btn" :class="{active: mode==='hard'}"   @click="setMode('hard')">{{ UI.modeHard }}</button>
+  </div>
+
   <!-- Actions -->
   <div class="btn-row">
     <button class="new-game-btn" @click="newGame">{{ UI.newGame }}</button>
@@ -331,11 +347,6 @@ const { createApp, ref, computed } = Vue;
 
 const STRINGS = {
   back:        { en: '← All Games',   he: 'כל המשחקים →',   es: '← Todos los juegos',   ar: 'كل الألعاب →' },
-  title:       { en: '✕ ○',           he: 'איקס עיגול',      es: '✕ ○',                  ar: '✕ ○' },
-  tagline:     { en: 'Two players or vs the computer — Easy, Medium or Hard',
-                 he: 'שני שחקנים או מול המחשב — קל, בינוני או קשה',
-                 es: 'Dos jugadores o contra la máquina — Fácil, Medio o Difícil',
-                 ar: 'لاعبان أو ضد الحاسوب — سهل أو متوسط أو صعب' },
   mode2p:      { en: '👥 2 Players',  he: '👥 2 שחקנים',    es: '👥 2 Jugadores',        ar: '👥 لاعبان' },
   modeEasy:    { en: '🤖 Easy',       he: '🤖 מחשב קל',      es: '🤖 Fácil',              ar: '🤖 سهل' },
   modeMedium:  { en: '🤖 Medium',     he: '🤖 מחשב בינוני',  es: '🤖 Medio',              ar: '🤖 متوسط' },
