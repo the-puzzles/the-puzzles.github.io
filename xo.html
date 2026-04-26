@@ -40,8 +40,13 @@ body {
   text-decoration: none;
   font-size: 0.85rem;
   transition: color 0.15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 .back-link:hover { color: #c9d1d9; }
+[dir="ltr"] .back-link::before { content: '←'; }
+[dir="rtl"] .back-link::after  { content: '→'; }
 .lang-toggle { display: flex; gap: 4px; }
 .lang-btn {
   background: none;
@@ -90,7 +95,7 @@ h1 .o { color: #60a5fa; }
   position: relative;
   transition: background 0.2s;
 }
-.score-item + .score-item { border-left: 1px solid #21262d; }
+.score-item + .score-item { border-inline-start: 1px solid #21262d; }
 .score-item::after {
   content: '';
   position: absolute;
@@ -130,11 +135,10 @@ h1 .o { color: #60a5fa; }
   font-weight: 700;
   color: #c9d1d9;
   margin-bottom: 14px;
-  text-align: center;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 6px;
   letter-spacing: 0.01em;
 }
 .status.won-x { color: #f472b6; }
@@ -284,8 +288,8 @@ h1 .o { color: #60a5fa; }
 
   <h1><span class="x">✕</span> <span class="o">○</span></h1>
 
-  <!-- Score -->
-  <div class="score-bar">
+  <!-- Score: dir=ltr keeps X/Draws/O in consistent left-to-right order -->
+  <div class="score-bar" dir="ltr">
     <div class="score-item score-x" :class="{active: phase === 'playing' && current === 'X' && !aiThink}">
       <div class="score-label">X</div>
       <div class="score-val">{{ scores.X }}</div>
@@ -302,8 +306,25 @@ h1 .o { color: #60a5fa; }
 
   <!-- Status -->
   <div class="status" :class="statusClass">
-    <span v-if="phase === 'playing' && !aiThink" class="turn-dot" :class="current === 'X' ? 'dot-x' : 'dot-o'"></span>
-    {{ statusMsg }}
+    <template v-if="isRTL">
+      <!-- Won: [ניצח][X] → RTL flex puts ניצח right, X left → reads "ניצח X" in Hebrew -->
+      <template v-if="phase === 'won'">
+        <span>{{ statusText }}</span>
+        <span :class="current === 'X' ? 'mark-x' : 'mark-o'">{{ current }}</span>
+      </template>
+      <!-- Turn: [X][תור][·] → RTL flex puts X right, תור left → visually "· תור X" (תור before X) -->
+      <template v-else>
+        <span v-if="showPlayerMark" :class="current === 'X' ? 'mark-x' : 'mark-o'">{{ current }}</span>
+        <span>{{ statusText }}</span>
+        <span v-if="phase === 'playing' && !aiThink" class="turn-dot" :class="current === 'X' ? 'dot-x' : 'dot-o'"></span>
+      </template>
+    </template>
+    <template v-else>
+      <span v-if="phase === 'playing' && !aiThink" class="turn-dot" :class="current === 'X' ? 'dot-x' : 'dot-o'"></span>
+      <span v-if="showPlayerMark" :class="current === 'X' ? 'mark-x' : 'mark-o'">{{ current }}</span>
+      <span>{{ statusText }}</span>
+    </template>
+    <span v-if="phase === 'won'">🎉</span>
   </div>
 
   <!-- Board -->
@@ -346,15 +367,13 @@ h1 .o { color: #60a5fa; }
 const { createApp, ref, computed } = Vue;
 
 const STRINGS = {
-  back:        { en: '← All Games',   he: 'כל המשחקים →',   es: '← Todos los juegos',   ar: 'كل الألعاب →' },
+  back:        { en: 'All Games',      he: 'כל המשחקים',     es: 'Todos los juegos',      ar: 'كل الألعاب' },
   mode2p:      { en: '👥 2 Players',  he: '👥 2 שחקנים',    es: '👥 2 Jugadores',        ar: '👥 لاعبان' },
-  modeEasy:    { en: '🤖 Easy',       he: '🤖 מחשב קל',      es: '🤖 Fácil',              ar: '🤖 سهل' },
-  modeMedium:  { en: '🤖 Medium',     he: '🤖 מחשב בינוני',  es: '🤖 Medio',              ar: '🤖 متوسط' },
-  modeHard:    { en: '🤖 Hard',       he: '🤖 מחשב קשה',     es: '🤖 Difícil',            ar: '🤖 صعب' },
-  turnX:       { en: "X's turn",      he: 'תור X',           es: 'Turno de X',            ar: 'دور X' },
-  turnO:       { en: "O's turn",      he: 'תור O',           es: 'Turno de O',            ar: 'دور O' },
-  wonX:        { en: 'X wins! 🎉',   he: '!X ניצח 🎉',     es: '¡Gana X! 🎉',           ar: '!فاز X 🎉' },
-  wonO:        { en: 'O wins! 🎉',   he: '!O ניצח 🎉',     es: '¡Gana O! 🎉',           ar: '!فاز O 🎉' },
+  modeEasy:    { en: '🤖 Easy',       he: '🤖 קל',            es: '🤖 Fácil',              ar: '🤖 سهل' },
+  modeMedium:  { en: '🤖 Medium',     he: '🤖 בינוני',        es: '🤖 Medio',              ar: '🤖 متوسط' },
+  modeHard:    { en: '🤖 Hard',       he: '🤖 קשה',           es: '🤖 Difícil',            ar: '🤖 صعب' },
+  wonVerb:     { en: 'wins!',          he: 'ניצח',              es: 'gana!',                 ar: 'فاز' },
+  turnWord:    { en: "'s turn",        he: 'תור',              es: 'turno',                 ar: 'دور' },
   draw:        { en: "It's a draw!",  he: 'תיקו!',           es: '¡Empate!',              ar: 'تعادل!' },
   thinking:    { en: 'Thinking…',     he: 'המחשב חושב…',     es: 'Pensando…',             ar: 'يفكر…' },
   newGame:     { en: 'New Game',      he: 'משחק חדש',        es: 'Nueva partida',         ar: 'لعبة جديدة' },
@@ -494,11 +513,15 @@ createApp({
       return Object.fromEntries(Object.entries(STRINGS).map(([k, v]) => [k, v[l] || v.en]));
     });
 
-    const statusMsg = computed(() => {
+    const showPlayerMark = computed(() =>
+      phase.value === 'won' || (phase.value === 'playing' && !aiThink.value)
+    );
+
+    const statusText = computed(() => {
       if (aiThink.value)          return UI.value.thinking;
-      if (phase.value === 'won')  return current.value === 'X' ? UI.value.wonX : UI.value.wonO;
+      if (phase.value === 'won')  return UI.value.wonVerb;
       if (phase.value === 'draw') return UI.value.draw;
-      return current.value === 'X' ? UI.value.turnX : UI.value.turnO;
+      return UI.value.turnWord;
     });
 
     const statusClass = computed(() => {
@@ -602,7 +625,7 @@ createApp({
 
     return {
       lang, mode, board, current, phase, winLine, scores, aiThink,
-      isRTL, UI, statusMsg, statusClass, canClick,
+      isRTL, UI, showPlayerMark, statusText, statusClass, canClick,
       clickCell, newGame, setMode, setLang, resetScores,
     };
   }
