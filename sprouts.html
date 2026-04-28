@@ -110,18 +110,12 @@ h1 {
 .score-p2.active { background: rgba(96,165,250,0.06); }
 .score-p2.active::after { background: #60a5fa; transform: scaleX(1); }
 .score-label {
-  font-size: 0.68rem;
-  color: #6e7681;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  font-weight: 700;
+  font-size: 0.68rem; color: #6e7681;
+  text-transform: uppercase; letter-spacing: 0.12em; font-weight: 700;
 }
 .score-val {
-  font-size: 2rem;
-  font-weight: 800;
-  line-height: 1;
-  min-width: 1.2ch;
-  text-align: center;
+  font-size: 2rem; font-weight: 800; line-height: 1;
+  min-width: 1.2ch; text-align: center;
 }
 .score-p1 .score-val { color: #f472b6; }
 .score-p2 .score-val { color: #60a5fa; }
@@ -132,7 +126,7 @@ h1 {
   font-size: 1.05rem;
   font-weight: 700;
   color: #c9d1d9;
-  margin-bottom: 14px;
+  margin-bottom: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -142,9 +136,7 @@ h1 {
 .status.p2-turn { color: #60a5fa; }
 .status.won     { color: #34d399; }
 .turn-dot {
-  width: 8px; height: 8px;
-  border-radius: 50%;
-  flex-shrink: 0;
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
   animation: pulse 1.4s ease infinite;
 }
 .turn-dot.p1 { background: #f472b6; }
@@ -154,10 +146,19 @@ h1 {
   50%       { opacity: 0.4; transform: scale(0.65); }
 }
 
+/* ── Route error flash ───────────────────────────────────────────── */
+.route-err {
+  height: 1.4rem;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: #f87171;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
 /* ── Board ───────────────────────────────────────────────────────── */
 .board-wrap {
-  width: 320px;
-  height: 320px;
+  width: 320px; height: 320px;
   margin-bottom: 20px;
   background: #0d1117;
   border: 1px solid #21262d;
@@ -166,64 +167,36 @@ h1 {
   position: relative;
 }
 .board-svg {
-  width: 100%;
-  height: 100%;
+  width: 100%; height: 100%;
   cursor: grab;
   touch-action: none;
 }
 .board-svg.panning { cursor: grabbing; }
-
-.edge-path {
-  fill: none;
-  stroke-width: 2.5;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
+.edge-path { fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
 .dot-hit   { cursor: pointer; }
 .dot-hit.dead { cursor: default; }
 .dot-vis { pointer-events: none; }
 .dot-live     { fill: #34d399; }
 .dot-dead     { fill: #374151; }
 .dot-selected { fill: #fbbf24; filter: drop-shadow(0 0 7px rgba(251,191,36,0.85)); }
-
 .reset-view-btn {
-  position: absolute;
-  bottom: 8px;
-  right: 8px;
-  background: rgba(13,17,23,0.85);
-  border: 1px solid #30363d;
-  color: #6e7681;
-  border-radius: 6px;
-  width: 26px; height: 26px;
-  font-size: 0.8rem;
-  cursor: pointer;
+  position: absolute; bottom: 8px; right: 8px;
+  background: rgba(13,17,23,0.85); border: 1px solid #30363d; color: #6e7681;
+  border-radius: 6px; width: 26px; height: 26px; font-size: 0.8rem; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  transition: color 0.15s, border-color 0.15s;
-  backdrop-filter: blur(4px);
-  line-height: 1;
+  transition: color 0.15s, border-color 0.15s; backdrop-filter: blur(4px);
 }
 .reset-view-btn:hover { color: #34d399; border-color: #10b981; }
 
 /* ── Mode / dots bars ────────────────────────────────────────────── */
 .mode-bar {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 10px;
-  flex-wrap: wrap;
-  justify-content: center;
-  width: 320px;
+  display: flex; gap: 6px; margin-bottom: 10px;
+  flex-wrap: wrap; justify-content: center; width: 320px;
 }
 .mode-btn {
-  background: #161b22;
-  border: 1px solid #30363d;
-  color: #8b949e;
-  border-radius: 20px;
-  padding: 6px 14px;
-  font-size: 0.82rem;
-  font-weight: 600;
-  font-family: inherit;
-  cursor: pointer;
-  transition: all 0.15s;
+  background: #161b22; border: 1px solid #30363d; color: #8b949e;
+  border-radius: 20px; padding: 6px 14px; font-size: 0.82rem;
+  font-weight: 600; font-family: inherit; cursor: pointer; transition: all 0.15s;
 }
 .mode-btn:hover:not(.active) { border-color: #6e7681; color: #c9d1d9; }
 .mode-btn.active { background: #091c14; border-color: #10b981; color: #34d399; }
@@ -231,30 +204,17 @@ h1 {
 /* ── Buttons ─────────────────────────────────────────────────────── */
 .btn-row { display: flex; gap: 10px; margin-top: 10px; }
 .new-game-btn {
-  background: #091c14;
-  border: 1px solid #10b981;
-  color: #34d399;
-  border-radius: 10px;
-  padding: 11px 40px;
-  font-size: 0.92rem;
-  font-weight: 700;
-  font-family: inherit;
-  cursor: pointer;
-  transition: opacity 0.15s, transform 0.1s, box-shadow 0.15s;
-  letter-spacing: 0.04em;
+  background: #091c14; border: 1px solid #10b981; color: #34d399;
+  border-radius: 10px; padding: 11px 40px; font-size: 0.92rem; font-weight: 700;
+  font-family: inherit; cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s, box-shadow 0.15s; letter-spacing: 0.04em;
 }
 .new-game-btn:hover  { opacity: 0.85; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(16,185,129,0.2); }
 .new-game-btn:active { transform: translateY(0); box-shadow: none; }
 .reset-scores-btn {
-  background: none;
-  border: 1px solid #30363d;
-  color: #6e7681;
-  border-radius: 10px;
-  padding: 11px 14px;
-  font-size: 0.9rem;
-  font-family: inherit;
-  cursor: pointer;
-  transition: color 0.15s, border-color 0.15s;
+  background: none; border: 1px solid #30363d; color: #6e7681;
+  border-radius: 10px; padding: 11px 14px; font-size: 0.9rem;
+  font-family: inherit; cursor: pointer; transition: color 0.15s, border-color 0.15s;
 }
 .reset-scores-btn:hover { color: #c9d1d9; border-color: #6e7681; }
 </style>
@@ -291,6 +251,8 @@ h1 {
     <span v-if="phase==='won'">🎉</span>
   </div>
 
+  <div class="route-err">{{ flashMsg }}</div>
+
   <div class="board-wrap">
     <svg
       ref="svgEl"
@@ -314,7 +276,6 @@ h1 {
         :stroke="edge.player === 1 ? '#f472b6' : '#60a5fa'"
         stroke-opacity="0.8"
       />
-      <!-- Transparent hit targets -->
       <circle
         v-for="dot in dots"
         :key="'h' + dot.id"
@@ -325,7 +286,6 @@ h1 {
         @mousedown.stop
         @click.stop="clickDot(dot.id)"
       />
-      <!-- Visible dots -->
       <circle
         v-for="dot in dots"
         :key="dot.id"
@@ -337,14 +297,12 @@ h1 {
     <button class="reset-view-btn" @click="resetView" title="Reset view">⊙</button>
   </div>
 
-  <!-- Mode selector -->
   <div class="mode-bar">
     <button class="mode-btn" :class="{active: mode==='2p'}"   @click="setMode('2p')">{{ UI.mode2p }}</button>
     <button class="mode-btn" :class="{active: mode==='easy'}" @click="setMode('easy')">{{ UI.modeEasy }}</button>
     <button class="mode-btn" :class="{active: mode==='hard'}" @click="setMode('hard')">{{ UI.modeHard }}</button>
   </div>
 
-  <!-- Starting dots -->
   <div class="mode-bar">
     <button class="mode-btn" :class="{active: startDots===2}" @click="setStartDots(2)">{{ UI.dots2 }}</button>
     <button class="mode-btn" :class="{active: startDots===3}" @click="setStartDots(3)">{{ UI.dots3 }}</button>
@@ -364,12 +322,13 @@ const { createApp, ref, computed } = Vue;
 const STRINGS = {
   back:        { en: 'All Games',      he: 'כל המשחקים',   es: 'Todos los juegos', ar: 'كل الألعاب' },
   p1label:     { en: 'Player 1',       he: 'שחקן 1',        es: 'Jugador 1',        ar: 'لاعب 1' },
-  p2label:     { en: 'Player 2',       he: 'שחקן 2',        es: 'Jugador 2',        ar: 'לاعב 2' },
+  p2label:     { en: 'Player 2',       he: 'שחקן 2',        es: 'Jugador 2',        ar: 'لاعب 2' },
   p1:          { en: 'Player 1',       he: 'שחקן 1',        es: 'Jugador 1',        ar: 'لاعب 1' },
   p2:          { en: 'Player 2',       he: 'שחקן 2',        es: 'Jugador 2',        ar: 'لاعب 2' },
   turnSuffix:  { en: "'s turn",        he: 'תור',           es: 'turno',            ar: 'دور' },
   wins:        { en: 'wins!',          he: 'ניצח!',         es: '¡gana!',           ar: 'فاز!' },
   thinking:    { en: 'Thinking…',      he: 'חושב…',         es: 'Pensando…',        ar: 'يفكر…' },
+  noRoute:     { en: "Can't draw here",he: 'לא ניתן לצייר', es: 'No se puede trazar',ar: 'لا يمكن الرسم' },
   mode2p:      { en: '👥 2 Players',  he: '👥 2 שחקנים',   es: '👥 2 Jugadores',   ar: '👥 لاعبان' },
   modeEasy:    { en: '🤖 Easy',        he: '🤖 קל',          es: '🤖 Fácil',         ar: '🤖 سهل' },
   modeHard:    { en: '🤖 Hard',        he: '🤖 קשה',         es: '🤖 Difícil',       ar: '🤖 صعب' },
@@ -390,78 +349,142 @@ function launchFireworks(player) {
   canvas.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:200;';
   canvas.width = window.innerWidth; canvas.height = window.innerHeight;
   document.body.appendChild(canvas);
-  const ctx = canvas.getContext('2d');
-  const cols = PALETTES[player];
-  const particles = [];
+  const ctx = canvas.getContext('2d'), cols = PALETTES[player], particles = [];
   function burst(x, y) {
-    for (let i = 0; i < 65; i++) {
-      const a = Math.PI*2*i/65, spd = 2+Math.random()*6;
-      particles.push({ x, y, vx: Math.cos(a)*spd, vy: Math.sin(a)*spd-2,
-        alpha:1, color: cols[Math.floor(Math.random()*cols.length)], r: 2+Math.random()*3 });
-    }
+    for (let i=0;i<65;i++){const a=Math.PI*2*i/65,spd=2+Math.random()*6;
+      particles.push({x,y,vx:Math.cos(a)*spd,vy:Math.sin(a)*spd-2,alpha:1,color:cols[Math.floor(Math.random()*cols.length)],r:2+Math.random()*3});}
   }
-  const end = Date.now()+3000; let lastBurst = 0;
-  function frame(now) {
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    if (now-lastBurst>420 && Date.now()<end-500) {
-      burst(canvas.width*(0.2+Math.random()*0.6), canvas.height*(0.1+Math.random()*0.4));
-      lastBurst = now;
-    }
-    for (const p of particles) {
-      p.x+=p.vx; p.y+=p.vy; p.vy+=0.12; p.alpha-=0.016;
-      if (p.alpha<=0) continue;
-      ctx.globalAlpha=p.alpha; ctx.fillStyle=p.color;
-      ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill();
-    }
-    ctx.globalAlpha=1;
-    particles.splice(0,particles.length,...particles.filter(p=>p.alpha>0));
-    if (Date.now()<end||particles.length>0) requestAnimationFrame(frame);
-    else document.body.removeChild(canvas);
-  }
-  burst(canvas.width*0.5, canvas.height*0.35);
-  requestAnimationFrame(frame);
+  const end=Date.now()+3000; let lb=0;
+  function frame(now){ctx.clearRect(0,0,canvas.width,canvas.height);
+    if(now-lb>420&&Date.now()<end-500){burst(canvas.width*(0.2+Math.random()*0.6),canvas.height*(0.1+Math.random()*0.4));lb=now;}
+    for(const p of particles){p.x+=p.vx;p.y+=p.vy;p.vy+=0.12;p.alpha-=0.016;if(p.alpha<=0)continue;
+      ctx.globalAlpha=p.alpha;ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();}
+    ctx.globalAlpha=1;particles.splice(0,particles.length,...particles.filter(p=>p.alpha>0));
+    if(Date.now()<end||particles.length>0)requestAnimationFrame(frame);else document.body.removeChild(canvas);}
+  burst(canvas.width*0.5,canvas.height*0.35); requestAnimationFrame(frame);
 }
 
-/* ── Pure game-theory (no Vue, memoized) ─────────────────────────── */
-function getMovesAbs(conns) {
-  const m = [];
-  for (let i = 0; i < conns.length; i++) {
-    if (conns[i] >= 3) continue;
-    for (let j = i; j < conns.length; j++) {
-      if (conns[j] >= 3) continue;
-      if (i === j && conns[i] > 1) continue;
-      m.push([i, j]);
+/* ── Geometry / intersection ────────────────────────────────────── */
+
+function sampleQuad(p0, cp, p2, n=32) {
+  const pts = [];
+  for (let k=0; k<=n; k++) {
+    const t=k/n, mt=1-t;
+    pts.push({ x: mt*mt*p0.x + 2*mt*t*cp.x + t*t*p2.x,
+               y: mt*mt*p0.y + 2*mt*t*cp.y + t*t*p2.y });
+  }
+  return pts;
+}
+
+function sampleCubic(p0, p1, p2, p3, n=32) {
+  const pts = [];
+  for (let k=0; k<=n; k++) {
+    const t=k/n, mt=1-t;
+    pts.push({ x: mt*mt*mt*p0.x + 3*mt*mt*t*p1.x + 3*mt*t*t*p2.x + t*t*t*p3.x,
+               y: mt*mt*mt*p0.y + 3*mt*mt*t*p1.y + 3*mt*t*t*p2.y + t*t*t*p3.y });
+  }
+  return pts;
+}
+
+// Returns true if segments AB and CD properly intersect (not at tips)
+function segCross(a, b, c, d) {
+  const ABx=b.x-a.x, ABy=b.y-a.y, CDx=d.x-c.x, CDy=d.y-c.y;
+  const den = ABx*CDy - ABy*CDx;
+  if (Math.abs(den) < 1e-9) return false;
+  const ACx=c.x-a.x, ACy=c.y-a.y;
+  const t = (ACx*CDy - ACy*CDx) / den;
+  const u = (ACx*ABy - ACy*ABx) / den;
+  return t > 0.01 && t < 0.99 && u > 0.01 && u < 0.99;
+}
+
+function segIntersectPt(a, b, c, d) {
+  const ABx=b.x-a.x, ABy=b.y-a.y, CDx=d.x-c.x, CDy=d.y-c.y;
+  const den = ABx*CDy - ABy*CDx;
+  if (Math.abs(den) < 1e-9) return null;
+  const t = ((c.x-a.x)*CDy - (c.y-a.y)*CDx) / den;
+  return { x: a.x+t*ABx, y: a.y+t*ABy };
+}
+
+// True if the two sampled curves cross each other (ignoring intersections near any dot)
+function curvesCross(pts1, pts2, allDots) {
+  const DOT_R = 22;
+  const n1=pts1.length-1, n2=pts2.length-1;
+  const s1=Math.max(1,Math.floor(n1*0.09)), s2=Math.max(1,Math.floor(n2*0.09));
+  for (let i=s1; i<n1-s1; i++) {
+    for (let j=s2; j<n2-s2; j++) {
+      if (!segCross(pts1[i],pts1[i+1],pts2[j],pts2[j+1])) continue;
+      const ix = segIntersectPt(pts1[i],pts1[i+1],pts2[j],pts2[j+1]);
+      if (ix && allDots.some(d => Math.hypot(d.x-ix.x, d.y-ix.y) < DOT_R)) continue;
+      return true;
     }
   }
+  return false;
+}
+
+/* ── Curve candidates ───────────────────────────────────────────── */
+
+// Offsets to try for a regular edge (perpendicular to midpoint)
+const EDGE_OFFSETS = [35, -35, 80, -80, 140, -140, 210, -210, 300, -300, 0, 430, -430];
+
+// [angle_delta, radius_multiplier] for self-loops
+const LOOP_VARIANTS = (() => {
+  const v = [];
+  for (let a=0; a<Math.PI*2; a+=Math.PI/4) v.push([a, 1.7]);
+  for (let a=Math.PI/8; a<Math.PI*2; a+=Math.PI/4) v.push([a, 2.3]);
+  return v;
+})();
+
+function makeEdgeCurve(fd, td, offset) {
+  const mx=(fd.x+td.x)/2, my=(fd.y+td.y)/2;
+  const dx=td.x-fd.x, dy=td.y-fd.y, len=Math.hypot(dx,dy)||1;
+  const cp = { x: mx+(-dy/len)*offset, y: my+(dx/len)*offset };
+  const pts = sampleQuad(fd, cp, td);
+  const mid = { x: 0.25*fd.x+0.5*cp.x+0.25*td.x, y: 0.25*fd.y+0.5*cp.y+0.25*td.y };
+  return { path: `M ${fd.x} ${fd.y} Q ${cp.x} ${cp.y} ${td.x} ${td.y}`, pts, mid };
+}
+
+function makeLoopCurve(d, angle, rMul) {
+  const r=70, sp=0.55;
+  const cp1 = { x: d.x+Math.cos(angle-sp)*r*rMul, y: d.y+Math.sin(angle-sp)*r*rMul };
+  const cp2 = { x: d.x+Math.cos(angle+sp)*r*rMul, y: d.y+Math.sin(angle+sp)*r*rMul };
+  const pts = sampleCubic(d, cp1, cp2, d);
+  const mid = {
+    x: 0.125*d.x+0.375*cp1.x+0.375*cp2.x+0.125*d.x,
+    y: 0.125*d.y+0.375*cp1.y+0.375*cp2.y+0.125*d.y,
+  };
+  return { path: `M ${d.x} ${d.y} C ${cp1.x} ${cp1.y} ${cp2.x} ${cp2.y} ${d.x} ${d.y}`, pts, mid };
+}
+
+/* ── Abstract game theory (negamax) ─────────────────────────────── */
+
+function getMovesAbs(conns) {
+  const m=[];
+  for (let i=0;i<conns.length;i++){if(conns[i]>=3)continue;
+    for(let j=i;j<conns.length;j++){if(conns[j]>=3)continue;
+      if(i===j&&conns[i]>1)continue; m.push([i,j]);}}
   return m;
 }
 function applyMoveAbs(conns, i, j) {
-  const c = [...conns];
-  if (i === j) c[i] += 2; else { c[i]++; c[j]++; }
-  c.push(2);
-  return c;
+  const c=[...conns];
+  if(i===j)c[i]+=2;else{c[i]++;c[j]++;}
+  c.push(2); return c;
 }
 const _nm = new Map();
 function negamax(conns) {
-  const key = [...conns].sort((a,b)=>a-b).join(',');
-  if (_nm.has(key)) return _nm.get(key);
-  const moves = getMovesAbs(conns);
-  if (!moves.length) { _nm.set(key,-1); return -1; }
-  let best = -2;
-  for (const [i,j] of moves) {
-    const s = -negamax(applyMoveAbs(conns,i,j));
-    if (s > best) best = s;
-    if (best >= 1) break;
-  }
-  _nm.set(key, best);
-  return best;
+  const key=[...conns].sort((a,b)=>a-b).join(',');
+  if(_nm.has(key))return _nm.get(key);
+  const moves=getMovesAbs(conns);
+  if(!moves.length){_nm.set(key,-1);return -1;}
+  let best=-2;
+  for(const [i,j] of moves){const s=-negamax(applyMoveAbs(conns,i,j));if(s>best)best=s;if(best>=1)break;}
+  _nm.set(key,best); return best;
 }
 
 const SAVE_KEY = 'sprouts-save';
 
 createApp({
   setup() {
-    let nid = 0, neid = 0;
+    let nid=0, neid=0;
 
     const lang      = ref('en');
     const mode      = ref('2p');
@@ -471,318 +494,288 @@ createApp({
     const selected  = ref(null);
     const current   = ref(1);
     const phase     = ref('playing');
-    const scores    = ref({ 1: 0, 2: 0 });
+    const scores    = ref({1:0,2:0});
     const aiThink   = ref(false);
     const isPanning = ref(false);
-    const view      = ref({ x: 0, y: 0, w: 320, h: 320 });
+    const flashMsg  = ref('');
+    const view      = ref({x:0,y:0,w:320,h:320});
     const svgEl     = ref(null);
 
-    // Non-reactive drag/touch state
-    let dragStart  = null;  // { x, y, vx, vy }
-    let dragDelta  = 0;
-    let touchDotId = null;
-    let touchMoves = 0;
-    let pinchState = null;  // { dist, w, svgX, svgY, vx, vy }
+    let dragStart=null, dragDelta=0, touchDotId=null, touchMoves=0, pinchState=null, flashTimer=null;
 
     /* ── Computed ─────────────────────────────────────────────────── */
-    const isRTL   = computed(() => lang.value === 'he' || lang.value === 'ar');
+    const isRTL   = computed(() => lang.value==='he'||lang.value==='ar');
     const viewBox = computed(() => `${view.value.x} ${view.value.y} ${view.value.w} ${view.value.h}`);
     const UI      = computed(() => {
-      const l = lang.value;
-      return Object.fromEntries(Object.entries(STRINGS).map(([k,v]) => [k, v[l]||v.en]));
+      const l=lang.value;
+      return Object.fromEntries(Object.entries(STRINGS).map(([k,v])=>[k,v[l]||v.en]));
     });
     const canInteract = computed(() =>
-      phase.value === 'playing' && !aiThink.value && (mode.value === '2p' || current.value === 1)
+      phase.value==='playing' && !aiThink.value && (mode.value==='2p'||current.value===1)
     );
     const statusText = computed(() => {
-      const ui = UI.value;
-      if (aiThink.value) return ui.thinking;
-      if (phase.value === 'won') {
-        const w = current.value === 1 ? ui.p1 : ui.p2;
-        return `${w} ${ui.wins}`;
-      }
-      const whose = current.value === 1 ? ui.p1 : ui.p2;
-      return isRTL.value ? `${ui.turnSuffix} ${whose}` : `${whose}${ui.turnSuffix}`;
+      const ui=UI.value;
+      if(aiThink.value) return ui.thinking;
+      if(phase.value==='won'){const w=current.value===1?ui.p1:ui.p2;return `${w} ${ui.wins}`;}
+      const whose=current.value===1?ui.p1:ui.p2;
+      return isRTL.value?`${ui.turnSuffix} ${whose}`:`${whose}${ui.turnSuffix}`;
     });
     const statusClass = computed(() => {
-      if (phase.value === 'won') return 'won';
-      return current.value === 1 ? 'p1-turn' : 'p2-turn';
+      if(phase.value==='won') return 'won';
+      return current.value===1?'p1-turn':'p2-turn';
     });
 
-    /* ── Dot helpers ──────────────────────────────────────────────── */
     function dotVisClass(dot) {
-      if (dot.id === selected.value) return 'dot-selected';
-      return dot.conns >= 3 ? 'dot-dead' : 'dot-live';
+      if(dot.id===selected.value) return 'dot-selected';
+      return dot.conns>=3?'dot-dead':'dot-live';
     }
     function dotHitClass(dot) {
-      return (!canInteract.value || dot.conns >= 3) ? 'dead' : '';
+      return(!canInteract.value||dot.conns>=3)?'dead':'';
     }
 
-    /* ── Coordinate conversion ────────────────────────────────────── */
-    function clientToSVG(cx, cy) {
-      const r = svgEl.value.getBoundingClientRect(), v = view.value;
-      return { x: v.x+(cx-r.left)/r.width*v.w, y: v.y+(cy-r.top)/r.height*v.h };
-    }
+    /* ── Route finding ────────────────────────────────────────────── */
+    function findRoute(fd, td) {
+      const existingPts = edges.value.map(e=>e.pts);
+      const allDots     = dots.value;
+      const noCross = pts => !existingPts.some(ep=>curvesCross(pts, ep, allDots));
 
-    /* ── Geometry helpers ─────────────────────────────────────────── */
-    function quadMid(p0, cp, p2) {
-      return { x: 0.25*p0.x+0.5*cp.x+0.25*p2.x, y: 0.25*p0.y+0.5*cp.y+0.25*p2.y };
-    }
-    function cubicMid(p0,p1,p2,p3) {
-      return {
-        x: 0.125*p0.x+0.375*p1.x+0.375*p2.x+0.125*p3.x,
-        y: 0.125*p0.y+0.375*p1.y+0.375*p2.y+0.125*p3.y,
-      };
-    }
-    function countEdges(id1, id2) {
-      return edges.value.filter(e=>(e.fromId===id1&&e.toId===id2)||(e.fromId===id2&&e.toId===id1)).length;
-    }
-    function countLoops(id) {
-      return edges.value.filter(e=>e.fromId===id&&e.toId===id).length;
-    }
-    function getEdgeData(fd, td) {
-      if (fd.id === td.id) {
-        const cnt  = countLoops(fd.id);
-        const base = Math.atan2(fd.y-160, fd.x-160) + cnt*1.3;
-        const r=70, sp=0.55;
-        const cp1 = { x: fd.x+Math.cos(base-sp)*r*1.7, y: fd.y+Math.sin(base-sp)*r*1.7 };
-        const cp2 = { x: fd.x+Math.cos(base+sp)*r*1.7, y: fd.y+Math.sin(base+sp)*r*1.7 };
-        return {
-          path: `M ${fd.x} ${fd.y} C ${cp1.x} ${cp1.y} ${cp2.x} ${cp2.y} ${fd.x} ${fd.y}`,
-          mid:  cubicMid(fd,cp1,cp2,fd),
-        };
+      if (fd.id===td.id) {
+        const base=Math.atan2(fd.y-160, fd.x-160);
+        for (const [da,rm] of LOOP_VARIANTS) {
+          const c=makeLoopCurve(fd, base+da, rm);
+          if(noCross(c.pts)) return c;
+        }
+        return null;
       }
-      const cnt = countEdges(fd.id,td.id);
-      const mx=(fd.x+td.x)/2, my=(fd.y+td.y)/2;
-      const dx=td.x-fd.x, dy=td.y-fd.y, len=Math.hypot(dx,dy)||1;
-      const sign = cnt%2===0 ? 1 : -1;
-      const mag  = 35+Math.floor(cnt/2)*50;
-      const cp   = { x: mx+(-dy/len)*sign*mag, y: my+(dx/len)*sign*mag };
-      return {
-        path: `M ${fd.x} ${fd.y} Q ${cp.x} ${cp.y} ${td.x} ${td.y}`,
-        mid:  quadMid(fd,cp,td),
-      };
+
+      for (const offset of EDGE_OFFSETS) {
+        const c=makeEdgeCurve(fd, td, offset);
+        if(noCross(c.pts)) return c;
+      }
+      return null;
     }
 
     /* ── Game logic ───────────────────────────────────────────────── */
     function hasValidMoves() {
-      const live = dots.value.filter(d=>d.conns<3);
-      if (live.length >= 2) return true;
-      if (live.length === 1 && live[0].conns <= 1) return true;
+      const d=dots.value;
+      for(let i=0;i<d.length;i++){
+        if(d[i].conns>=3)continue;
+        for(let j=i;j<d.length;j++){
+          if(d[j].conns>=3)continue;
+          if(i===j&&d[i].conns>1)continue;
+          if(findRoute(d[i],d[j])!==null) return true;
+        }
+      }
       return false;
     }
 
     function makeMove(fromId, toId) {
-      const fd = dots.value.find(d=>d.id===fromId);
-      const td = dots.value.find(d=>d.id===toId);
-      const { path, mid } = getEdgeData(fd, td);
-
-      const midDot = { id: nid++, x: Math.round(mid.x), y: Math.round(mid.y), conns: 2 };
-      const self   = fromId === toId;
-      dots.value = [
-        ...dots.value.map(d => {
-          if (d.id===fromId && self) return { ...d, conns: d.conns+2 };
-          if (d.id===fromId || d.id===toId) return { ...d, conns: d.conns+1 };
+      const fd=dots.value.find(d=>d.id===fromId);
+      const td=dots.value.find(d=>d.id===toId);
+      const route=findRoute(fd,td);
+      if(!route){
+        flash(UI.value.noRoute);
+        selected.value=null;
+        return;
+      }
+      const {path,pts,mid}=route;
+      const midDot={id:nid++,x:Math.round(mid.x),y:Math.round(mid.y),conns:2};
+      const self=fromId===toId;
+      dots.value=[
+        ...dots.value.map(d=>{
+          if(d.id===fromId&&self) return{...d,conns:d.conns+2};
+          if(d.id===fromId||d.id===toId) return{...d,conns:d.conns+1};
           return d;
         }),
         midDot,
       ];
-      edges.value = [...edges.value, { id: neid++, fromId, toId, path, player: current.value }];
-      selected.value = null;
+      edges.value=[...edges.value,{id:neid++,fromId,toId,path,pts,player:current.value}];
+      selected.value=null;
 
-      if (!hasValidMoves()) {
-        phase.value = 'won';
-        scores.value = { ...scores.value, [current.value]: scores.value[current.value]+1 };
+      if(!hasValidMoves()){
+        phase.value='won';
+        scores.value={...scores.value,[current.value]:scores.value[current.value]+1};
         launchFireworks(current.value);
-        save();
-        return;
+        save(); return;
       }
-      current.value = current.value === 1 ? 2 : 1;
-      if (mode.value !== '2p' && current.value === 2) triggerAI();
+      current.value=current.value===1?2:1;
+      if(mode.value!=='2p'&&current.value===2) triggerAI();
     }
 
     function clickDot(id) {
-      if (!canInteract.value) return;
-      const dot = dots.value.find(d=>d.id===id);
-      if (!dot) return;
-      if (selected.value === null) {
-        if (dot.conns >= 3) return;
-        selected.value = id;
+      if(!canInteract.value) return;
+      const dot=dots.value.find(d=>d.id===id);
+      if(!dot) return;
+      if(selected.value===null){
+        if(dot.conns>=3) return;
+        selected.value=id; return;
+      }
+      if(selected.value===id){
+        if(dot.conns<=1) makeMove(id,id);
+        else selected.value=null;
         return;
       }
-      if (selected.value === id) {
-        if (dot.conns <= 1) makeMove(id, id);
-        else selected.value = null;
-        return;
-      }
-      if (dot.conns >= 3) { selected.value = null; return; }
-      makeMove(selected.value, id);
+      if(dot.conns>=3){selected.value=null;return;}
+      makeMove(selected.value,id);
     }
 
-    function deselect() { selected.value = null; }
+    function deselect(){selected.value=null;}
+
+    /* ── Flash ────────────────────────────────────────────────────── */
+    function flash(msg){
+      flashMsg.value=msg;
+      clearTimeout(flashTimer);
+      flashTimer=setTimeout(()=>{flashMsg.value='';},2000);
+    }
 
     /* ── AI ───────────────────────────────────────────────────────── */
-    function triggerAI() {
-      aiThink.value = true;
-      setTimeout(() => {
-        aiThink.value = false;
-        const mv = getAIMove();
-        if (mv) makeMove(mv.fromId, mv.toId);
-      }, 420);
+    function triggerAI(){
+      aiThink.value=true;
+      setTimeout(()=>{
+        aiThink.value=false;
+        const mv=getAIMove();
+        if(mv) makeMove(mv.fromId,mv.toId);
+      },420);
     }
 
-    function getAIMove() {
-      const conns   = dots.value.map(d=>d.conns);
-      const moves   = getMovesAbs(conns);
-      if (!moves.length) return null;
-      const shuffled = [...moves].sort(()=>Math.random()-0.5);
-      if (mode.value === 'easy') {
-        const [i,j] = shuffled[0];
-        return { fromId: dots.value[i].id, toId: dots.value[j].id };
+    function getAIMove(){
+      const d=dots.value;
+      const conns=d.map(x=>x.conns);
+      // Filter to abstract moves that also have a valid physical route
+      const routable=getMovesAbs(conns)
+        .map(([i,j])=>({i,j,fd:d[i],td:d[j]}))
+        .filter(m=>findRoute(m.fd,m.td)!==null)
+        .sort(()=>Math.random()-0.5);
+      if(!routable.length) return null;
+      if(mode.value==='easy'){const m=routable[0];return{fromId:m.fd.id,toId:m.td.id};}
+      // Hard: negamax on abstract model, filtered to routable first-level moves
+      let best=-2,bm=routable[0];
+      for(const m of routable){
+        const s=-negamax(applyMoveAbs(conns,m.i,m.j));
+        if(s>best){best=s;bm=m;}
+        if(best>=1) break;
       }
-      let best=-2, bm=shuffled[0];
-      for (const [i,j] of shuffled) {
-        const s = -negamax(applyMoveAbs(conns,i,j));
-        if (s > best) { best=s; bm=[i,j]; }
-        if (best >= 1) break;
-      }
-      return { fromId: dots.value[bm[0]].id, toId: dots.value[bm[1]].id };
+      return{fromId:bm.fd.id,toId:bm.td.id};
     }
 
     /* ── Pan / zoom ───────────────────────────────────────────────── */
-    function onWheel(e) {
-      const scale = e.deltaY > 0 ? 1.12 : 0.89;
-      const pt = clientToSVG(e.clientX, e.clientY);
-      const v  = view.value;
-      const nw = Math.max(80, Math.min(960, v.w*scale));
-      view.value = { x: pt.x-(pt.x-v.x)*(nw/v.w), y: pt.y-(pt.y-v.y)*(nw/v.h), w: nw, h: nw };
+    function clientToSVG(cx,cy){
+      const r=svgEl.value.getBoundingClientRect(),v=view.value;
+      return{x:v.x+(cx-r.left)/r.width*v.w,y:v.y+(cy-r.top)/r.height*v.h};
     }
+    function onWheel(e){
+      const scale=e.deltaY>0?1.12:0.89;
+      const pt=clientToSVG(e.clientX,e.clientY),v=view.value;
+      const nw=Math.max(80,Math.min(960,v.w*scale));
+      view.value={x:pt.x-(pt.x-v.x)*(nw/v.w),y:pt.y-(pt.y-v.y)*(nw/v.h),w:nw,h:nw};
+    }
+    function onSvgMouseDown(e){
+      if(e.button!==0)return;
+      const v=view.value;
+      dragStart={x:e.clientX,y:e.clientY,vx:v.x,vy:v.y}; dragDelta=0;
+    }
+    function onSvgMouseMove(e){
+      if(!dragStart)return;
+      const dx=e.clientX-dragStart.x,dy=e.clientY-dragStart.y;
+      dragDelta=Math.hypot(dx,dy);
+      if(dragDelta>3){
+        isPanning.value=true;
+        const r=svgEl.value.getBoundingClientRect(),v=view.value;
+        view.value={...v,x:dragStart.vx-dx*(v.w/r.width),y:dragStart.vy-dy*(v.h/r.height)};
+      }
+    }
+    function onSvgMouseUp(){
+      if(!dragStart)return;
+      if(dragDelta<=3)deselect();
+      dragStart=null;dragDelta=0;isPanning.value=false;
+    }
+    function onSvgMouseLeave(){dragStart=null;isPanning.value=false;}
+    function resetView(){view.value={x:0,y:0,w:320,h:320};}
 
-    function onSvgMouseDown(e) {
-      if (e.button !== 0) return;
-      const v = view.value;
-      dragStart = { x: e.clientX, y: e.clientY, vx: v.x, vy: v.y };
-      dragDelta = 0;
+    function dotNear(cx,cy){
+      const pt=clientToSVG(cx,cy);
+      return dots.value.find(d=>Math.hypot(d.x-pt.x,d.y-pt.y)<22)||null;
     }
-    function onSvgMouseMove(e) {
-      if (!dragStart) return;
-      const dx=e.clientX-dragStart.x, dy=e.clientY-dragStart.y;
-      dragDelta = Math.hypot(dx, dy);
-      if (dragDelta > 3) {
-        isPanning.value = true;
-        const r = svgEl.value.getBoundingClientRect(), v = view.value;
-        view.value = { ...v, x: dragStart.vx-dx*(v.w/r.width), y: dragStart.vy-dy*(v.h/r.height) };
+    function onTouchStart(e){
+      if(e.touches.length===1){
+        const t=e.touches[0];
+        const dot=dotNear(t.clientX,t.clientY);
+        if(dot){touchDotId=dot.id;touchMoves=0;}
+        else{touchDotId=null;const v=view.value;dragStart={x:t.clientX,y:t.clientY,vx:v.x,vy:v.y};dragDelta=0;}
+      }else if(e.touches.length===2){
+        touchDotId=null;
+        const[t0,t1]=e.touches;
+        const dist=Math.hypot(t0.clientX-t1.clientX,t0.clientY-t1.clientY);
+        const mid=clientToSVG((t0.clientX+t1.clientX)/2,(t0.clientY+t1.clientY)/2);
+        const v=view.value;
+        pinchState={dist,w:v.w,svgX:mid.x,svgY:mid.y,vx:v.x,vy:v.y};dragStart=null;
       }
     }
-    function onSvgMouseUp() {
-      if (!dragStart) return;
-      if (dragDelta <= 3) deselect();
-      dragStart = null; dragDelta = 0; isPanning.value = false;
-    }
-    function onSvgMouseLeave() {
-      dragStart = null; isPanning.value = false;
-    }
-    function resetView() { view.value = { x:0, y:0, w:320, h:320 }; }
-
-    /* ── Touch ────────────────────────────────────────────────────── */
-    function dotNearSVGPt(pt) {
-      return dots.value.find(d => Math.hypot(d.x-pt.x, d.y-pt.y) < 22) || null;
-    }
-    function onTouchStart(e) {
-      if (e.touches.length === 1) {
-        const t   = e.touches[0];
-        const dot = dotNearSVGPt(clientToSVG(t.clientX, t.clientY));
-        if (dot) {
-          touchDotId = dot.id; touchMoves = 0;
-        } else {
-          touchDotId = null;
-          const v = view.value;
-          dragStart = { x: t.clientX, y: t.clientY, vx: v.x, vy: v.y };
-          dragDelta = 0;
+    function onTouchMove(e){
+      if(e.touches.length===1){
+        if(touchDotId!==null){touchMoves++;return;}
+        if(!dragStart)return;
+        const t=e.touches[0];
+        const dx=t.clientX-dragStart.x,dy=t.clientY-dragStart.y;
+        dragDelta=Math.hypot(dx,dy);
+        if(dragDelta>5){
+          const r=svgEl.value.getBoundingClientRect(),v=view.value;
+          view.value={...v,x:dragStart.vx-dx*(v.w/r.width),y:dragStart.vy-dy*(v.h/r.height)};
         }
-      } else if (e.touches.length === 2) {
-        touchDotId = null;
-        const [t0,t1] = e.touches;
-        const dist = Math.hypot(t0.clientX-t1.clientX, t0.clientY-t1.clientY);
-        const mid  = clientToSVG((t0.clientX+t1.clientX)/2, (t0.clientY+t1.clientY)/2);
-        const v    = view.value;
-        pinchState = { dist, w: v.w, svgX: mid.x, svgY: mid.y, vx: v.x, vy: v.y };
-        dragStart  = null;
+      }else if(e.touches.length===2&&pinchState){
+        const[t0,t1]=e.touches;
+        const dist=Math.hypot(t0.clientX-t1.clientX,t0.clientY-t1.clientY);
+        const nw=Math.max(80,Math.min(960,pinchState.w*pinchState.dist/dist));
+        const cx=pinchState.svgX,cy=pinchState.svgY;
+        view.value={x:cx-(cx-pinchState.vx)*(nw/pinchState.w),y:cy-(cy-pinchState.vy)*(nw/pinchState.w),w:nw,h:nw};
       }
     }
-    function onTouchMove(e) {
-      if (e.touches.length === 1) {
-        if (touchDotId !== null) { touchMoves++; return; }
-        if (!dragStart) return;
-        const t  = e.touches[0];
-        const dx = t.clientX-dragStart.x, dy = t.clientY-dragStart.y;
-        dragDelta = Math.hypot(dx, dy);
-        if (dragDelta > 5) {
-          const r = svgEl.value.getBoundingClientRect(), v = view.value;
-          view.value = { ...v, x: dragStart.vx-dx*(v.w/r.width), y: dragStart.vy-dy*(v.h/r.height) };
-        }
-      } else if (e.touches.length === 2 && pinchState) {
-        const [t0,t1] = e.touches;
-        const dist = Math.hypot(t0.clientX-t1.clientX, t0.clientY-t1.clientY);
-        const nw   = Math.max(80, Math.min(960, pinchState.w*pinchState.dist/dist));
-        const cx   = pinchState.svgX, cy = pinchState.svgY;
-        view.value = {
-          x: cx-(cx-pinchState.vx)*(nw/pinchState.w),
-          y: cy-(cy-pinchState.vy)*(nw/pinchState.w),
-          w: nw, h: nw,
-        };
-      }
-    }
-    function onTouchEnd(e) {
-      if (e.touches.length > 0) return;
-      if (touchDotId !== null && touchMoves < 3) clickDot(touchDotId);
-      touchDotId = null; touchMoves = 0;
-      dragStart  = null; dragDelta  = 0;
-      pinchState = null; isPanning.value = false;
+    function onTouchEnd(e){
+      if(e.touches.length>0)return;
+      if(touchDotId!==null&&touchMoves<3)clickDot(touchDotId);
+      touchDotId=null;touchMoves=0;dragStart=null;dragDelta=0;pinchState=null;isPanning.value=false;
     }
 
     /* ── Game management ──────────────────────────────────────────── */
-    function newGame() {
-      nid = 0; neid = 0;
-      const n=startDots.value, cx=160, cy=160, r=90;
-      const off = n===2 ? 0 : -Math.PI/2;
-      dots.value = Array.from({length:n}, (_,i) => {
-        const a = 2*Math.PI*i/n+off;
-        return { id:nid++, x:Math.round(cx+r*Math.cos(a)), y:Math.round(cy+r*Math.sin(a)), conns:0 };
+    function newGame(){
+      nid=0;neid=0;
+      const n=startDots.value,cx=160,cy=160,r=90;
+      const off=n===2?0:-Math.PI/2;
+      dots.value=Array.from({length:n},(_,i)=>{
+        const a=2*Math.PI*i/n+off;
+        return{id:nid++,x:Math.round(cx+r*Math.cos(a)),y:Math.round(cy+r*Math.sin(a)),conns:0};
       });
-      edges.value=[]; selected.value=null; current.value=1;
-      phase.value='playing'; aiThink.value=false;
+      edges.value=[];selected.value=null;current.value=1;
+      phase.value='playing';aiThink.value=false;flashMsg.value='';
     }
+    function setMode(m)      {mode.value=m;      newGame();save();}
+    function setStartDots(n) {startDots.value=n; newGame();save();}
+    function setLang(l)      {lang.value=l;save();}
+    function resetScores()   {scores.value={1:0,2:0};newGame();save();}
 
-    function setMode(m)      { mode.value=m;      newGame(); save(); }
-    function setStartDots(n) { startDots.value=n; newGame(); save(); }
-    function setLang(l)      { lang.value=l; save(); }
-    function resetScores()   { scores.value={1:0,2:0}; newGame(); save(); }
-
-    function save() {
-      try { localStorage.setItem(SAVE_KEY, JSON.stringify({ lang:lang.value, mode:mode.value, startDots:startDots.value, scores:scores.value })); } catch {}
+    function save(){
+      try{localStorage.setItem(SAVE_KEY,JSON.stringify({lang:lang.value,mode:mode.value,startDots:startDots.value,scores:scores.value}));}catch{}
     }
-    function load() {
-      try {
+    function load(){
+      try{
         const s=JSON.parse(localStorage.getItem(SAVE_KEY)||'null');
-        if (!s) return;
-        if (s.lang)      lang.value=s.lang;
-        if (s.mode)      mode.value=s.mode;
-        if (s.startDots) startDots.value=s.startDots;
-        if (s.scores)    scores.value=s.scores;
-      } catch {}
+        if(!s)return;
+        if(s.lang)      lang.value=s.lang;
+        if(s.mode)      mode.value=s.mode;
+        if(s.startDots) startDots.value=s.startDots;
+        if(s.scores)    scores.value=s.scores;
+      }catch{}
     }
 
     load(); newGame();
 
     return {
-      lang, mode, startDots, dots, edges, selected, current, phase, scores, aiThink, isPanning,
-      svgEl, viewBox, isRTL, UI, statusText, statusClass,
-      dotVisClass, dotHitClass,
-      clickDot, deselect, resetView,
-      onWheel, onSvgMouseDown, onSvgMouseMove, onSvgMouseUp, onSvgMouseLeave,
-      onTouchStart, onTouchMove, onTouchEnd,
-      newGame, setMode, setStartDots, setLang, resetScores,
+      lang,mode,startDots,dots,edges,selected,current,phase,scores,aiThink,isPanning,flashMsg,
+      svgEl,viewBox,isRTL,UI,statusText,statusClass,
+      dotVisClass,dotHitClass,clickDot,deselect,resetView,
+      onWheel,onSvgMouseDown,onSvgMouseMove,onSvgMouseUp,onSvgMouseLeave,
+      onTouchStart,onTouchMove,onTouchEnd,
+      newGame,setMode,setStartDots,setLang,resetScores,
     };
   }
 }).mount('#app');
