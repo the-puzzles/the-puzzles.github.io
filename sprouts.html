@@ -406,25 +406,28 @@ function segIntersectPt(a, b, c, d) {
 }
 
 // True if curves properly cross.
-// For curves that share an endpoint dot, segments physically close to that dot
-// are skipped (radius 42px covers the full "departure tail" of even the largest
-// self-loops). Curves with no shared endpoints are checked in full, so a
-// crossing near the START of an unrelated curve is never missed.
+// Two regimes:
+//   No shared dots  → check every segment (unrelated curves; any crossing matters).
+//   Shared dots     → skip the first/last 9% of each curve, then also allow
+//                     crossings within 30px of a shared dot. The 9% skip covers
+//                     the "departure arc" of self-loops (both ends return to the
+//                     same dot and swing ~40px before the arc begins).
 function curvesProperlyIntersect(pts1, pts2, sharedDots) {
-  const SKIP_R = 42;
   const n1=pts1.length-1, n2=pts2.length-1;
-  // Precompute per-point proximity flags (avoid recomputing inside nested loop)
-  const near1 = sharedDots.length
-    ? pts1.map(p => sharedDots.some(d => Math.hypot(d.x-p.x, d.y-p.y) < SKIP_R))
-    : null;
-  const near2 = sharedDots.length
-    ? pts2.map(p => sharedDots.some(d => Math.hypot(d.x-p.x, d.y-p.y) < SKIP_R))
-    : null;
-  for (let i=0; i<n1; i++) {
-    if (near1 && (near1[i] || near1[i+1])) continue;
-    for (let j=0; j<n2; j++) {
-      if (near2 && (near2[j] || near2[j+1])) continue;
-      if (segCross(pts1[i],pts1[i+1],pts2[j],pts2[j+1])) return true;
+  if (!sharedDots.length) {
+    for (let i=0; i<n1; i++)
+      for (let j=0; j<n2; j++)
+        if (segCross(pts1[i],pts1[i+1],pts2[j],pts2[j+1])) return true;
+    return false;
+  }
+  const DOT_R=30;
+  const s1=Math.max(1,Math.floor(n1*0.09)), s2=Math.max(1,Math.floor(n2*0.09));
+  for (let i=s1; i<n1-s1; i++) {
+    for (let j=s2; j<n2-s2; j++) {
+      if (!segCross(pts1[i],pts1[i+1],pts2[j],pts2[j+1])) continue;
+      const ix=segIntersectPt(pts1[i],pts1[i+1],pts2[j],pts2[j+1]);
+      if (ix && sharedDots.some(d=>Math.hypot(d.x-ix.x,d.y-ix.y)<DOT_R)) continue;
+      return true;
     }
   }
   return false;
