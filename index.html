@@ -93,6 +93,7 @@ header {
 .card.wordsearch:hover  { border-color: #fb923c; box-shadow: 0 12px 40px rgba(251,146,60,0.15); }
 .card.xo:hover          { border-color: #f43f5e; box-shadow: 0 12px 40px rgba(244,63,94,0.15); }
 .card.sprouts:hover     { border-color: #10b981; box-shadow: 0 12px 40px rgba(16,185,129,0.15); }
+.card.morris:hover      { border-color: #8b5cf6; box-shadow: 0 12px 40px rgba(139,92,246,0.15); }
 .card.morse:hover       { border-color: #fbbf24; box-shadow: 0 12px 40px rgba(251,191,36,0.15); }
 .card.wordladder:hover  { border-color: #22d3ee; box-shadow: 0 12px 40px rgba(34,211,238,0.15); }
 .card.braille:hover     { border-color: #a78bfa; box-shadow: 0 12px 40px rgba(167,139,250,0.15); }
@@ -117,6 +118,7 @@ header {
 .braille    .card-icon { background: #1e1528; }
 .xo         .card-icon { background: #1a0d0f; }
 .sprouts    .card-icon { background: #091c14; }
+.morris     .card-icon { background: #120d1f; }
 
 .card-title {
   font-size: 1.5rem;
@@ -183,6 +185,12 @@ header {
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+.morris .card-title {
+  background: linear-gradient(135deg, #f97316, #8b5cf6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
 
 /* ── Preview board ───────────────────────────────────────────────────── */
 .preview {
@@ -245,6 +253,7 @@ header {
 .braille     .rule-dot { background: #a78bfa; }
 .xo          .rule-dot { background: #f43f5e; }
 .sprouts     .rule-dot { background: #10b981; }
+.morris      .rule-dot { background: #8b5cf6; }
 
 /* ── Play button ─────────────────────────────────────────────────────── */
 .play-btn {
@@ -276,6 +285,7 @@ header {
 .braille     .play-btn { background: #2e1065; color: #a78bfa; border: 1px solid #a78bfa; }
 .xo          .play-btn { background: #1a0d0f; color: #f472b6; border: 1px solid #f43f5e; }
 .sprouts     .play-btn { background: #091c14; color: #34d399; border: 1px solid #10b981; }
+.morris      .play-btn { background: #120d1f; color: #a78bfa; border: 1px solid #8b5cf6; }
 
 .play-arrow { font-size: 1rem; transition: transform 0.15s; }
 .play-btn:hover .play-arrow { transform: translateX(3px); }
@@ -714,6 +724,47 @@ footer {
     </div>
 
     <div class="play-btn">Play X O <span class="play-arrow">→</span></div>
+  </a>
+
+  <!-- ── Three Men's Morris ───────────────────────────────────────── -->
+  <a class="card morris" href="morris.html">
+    <div class="card-header">
+      <div class="card-icon">⬡</div>
+      <div class="card-title">THREE MEN'S MORRIS</div>
+    </div>
+
+    <div class="preview" style="grid-template-columns: 1fr; padding: 10px 16px;">
+      <svg viewBox="0 0 180 180" style="width:148px;height:148px;display:block;margin:0 auto;">
+        <line x1="30" y1="30" x2="150" y2="30"  stroke="#2d333b" stroke-width="2"/>
+        <line x1="30" y1="90" x2="150" y2="90"  stroke="#2d333b" stroke-width="2"/>
+        <line x1="30" y1="150" x2="150" y2="150" stroke="#2d333b" stroke-width="2"/>
+        <line x1="30"  y1="30" x2="30"  y2="150" stroke="#2d333b" stroke-width="2"/>
+        <line x1="90"  y1="30" x2="90"  y2="150" stroke="#2d333b" stroke-width="2"/>
+        <line x1="150" y1="30" x2="150" y2="150" stroke="#2d333b" stroke-width="2"/>
+        <line x1="30" y1="30" x2="150" y2="150"  stroke="#2d333b" stroke-width="2"/>
+        <line x1="150" y1="30" x2="30"  y2="150" stroke="#2d333b" stroke-width="2"/>
+        <circle cx="30"  cy="30"  r="9" fill="#f97316"/>
+        <circle cx="150" cy="30"  r="9" fill="#f97316"/>
+        <circle cx="90"  cy="150" r="9" fill="#f97316"/>
+        <circle cx="90"  cy="30"  r="6" fill="#21262d" stroke="#30363d" stroke-width="1.5"/>
+        <circle cx="30"  cy="90"  r="9" fill="#8b5cf6"/>
+        <circle cx="150" cy="90"  r="9" fill="#8b5cf6"/>
+        <circle cx="90"  cy="90"  r="9" fill="#8b5cf6"/>
+        <circle cx="30"  cy="150" r="6" fill="#21262d" stroke="#30363d" stroke-width="1.5"/>
+        <circle cx="150" cy="150" r="6" fill="#21262d" stroke="#30363d" stroke-width="1.5"/>
+      </svg>
+    </div>
+
+    <p class="card-tagline">A two-phase strategy classic. Place three pieces, then slide them to form a row — diagonals count!</p>
+
+    <div class="card-rules">
+      <div class="rule"><div class="rule-dot"></div><span>Place 3 pieces each, then slide to adjacent squares</span></div>
+      <div class="rule"><div class="rule-dot"></div><span>Adjacency includes diagonals</span></div>
+      <div class="rule"><div class="rule-dot"></div><span>Get 3 in a row — row, column, or diagonal</span></div>
+      <div class="rule"><div class="rule-dot"></div><span>2-player mode or vs computer (Easy / Hard)</span></div>
+    </div>
+
+    <div class="play-btn">Play Three Men's Morris <span class="play-arrow">→</span></div>
   </a>
 
   <!-- ── Sprouts ──────────────────────────────────────────────────── -->

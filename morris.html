@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Three Men's Morris</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0d1117">
+<link rel="apple-touch-icon" href="icon.svg">
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root { --board: min(320px, calc(100vw - 48px)); }
+
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: #0d1117;
+  color: #c9d1d9;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 16px 48px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* ── Top bar ─────────────────────────────────────────────────────── */
+.top-bar {
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+.back-link {
+  color: #6e7681;
+  text-decoration: none;
+  font-size: 0.85rem;
+  transition: color 0.15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.back-link:hover { color: #c9d1d9; }
+[dir="ltr"] .back-link::before { content: '←'; }
+[dir="rtl"] .back-link::after  { content: '→'; }
+.lang-toggle { display: flex; gap: 4px; }
+.lang-btn {
+  background: none;
+  border: 1px solid #30363d;
+  color: #6e7681;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.lang-btn.active  { background: #120d1f; border-color: #8b5cf6; color: #a78bfa; }
+.lang-btn:hover:not(.active) { color: #c9d1d9; border-color: #6e7681; }
+
+/* ── Title ───────────────────────────────────────────────────────── */
+h1 {
+  font-size: 1.9rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  margin-bottom: 24px;
+  text-align: center;
+  line-height: 1.2;
+  background: linear-gradient(135deg, #f97316, #8b5cf6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Score ───────────────────────────────────────────────────────── */
+.score-bar {
+  display: flex;
+  width: var(--board);
+  background: #161b22;
+  border: 1px solid #21262d;
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+.score-item {
+  flex: 1;
+  padding: 12px 8px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  position: relative;
+  transition: background 0.2s;
+}
+.score-item + .score-item { border-inline-start: 1px solid #21262d; }
+.score-item::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 12px; right: 12px;
+  height: 3px;
+  border-radius: 2px 2px 0 0;
+  transform: scaleX(0);
+  transition: transform 0.25s ease;
+}
+.score-p1.active  { background: rgba(249,115,22,0.07); }
+.score-p1.active::after { background: #f97316; transform: scaleX(1); }
+.score-p2.active  { background: rgba(139,92,246,0.07); }
+.score-p2.active::after { background: #8b5cf6; transform: scaleX(1); }
+
+.score-label {
+  font-size: 0.68rem;
+  color: #6e7681;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: 700;
+}
+.score-val {
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1;
+  min-width: 1.2ch;
+  text-align: center;
+}
+.score-p1    .score-val { color: #f97316; }
+.score-draw  .score-val { color: #6e7681; }
+.score-p2    .score-val { color: #8b5cf6; }
+
+/* ── Status ──────────────────────────────────────────────────────── */
+.status {
+  height: 2.2rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #c9d1d9;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  letter-spacing: 0.01em;
+}
+.status.won-p1 { color: #f97316; }
+.status.won-p2 { color: #8b5cf6; }
+.status.draw   { color: #8b949e; }
+
+.turn-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  animation: pulse 1.4s ease infinite;
+}
+.turn-dot.dot-p1 { background: #f97316; }
+.turn-dot.dot-p2 { background: #8b5cf6; }
+@keyframes pulse {
+  0%, 100% { opacity: 1;   transform: scale(1);   }
+  50%       { opacity: 0.4; transform: scale(0.65); }
+}
+
+/* ── Phase badge ─────────────────────────────────────────────────── */
+.phase-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #444c56;
+  margin-bottom: 10px;
+  height: 1.1rem;
+}
+
+/* ── Board ───────────────────────────────────────────────────────── */
+.board-wrap {
+  width: var(--board);
+  height: var(--board);
+  margin-bottom: 24px;
+  position: relative;
+}
+.board-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+}
+
+/* grid lines */
+.grid-line { stroke: #2d333b; stroke-width: 2; }
+
+/* intersection points (clickable areas) */
+.point-hit {
+  cursor: pointer;
+  fill: transparent;
+}
+.point-hit:hover .point-bg { fill: rgba(255,255,255,0.06); }
+
+/* empty point marker */
+.point-empty {
+  fill: #21262d;
+  stroke: #30363d;
+  stroke-width: 1.5;
+  transition: fill 0.15s;
+}
+.point-hit.can-place:hover .point-empty,
+.point-hit.can-move-to:hover .point-empty {
+  fill: rgba(255,255,255,0.12);
+}
+
+/* pieces */
+.piece-p1 { fill: #f97316; }
+.piece-p2 { fill: #8b5cf6; }
+.piece-selected {
+  filter: drop-shadow(0 0 8px currentColor);
+  stroke: white;
+  stroke-width: 2;
+}
+.piece-win {
+  filter: drop-shadow(0 0 12px currentColor);
+}
+
+/* move-to indicator */
+.move-hint { fill: rgba(255,255,255,0.12); stroke: #6e7681; stroke-width: 1.5; stroke-dasharray: 4 3; }
+
+@keyframes popIn {
+  0%   { transform: scale(0.2); opacity: 0; }
+  65%  { transform: scale(1.25); }
+  100% { transform: scale(1);   opacity: 1; }
+}
+.piece-pop { animation: popIn 0.22s cubic-bezier(0.34,1.56,0.64,1) both; }
+
+/* ── Mode bar ────────────────────────────────────────────────────── */
+.mode-bar {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  justify-content: center;
+  width: var(--board);
+}
+.mode-btn {
+  background: #161b22;
+  border: 1px solid #30363d;
+  color: #8b949e;
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.mode-btn:hover:not(.active) { border-color: #6e7681; color: #c9d1d9; }
+.mode-btn.active { background: #120d1f; border-color: #8b5cf6; color: #a78bfa; }
+
+/* ── Buttons ─────────────────────────────────────────────────────── */
+.btn-row { display: flex; gap: 10px; }
+.new-game-btn {
+  background: #120d1f;
+  border: 1px solid #8b5cf6;
+  color: #a78bfa;
+  border-radius: 10px;
+  padding: 11px 40px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s, box-shadow 0.15s;
+  letter-spacing: 0.04em;
+}
+.new-game-btn:hover  { opacity: 0.85; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(139,92,246,0.25); }
+.new-game-btn:active { transform: translateY(0); box-shadow: none; }
+.reset-scores-btn {
+  background: none;
+  border: 1px solid #30363d;
+  color: #6e7681;
+  border-radius: 10px;
+  padding: 11px 14px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.reset-scores-btn:hover { color: #c9d1d9; border-color: #6e7681; }
+</style>
+</head>
+<body>
+<div id="app" :dir="isRTL ? 'rtl' : 'ltr'">
+
+  <!-- Top bar -->
+  <div class="top-bar">
+    <a class="back-link" href="index.html">{{ UI.back }}</a>
+    <div class="lang-toggle">
+      <button class="lang-btn" :class="{active: lang==='en'}" @click="setLang('en')">EN</button>
+      <button class="lang-btn" :class="{active: lang==='he'}" @click="setLang('he')">עב</button>
+    </div>
+  </div>
+
+  <h1>{{ UI.title }}</h1>
+
+  <!-- Score -->
+  <div class="score-bar" dir="ltr">
+    <div class="score-item score-p1" :class="{active: gamePhase !== 'over' && turn === 1 && !aiThink}">
+      <div class="score-label">{{ UI.p1 }}</div>
+      <div class="score-val">{{ scores[0] }}</div>
+    </div>
+    <div class="score-item score-draw">
+      <div class="score-label">{{ UI.draws }}</div>
+      <div class="score-val">{{ scores[2] }}</div>
+    </div>
+    <div class="score-item score-p2" :class="{active: gamePhase !== 'over' && turn === 2 && !aiThink}">
+      <div class="score-label">{{ UI.p2 }}</div>
+      <div class="score-val">{{ scores[1] }}</div>
+    </div>
+  </div>
+
+  <!-- Status -->
+  <div class="status" :class="statusClass">
+    <template v-if="isRTL">
+      <template v-if="gamePhase === 'over' && winner">
+        <span>{{ UI.wonVerb }}</span>
+        <span>{{ winner === 1 ? UI.p1 : UI.p2 }}</span>
+      </template>
+      <template v-else-if="gamePhase === 'over'">
+        <span>{{ UI.draw }}</span>
+      </template>
+      <template v-else>
+        <span v-if="!aiThink" class="turn-dot" :class="turn === 1 ? 'dot-p1' : 'dot-p2'"></span>
+        <span>{{ aiThink ? UI.thinking : UI.turnWord }}</span>
+        <span :style="{color: turn === 1 ? '#f97316' : '#8b5cf6'}">{{ turn === 1 ? UI.p1 : UI.p2 }}</span>
+      </template>
+    </template>
+    <template v-else>
+      <template v-if="gamePhase === 'over' && winner">
+        <span :style="{color: winner === 1 ? '#f97316' : '#8b5cf6'}">{{ winner === 1 ? UI.p1 : UI.p2 }}</span>
+        <span>{{ UI.wonVerb }}</span>
+        <span>🎉</span>
+      </template>
+      <template v-else-if="gamePhase === 'over'">
+        <span>{{ UI.draw }}</span>
+      </template>
+      <template v-else>
+        <span v-if="!aiThink" class="turn-dot" :class="turn === 1 ? 'dot-p1' : 'dot-p2'"></span>
+        <span :style="{color: turn === 1 ? '#f97316' : '#8b5cf6'}">{{ turn === 1 ? UI.p1 : UI.p2 }}</span>
+        <span>{{ aiThink ? UI.thinking : UI.turnWord }}</span>
+      </template>
+    </template>
+  </div>
+
+  <!-- Phase badge -->
+  <div class="phase-badge">{{ gamePhase === 'placing' ? UI.phasePlace : (gamePhase === 'moving' ? UI.phaseMove : '') }}</div>
+
+  <!-- Board -->
+  <div class="board-wrap">
+    <svg class="board-svg" viewBox="0 0 320 320">
+      <!-- Grid lines (rows) -->
+      <line class="grid-line" x1="60" y1="60"  x2="260" y2="60"/>
+      <line class="grid-line" x1="60" y1="160" x2="260" y2="160"/>
+      <line class="grid-line" x1="60" y1="260" x2="260" y2="260"/>
+      <!-- Grid lines (cols) -->
+      <line class="grid-line" x1="60"  y1="60" x2="60"  y2="260"/>
+      <line class="grid-line" x1="160" y1="60" x2="160" y2="260"/>
+      <line class="grid-line" x1="260" y1="60" x2="260" y2="260"/>
+      <!-- Diagonals -->
+      <line class="grid-line" x1="60"  y1="60"  x2="260" y2="260"/>
+      <line class="grid-line" x1="260" y1="60"  x2="60"  y2="260"/>
+
+      <!-- Win line highlight -->
+      <line v-if="winLine"
+        :x1="POS[winLine[0]].x" :y1="POS[winLine[0]].y"
+        :x2="POS[winLine[2]].x" :y2="POS[winLine[2]].y"
+        :stroke="winner === 1 ? '#f97316' : '#8b5cf6'"
+        stroke-width="5" stroke-linecap="round" opacity="0.6"/>
+
+      <!-- Move hints (adjacent empty cells for selected piece) -->
+      <circle
+        v-for="idx in moveHints"
+        :key="'hint-' + idx"
+        :cx="POS[idx].x" :cy="POS[idx].y"
+        r="16"
+        class="move-hint"/>
+
+      <!-- Points -->
+      <g v-for="(pos, idx) in POS" :key="idx"
+        :class="['point-hit', pointClass(idx)]"
+        @click="clickPoint(idx)">
+        <!-- hover bg -->
+        <circle :cx="pos.x" :cy="pos.y" r="22" fill="transparent" class="point-bg"/>
+
+        <!-- empty marker -->
+        <circle v-if="board[idx] === 0"
+          :cx="pos.x" :cy="pos.y" r="8"
+          class="point-empty"/>
+
+        <!-- piece -->
+        <circle v-if="board[idx] !== 0"
+          :cx="pos.x" :cy="pos.y" r="14"
+          :class="[
+            board[idx] === 1 ? 'piece-p1' : 'piece-p2',
+            selected === idx ? 'piece-selected' : '',
+            winLine && winLine.includes(idx) ? 'piece-win' : '',
+            justPlaced === idx ? 'piece-pop' : ''
+          ]"
+          :style="board[idx] === 1 ? 'color:#f97316' : 'color:#8b5cf6'"/>
+      </g>
+    </svg>
+  </div>
+
+  <!-- Mode selector -->
+  <div class="mode-bar">
+    <button class="mode-btn" :class="{active: mode==='2p'}"   @click="setMode('2p')">{{ UI.mode2p }}</button>
+    <button class="mode-btn" :class="{active: mode==='easy'}" @click="setMode('easy')">{{ UI.modeEasy }}</button>
+    <button class="mode-btn" :class="{active: mode==='hard'}" @click="setMode('hard')">{{ UI.modeHard }}</button>
+  </div>
+
+  <!-- Actions -->
+  <div class="btn-row">
+    <button class="new-game-btn" @click="newGame">{{ UI.newGame }}</button>
+    <button class="reset-scores-btn" @click="resetScores" :title="UI.resetScores">↺</button>
+  </div>
+
+</div>
+
+<script>
+const { createApp, ref, computed } = Vue;
+
+const STRINGS = {
+  back:       { en: 'All Games',         he: 'כל המשחקים' },
+  title:      { en: "Three Men's Morris", he: 'מוריס שלושה' },
+  p1:         { en: 'Orange',            he: 'כתום' },
+  p2:         { en: 'Violet',            he: 'סגול' },
+  draws:      { en: 'Draws',             he: 'תיקו' },
+  wonVerb:    { en: 'wins!',             he: 'ניצח!' },
+  turnWord:   { en: "'s turn",           he: 'תור' },
+  draw:       { en: "It's a draw!",      he: 'תיקו!' },
+  thinking:   { en: 'Thinking…',         he: 'המחשב חושב…' },
+  newGame:    { en: 'New Game',          he: 'משחק חדש' },
+  resetScores:{ en: 'Reset scores',      he: 'אפס ניקוד' },
+  mode2p:     { en: '👥 2 Players',     he: '👥 2 שחקנים' },
+  modeEasy:   { en: '🤖 Easy',          he: '🤖 קל' },
+  modeHard:   { en: '🤖 Hard',          he: '🤖 קשה' },
+  phasePlace: { en: 'Placing pieces',    he: 'מניחים כלים' },
+  phaseMove:  { en: 'Moving pieces',     he: 'מזיזים כלים' },
+};
+
+// Board positions (SVG coords)
+const POS = [
+  {x:60,  y:60 }, {x:160, y:60 }, {x:260, y:60 },
+  {x:60,  y:160}, {x:160, y:160}, {x:260, y:160},
+  {x:60,  y:260}, {x:160, y:260}, {x:260, y:260},
+];
+
+// Adjacency including diagonals
+const ADJ = [
+  [1,3,4],         // 0
+  [0,2,3,4,5],     // 1
+  [1,4,5],         // 2
+  [0,1,4,6,7],     // 3
+  [0,1,2,3,5,6,7,8], // 4 (center)
+  [1,2,4,7,8],     // 5
+  [3,4,7],         // 6
+  [3,4,5,6,8],     // 7
+  [4,5,7],         // 8
+];
+
+const WIN_LINES = [
+  [0,1,2],[3,4,5],[6,7,8],
+  [0,3,6],[1,4,7],[2,5,8],
+  [0,4,8],[2,4,6],
+];
+
+function checkWinner(board) {
+  for (const line of WIN_LINES) {
+    const [a, b, c] = line;
+    if (board[a] && board[a] === board[b] && board[a] === board[c])
+      return { winner: board[a], line };
+  }
+  return null;
+}
+
+function getPlacingMoves(board) {
+  const moves = [];
+  for (let i = 0; i < 9; i++) if (board[i] === 0) moves.push({ type: 'place', to: i });
+  return moves;
+}
+
+function getMovingMoves(board, player) {
+  const moves = [];
+  for (let from = 0; from < 9; from++) {
+    if (board[from] !== player) continue;
+    for (const to of ADJ[from]) {
+      if (board[to] === 0) moves.push({ type: 'move', from, to });
+    }
+  }
+  return moves;
+}
+
+function applyMove(board, placed, move, player) {
+  const b = [...board];
+  const p = [...placed];
+  if (move.type === 'place') {
+    b[move.to] = player;
+    p[player - 1]++;
+  } else {
+    b[move.from] = 0;
+    b[move.to] = player;
+  }
+  return { board: b, placed: p };
+}
+
+function isMovingPhase(placed) {
+  return placed[0] >= 3 && placed[1] >= 3;
+}
+
+// Positional value: center > edges > corners
+const POS_VAL = [1, 2, 1, 2, 4, 2, 1, 2, 1];
+
+function evaluate(board, placed) {
+  const res = checkWinner(board);
+  if (res) return res.winner === 2 ? 1000 : -1000;
+
+  let score = 0;
+  for (const line of WIN_LINES) {
+    const [a, b, c] = line;
+    const p1 = [a,b,c].filter(i => board[i] === 1).length;
+    const p2 = [a,b,c].filter(i => board[i] === 2).length;
+    if (p1 === 0 && p2 === 2) score += 10;
+    if (p2 === 0 && p1 === 2) score -= 10;
+    if (p1 === 0 && p2 === 1) score += 1;
+    if (p2 === 0 && p1 === 1) score -= 1;
+  }
+  // positional bonus
+  for (let i = 0; i < 9; i++) {
+    if (board[i] === 2) score += POS_VAL[i] * 0.3;
+    if (board[i] === 1) score -= POS_VAL[i] * 0.3;
+  }
+  return score;
+}
+
+function minimax(board, placed, player, depth, alpha, beta, maxDepth) {
+  const res = checkWinner(board);
+  if (res) return res.winner === 2 ? 1000 + depth : -1000 - depth;
+  if (depth >= maxDepth) return evaluate(board, placed);
+
+  const moving = isMovingPhase(placed);
+  const moves = moving
+    ? getMovingMoves(board, player)
+    : getPlacingMoves(board);
+
+  if (moves.length === 0) {
+    // current player can't move → loses
+    return player === 2 ? -900 - depth : 900 + depth;
+  }
+
+  const maximizing = player === 2;
+  let best = maximizing ? -Infinity : Infinity;
+
+  for (const move of moves) {
+    const { board: nb, placed: np } = applyMove(board, placed, move, player);
+    const nextPlayer = player === 1 ? 2 : 1;
+    const score = minimax(nb, np, nextPlayer, depth + 1, alpha, beta, maxDepth);
+    if (maximizing) {
+      best = Math.max(best, score);
+      alpha = Math.max(alpha, best);
+    } else {
+      best = Math.min(best, score);
+      beta = Math.min(beta, best);
+    }
+    if (beta <= alpha) break;
+  }
+  return best;
+}
+
+function getBestMove(board, placed, player) {
+  const moving = isMovingPhase(placed);
+  const moves = moving ? getMovingMoves(board, player) : getPlacingMoves(board);
+  if (!moves.length) return null;
+
+  const maxDepth = moving ? 8 : 6;
+  let best = -Infinity, bestMove = moves[0];
+  const opponent = player === 1 ? 2 : 1;
+
+  for (const move of moves) {
+    const { board: nb, placed: np } = applyMove(board, placed, move, player);
+    const score = minimax(nb, np, opponent, 1, -Infinity, Infinity, maxDepth);
+    const s = player === 2 ? score : -score;
+    if (s > best) { best = s; bestMove = move; }
+  }
+  return bestMove;
+}
+
+function getRandomMove(board, placed, player) {
+  const moving = isMovingPhase(placed);
+  const moves = moving ? getMovingMoves(board, player) : getPlacingMoves(board);
+  return moves.length ? moves[Math.floor(Math.random() * moves.length)] : null;
+}
+
+const PALETTES = {
+  1: ['#f97316','#fb923c','#fdba74','#fbbf24','#fde68a'],
+  2: ['#8b5cf6','#a78bfa','#c4b5fd','#7c3aed','#ddd6fe'],
+};
+
+function launchFireworks(player) {
+  const canvas = document.createElement('canvas');
+  canvas.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:200;';
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  document.body.appendChild(canvas);
+  const ctx = canvas.getContext('2d');
+  const cols = PALETTES[player];
+  const particles = [];
+
+  function burst(x, y) {
+    for (let i = 0; i < 65; i++) {
+      const angle = Math.PI * 2 * i / 65;
+      const spd = 2 + Math.random() * 6;
+      particles.push({
+        x, y, vx: Math.cos(angle) * spd, vy: Math.sin(angle) * spd - 2,
+        alpha: 1, color: cols[Math.floor(Math.random() * cols.length)], r: 2 + Math.random() * 3
+      });
+    }
+  }
+
+  const end = Date.now() + 3000;
+  let lastBurst = 0;
+  function frame(now) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (now - lastBurst > 420 && Date.now() < end - 500) {
+      burst(canvas.width * (0.2 + Math.random() * 0.6), canvas.height * (0.1 + Math.random() * 0.4));
+      lastBurst = now;
+    }
+    for (const p of particles) {
+      p.x += p.vx; p.y += p.vy; p.vy += 0.12; p.alpha -= 0.016;
+      if (p.alpha <= 0) continue;
+      ctx.globalAlpha = p.alpha;
+      ctx.fillStyle = p.color;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    particles.splice(0, particles.length, ...particles.filter(p => p.alpha > 0));
+    if (Date.now() < end || particles.length > 0) requestAnimationFrame(frame);
+    else document.body.removeChild(canvas);
+  }
+  burst(canvas.width * 0.5, canvas.height * 0.35);
+  requestAnimationFrame(frame);
+}
+
+const SAVE_KEY = 'morris-save';
+
+createApp({
+  setup() {
+    const lang      = ref('en');
+    const mode      = ref('2p');
+    const board     = ref(Array(9).fill(0));  // 0=empty, 1=P1, 2=P2
+    const placed    = ref([0, 0]);             // pieces placed by each player
+    const turn      = ref(1);
+    const selected  = ref(null);              // index of selected piece (moving phase)
+    const gamePhase = ref('placing');          // 'placing' | 'moving' | 'over'
+    const winner    = ref(null);
+    const winLine   = ref(null);
+    const scores    = ref([0, 0, 0]);          // [p1wins, p2wins, draws]
+    const aiThink   = ref(false);
+    const justPlaced = ref(null);
+    const moveCount  = ref(0);
+
+    const isRTL = computed(() => lang.value === 'he');
+    const UI = computed(() => {
+      const l = lang.value;
+      return Object.fromEntries(Object.entries(STRINGS).map(([k, v]) => [k, v[l] ?? v.en]));
+    });
+
+    const statusClass = computed(() => {
+      if (gamePhase.value === 'over' && winner.value === 1) return 'won-p1';
+      if (gamePhase.value === 'over' && winner.value === 2) return 'won-p2';
+      if (gamePhase.value === 'over') return 'draw';
+      return '';
+    });
+
+    // Which empty cells the selected piece can move to
+    const moveHints = computed(() => {
+      if (gamePhase.value !== 'moving' || selected.value === null) return [];
+      if (aiThink.value) return [];
+      return ADJ[selected.value].filter(i => board.value[i] === 0);
+    });
+
+    function pointClass(idx) {
+      if (gamePhase.value === 'over') return '';
+      if (aiThink.value) return '';
+      const b = board.value;
+      const ph = gamePhase.value;
+      if (ph === 'placing' && b[idx] === 0 && (mode.value === '2p' || turn.value === 1)) return 'can-place';
+      if (ph === 'moving') {
+        // own piece → selectable
+        if (b[idx] === turn.value && (mode.value === '2p' || turn.value === 1)) return 'can-select';
+        // empty adjacent to selected → can move there
+        if (selected.value !== null && b[idx] === 0 && ADJ[selected.value].includes(idx)) return 'can-move-to';
+      }
+      return '';
+    }
+
+    function endGame(w) {
+      gamePhase.value = 'over';
+      winner.value = w;
+      if (w) {
+        winLine.value = checkWinner(board.value)?.line ?? null;
+        const s = [...scores.value];
+        s[w - 1]++;
+        scores.value = s;
+        launchFireworks(w);
+      } else {
+        const s = [...scores.value];
+        s[2]++;
+        scores.value = s;
+      }
+      save();
+    }
+
+    function afterMove(b, p) {
+      const res = checkWinner(b);
+      if (res) { board.value = b; placed.value = p; endGame(res.winner); return; }
+
+      const moving = isMovingPhase(p);
+      gamePhase.value = moving ? 'moving' : 'placing';
+      const next = turn.value === 1 ? 2 : 1;
+
+      // Check if next player has any moves
+      if (moving) {
+        const nextMoves = getMovingMoves(b, next);
+        if (!nextMoves.length) { board.value = b; placed.value = p; endGame(turn.value); return; }
+      }
+
+      // Draw detection: 60 moves without win
+      if (moving) {
+        moveCount.value++;
+        if (moveCount.value >= 60) { board.value = b; placed.value = p; endGame(null); return; }
+      }
+
+      board.value = b;
+      placed.value = p;
+      turn.value = next;
+
+      if (mode.value !== '2p' && next === 2) {
+        aiThink.value = true;
+        setTimeout(doAiMove, 380);
+      }
+    }
+
+    function doAiMove() {
+      aiThink.value = false;
+      const move = mode.value === 'hard'
+        ? getBestMove([...board.value], [...placed.value], 2)
+        : getRandomMove([...board.value], [...placed.value], 2);
+      if (!move) return;
+      const { board: nb, placed: np } = applyMove([...board.value], [...placed.value], move, 2);
+      justPlaced.value = move.to;
+      setTimeout(() => { justPlaced.value = null; }, 350);
+      afterMove(nb, np);
+    }
+
+    function clickPoint(idx) {
+      if (gamePhase.value === 'over') return;
+      if (aiThink.value) return;
+      if (mode.value !== '2p' && turn.value === 2) return;
+
+      const b = board.value;
+      const ph = gamePhase.value;
+
+      if (ph === 'placing') {
+        if (b[idx] !== 0) return;
+        if (placed.value[turn.value - 1] >= 3) return;
+        const { board: nb, placed: np } = applyMove([...b], [...placed.value], { type: 'place', to: idx }, turn.value);
+        justPlaced.value = idx;
+        setTimeout(() => { justPlaced.value = null; }, 350);
+        afterMove(nb, np);
+      } else if (ph === 'moving') {
+        if (b[idx] === turn.value) {
+          // select own piece
+          selected.value = selected.value === idx ? null : idx;
+        } else if (selected.value !== null && b[idx] === 0 && ADJ[selected.value].includes(idx)) {
+          // move to adjacent empty
+          const { board: nb, placed: np } = applyMove([...b], [...placed.value], { type: 'move', from: selected.value, to: idx }, turn.value);
+          justPlaced.value = idx;
+          setTimeout(() => { justPlaced.value = null; }, 350);
+          selected.value = null;
+          afterMove(nb, np);
+        } else {
+          selected.value = null;
+        }
+      }
+    }
+
+    function newGame() {
+      board.value    = Array(9).fill(0);
+      placed.value   = [0, 0];
+      turn.value     = 1;
+      selected.value = null;
+      gamePhase.value = 'placing';
+      winner.value   = null;
+      winLine.value  = null;
+      aiThink.value  = false;
+      moveCount.value = 0;
+      justPlaced.value = null;
+    }
+
+    function resetScores() {
+      scores.value = [0, 0, 0];
+      save();
+    }
+
+    function setLang(l) { lang.value = l; save(); }
+
+    function setMode(m) {
+      mode.value = m;
+      newGame();
+      save();
+    }
+
+    function save() {
+      try {
+        localStorage.setItem(SAVE_KEY, JSON.stringify({ lang: lang.value, mode: mode.value, scores: scores.value }));
+      } catch (_) {}
+    }
+
+    function load() {
+      try {
+        const d = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}');
+        if (d.lang)   lang.value   = d.lang;
+        if (d.mode)   mode.value   = d.mode;
+        if (d.scores) scores.value = d.scores;
+      } catch (_) {}
+    }
+
+    load();
+
+    return {
+      lang, mode, board, placed, turn, selected, gamePhase, winner, winLine,
+      scores, aiThink, justPlaced, isRTL, UI, statusClass, moveHints,
+      POS, clickPoint, pointClass, newGame, resetScores, setLang, setMode,
+    };
+  }
+}).mount('#app');
+</script>
+</body>
+</html>
