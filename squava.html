@@ -258,7 +258,7 @@ h1 {
       </template>
       <template v-else-if="phase === 'lost'">
         <span>{{ UI.lostVerb }}</span>
-        <span :style="{color: winner===1?'#f59e0b':'#818cf8'}">{{ winner===1 ? UI.p1 : UI.p2 }}</span>
+        <span :style="{color: winner===2?'#f59e0b':'#818cf8'}">{{ winner===2 ? UI.p1 : UI.p2 }}</span>
       </template>
       <template v-else-if="phase === 'draw'">
         <span>{{ UI.draw }}</span>
@@ -276,7 +276,7 @@ h1 {
         <span>🎉</span>
       </template>
       <template v-else-if="phase === 'lost'">
-        <span :style="{color: winner===1?'#f59e0b':'#818cf8'}">{{ winner===1 ? UI.p1 : UI.p2 }}</span>
+        <span :style="{color: winner===2?'#f59e0b':'#818cf8'}">{{ winner===2 ? UI.p1 : UI.p2 }}</span>
         <span>{{ UI.lostVerb }}</span>
       </template>
       <template v-else-if="phase === 'draw'">
