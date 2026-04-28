@@ -179,6 +179,12 @@ h1 {
 .dot-live     { fill: #34d399; }
 .dot-dead     { fill: #374151; }
 .dot-selected { fill: #fbbf24; filter: drop-shadow(0 0 7px rgba(251,191,36,0.85)); }
+.dot-label {
+  font-size: 7px; font-weight: 700; font-family: monospace;
+  text-anchor: middle; dominant-baseline: middle;
+  fill: #0d1117; pointer-events: none;
+}
+.dot-label-dead { fill: #6e7681; }
 .reset-view-btn {
   position: absolute; bottom: 8px; right: 8px;
   background: rgba(13,17,23,0.85); border: 1px solid #30363d; color: #6e7681;
@@ -293,6 +299,13 @@ h1 {
         class="dot-vis"
         :class="dotVisClass(dot)"
       />
+      <text
+        v-for="dot in dots"
+        :key="'t' + dot.id"
+        :x="dot.x" :y="dot.y + 1"
+        class="dot-label"
+        :class="dot.conns>=3 ? 'dot-label-dead' : ''"
+      >{{ 3 - dot.conns }}</text>
     </svg>
     <button class="reset-view-btn" @click="resetView" title="Reset view">⊙</button>
   </div>
