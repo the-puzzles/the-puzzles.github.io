@@ -449,13 +449,30 @@ function curvesProperlyIntersect(pts1, pts2, sharedDots) {
 /* ── Curve candidates ───────────────────────────────────────────── */
 
 // Offsets to try for a regular edge (perpendicular to midpoint)
-const EDGE_OFFSETS = [35, -35, 80, -80, 140, -140, 210, -210, 300, -300, 0, 430, -430];
+const EDGE_OFFSETS = [35, -35, 80, -80, 140, -140, 210, -210, 300, -300, 0, 430, -430, 600, -600];
+
+// Absolute control-point positions spread across the board.
+// Used as a second pass when all perpendicular offsets are blocked — these
+// create "going around via a corner/edge" routes that bypass central obstacles.
+const ABS_CPS = [
+  {x:0,y:0},{x:160,y:0},{x:320,y:0},
+  {x:0,y:160},{x:320,y:160},
+  {x:0,y:320},{x:160,y:320},{x:320,y:320},
+  {x:80,y:80},{x:240,y:80},{x:80,y:240},{x:240,y:240},
+];
+
+function makeEdgeCurveAbs(fd, td, cpx, cpy) {
+  const pts = sampleQuad(fd, {x:cpx,y:cpy}, td);
+  const mid = {x:0.25*fd.x+0.5*cpx+0.25*td.x, y:0.25*fd.y+0.5*cpy+0.25*td.y};
+  return {path:`M ${fd.x} ${fd.y} Q ${cpx} ${cpy} ${td.x} ${td.y}`, pts, mid};
+}
 
 // [angle_delta, radius_multiplier] for self-loops
 const LOOP_VARIANTS = (() => {
   const v = [];
   for (let a=0; a<Math.PI*2; a+=Math.PI/4) v.push([a, 1.7]);
   for (let a=Math.PI/8; a<Math.PI*2; a+=Math.PI/4) v.push([a, 2.3]);
+  for (let a=0; a<Math.PI*2; a+=Math.PI/4) v.push([a, 3.2]);
   return v;
 })();
 
@@ -587,6 +604,10 @@ createApp({
 
       for (const offset of EDGE_OFFSETS) {
         const c=makeEdgeCurve(fd, td, offset);
+        if(!crosses(c.pts)) return c;
+      }
+      for (const {x,y} of ABS_CPS) {
+        const c=makeEdgeCurveAbs(fd, td, x, y);
         if(!crosses(c.pts)) return c;
       }
       return null;
