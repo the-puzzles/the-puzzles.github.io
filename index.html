@@ -94,6 +94,7 @@ header {
 .card.xo:hover          { border-color: #f43f5e; box-shadow: 0 12px 40px rgba(244,63,94,0.15); }
 .card.sprouts:hover     { border-color: #10b981; box-shadow: 0 12px 40px rgba(16,185,129,0.15); }
 .card.morris:hover      { border-color: #8b5cf6; box-shadow: 0 12px 40px rgba(139,92,246,0.15); }
+.card.squava:hover      { border-color: #f59e0b; box-shadow: 0 12px 40px rgba(245,158,11,0.15); }
 .card.morse:hover       { border-color: #fbbf24; box-shadow: 0 12px 40px rgba(251,191,36,0.15); }
 .card.wordladder:hover  { border-color: #22d3ee; box-shadow: 0 12px 40px rgba(34,211,238,0.15); }
 .card.braille:hover     { border-color: #a78bfa; box-shadow: 0 12px 40px rgba(167,139,250,0.15); }
@@ -119,6 +120,7 @@ header {
 .xo         .card-icon { background: #1a0d0f; }
 .sprouts    .card-icon { background: #091c14; }
 .morris     .card-icon { background: #120d1f; }
+.squava     .card-icon { background: #1a1400; }
 
 .card-title {
   font-size: 1.5rem;
@@ -191,6 +193,12 @@ header {
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+.squava .card-title {
+  background: linear-gradient(135deg, #f59e0b, #818cf8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
 
 /* ── Preview board ───────────────────────────────────────────────────── */
 .preview {
@@ -254,6 +262,7 @@ header {
 .xo          .rule-dot { background: #f43f5e; }
 .sprouts     .rule-dot { background: #10b981; }
 .morris      .rule-dot { background: #8b5cf6; }
+.squava      .rule-dot { background: #f59e0b; }
 
 /* ── Play button ─────────────────────────────────────────────────────── */
 .play-btn {
@@ -286,6 +295,7 @@ header {
 .xo          .play-btn { background: #1a0d0f; color: #f472b6; border: 1px solid #f43f5e; }
 .sprouts     .play-btn { background: #091c14; color: #34d399; border: 1px solid #10b981; }
 .morris      .play-btn { background: #120d1f; color: #a78bfa; border: 1px solid #8b5cf6; }
+.squava      .play-btn { background: #1a1400; color: #fbbf24; border: 1px solid #f59e0b; }
 
 .play-arrow { font-size: 1rem; transition: transform 0.15s; }
 .play-btn:hover .play-arrow { transform: translateX(3px); }
@@ -724,6 +734,57 @@ footer {
     </div>
 
     <div class="play-btn">Play X O <span class="play-arrow">→</span></div>
+  </a>
+
+  <!-- ── Squava ────────────────────────────────────────────────────── -->
+  <a class="card squava" href="squava.html">
+    <div class="card-header">
+      <div class="card-icon">◈</div>
+      <div class="card-title">SQUAVA</div>
+    </div>
+
+    <div class="preview" style="grid-template-columns: repeat(5, 30px); gap:1px; background:#2d333b; padding:1px; border-radius:8px;">
+      <div class="preview-cell" style="background:#0f1419"></div>
+      <div class="preview-cell" style="background:#141c28"></div>
+      <div class="preview-cell" style="background:#0f1419; display:flex;align-items:center;justify-content:center;"><div style="width:14px;height:14px;border-radius:50%;background:#f59e0b"></div></div>
+      <div class="preview-cell" style="background:#141c28"></div>
+      <div class="preview-cell" style="background:#0f1419"></div>
+
+      <div class="preview-cell" style="background:#141c28"></div>
+      <div class="preview-cell" style="background:#0f1419; display:flex;align-items:center;justify-content:center;"><div style="width:14px;height:14px;border-radius:50%;background:#818cf8"></div></div>
+      <div class="preview-cell" style="background:#141c28; display:flex;align-items:center;justify-content:center;"><div style="width:14px;height:14px;border-radius:50%;background:#f59e0b"></div></div>
+      <div class="preview-cell" style="background:#0f1419; display:flex;align-items:center;justify-content:center;"><div style="width:14px;height:14px;border-radius:50%;background:#818cf8"></div></div>
+      <div class="preview-cell" style="background:#141c28"></div>
+
+      <div class="preview-cell" style="background:#0f1419; display:flex;align-items:center;justify-content:center;"><div style="width:14px;height:14px;border-radius:50%;background:#818cf8"></div></div>
+      <div class="preview-cell" style="background:#141c28"></div>
+      <div class="preview-cell" style="background:#0f1419; display:flex;align-items:center;justify-content:center;"><div style="width:14px;height:14px;border-radius:50%;background:#f59e0b;box-shadow:0 0 8px rgba(245,158,11,0.9)"></div></div>
+      <div class="preview-cell" style="background:#141c28"></div>
+      <div class="preview-cell" style="background:#0f1419; display:flex;align-items:center;justify-content:center;"><div style="width:14px;height:14px;border-radius:50%;background:#818cf8"></div></div>
+
+      <div class="preview-cell" style="background:#141c28"></div>
+      <div class="preview-cell" style="background:#0f1419; display:flex;align-items:center;justify-content:center;"><div style="width:14px;height:14px;border-radius:50%;background:#f59e0b"></div></div>
+      <div class="preview-cell" style="background:#141c28; display:flex;align-items:center;justify-content:center;"><div style="width:14px;height:14px;border-radius:50%;background:#818cf8"></div></div>
+      <div class="preview-cell" style="background:#0f1419"></div>
+      <div class="preview-cell" style="background:#141c28"></div>
+
+      <div class="preview-cell" style="background:#0f1419"></div>
+      <div class="preview-cell" style="background:#141c28"></div>
+      <div class="preview-cell" style="background:#0f1419; display:flex;align-items:center;justify-content:center;"><div style="width:14px;height:14px;border-radius:50%;background:#f59e0b"></div></div>
+      <div class="preview-cell" style="background:#141c28"></div>
+      <div class="preview-cell" style="background:#0f1419"></div>
+    </div>
+
+    <p class="card-tagline">A 5×5 strategy game with a twist. Get 4 in a row to win — but get 3 in a row first, and you lose.</p>
+
+    <div class="card-rules">
+      <div class="rule"><div class="rule-dot"></div><span>Place a piece on any empty square each turn</span></div>
+      <div class="rule"><div class="rule-dot"></div><span>4 in a row (orthogonal or diagonal) wins</span></div>
+      <div class="rule"><div class="rule-dot"></div><span>3 in a row first loses — watch your own moves!</span></div>
+      <div class="rule"><div class="rule-dot"></div><span>2-player mode or vs computer (Easy / Hard)</span></div>
+    </div>
+
+    <div class="play-btn">Play Squava <span class="play-arrow">→</span></div>
   </a>
 
   <!-- ── Three Men's Morris ───────────────────────────────────────── -->

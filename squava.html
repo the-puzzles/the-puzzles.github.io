@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Squava</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0d1117">
+<link rel="apple-touch-icon" href="icon.svg">
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root { --cell: clamp(52px, calc((100vw - 32px) / 5), 68px); }
+
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: #0d1117;
+  color: #c9d1d9;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 16px 48px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* ── Top bar ──────────────────────────────────────────────────────── */
+.top-bar {
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+.back-link {
+  color: #6e7681; text-decoration: none; font-size: 0.85rem;
+  transition: color 0.15s; display: inline-flex; align-items: center; gap: 4px;
+}
+.back-link:hover { color: #c9d1d9; }
+[dir="ltr"] .back-link::before { content: '←'; }
+[dir="rtl"] .back-link::after  { content: '→'; }
+.lang-toggle { display: flex; gap: 4px; }
+.lang-btn {
+  background: none; border: 1px solid #30363d; color: #6e7681;
+  border-radius: 6px; padding: 4px 8px; font-size: 0.78rem; font-weight: 700;
+  font-family: inherit; cursor: pointer; transition: all 0.15s;
+}
+.lang-btn.active  { background: #1a1400; border-color: #f59e0b; color: #fbbf24; }
+.lang-btn:hover:not(.active) { color: #c9d1d9; border-color: #6e7681; }
+
+/* ── Title ────────────────────────────────────────────────────────── */
+h1 {
+  font-size: 3rem; font-weight: 900; letter-spacing: 0.2em;
+  margin-bottom: 24px; text-align: center; line-height: 1;
+  background: linear-gradient(135deg, #f59e0b, #818cf8);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+
+/* ── Score ────────────────────────────────────────────────────────── */
+.score-bar {
+  display: flex;
+  width: calc(var(--cell) * 5 + 4px);
+  background: #161b22; border: 1px solid #21262d;
+  border-radius: 14px; overflow: hidden; margin-bottom: 14px;
+}
+.score-item {
+  flex: 1; padding: 12px 8px 14px;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  position: relative; transition: background 0.2s;
+}
+.score-item + .score-item { border-inline-start: 1px solid #21262d; }
+.score-item::after {
+  content: ''; position: absolute; bottom: 0; left: 12px; right: 12px;
+  height: 3px; border-radius: 2px 2px 0 0;
+  transform: scaleX(0); transition: transform 0.25s ease;
+}
+.score-p1.active  { background: rgba(245,158,11,0.07); }
+.score-p1.active::after { background: #f59e0b; transform: scaleX(1); }
+.score-p2.active  { background: rgba(129,140,248,0.07); }
+.score-p2.active::after { background: #818cf8; transform: scaleX(1); }
+
+.score-label { font-size: 0.68rem; color: #6e7681; text-transform: uppercase; letter-spacing: 0.12em; font-weight: 700; }
+.score-val   { font-size: 2rem; font-weight: 800; line-height: 1; min-width: 1.2ch; text-align: center; }
+.score-p1 .score-val   { color: #f59e0b; }
+.score-draw .score-val { color: #6e7681; }
+.score-p2 .score-val   { color: #818cf8; }
+
+/* ── Status ───────────────────────────────────────────────────────── */
+.status {
+  height: 2.2rem; font-size: 1.05rem; font-weight: 700; color: #c9d1d9;
+  margin-bottom: 14px; display: flex; align-items: center; justify-content: center;
+  gap: 6px; letter-spacing: 0.01em;
+}
+.status.won-p1  { color: #f59e0b; }
+.status.won-p2  { color: #818cf8; }
+.status.lost-p1 { color: #f87171; }
+.status.lost-p2 { color: #f87171; }
+.status.draw    { color: #8b949e; }
+
+.turn-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+  animation: pulse 1.4s ease infinite;
+}
+.turn-dot.dot-p1 { background: #f59e0b; }
+.turn-dot.dot-p2 { background: #818cf8; }
+@keyframes pulse {
+  0%,100% { opacity:1; transform:scale(1); }
+  50%     { opacity:.4; transform:scale(.65); }
+}
+
+/* ── Board ────────────────────────────────────────────────────────── */
+.board {
+  display: grid;
+  grid-template-columns: repeat(5, var(--cell));
+  grid-template-rows:    repeat(5, var(--cell));
+  gap: 1px;
+  background: #2d333b;
+  border: 1px solid #2d333b;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+
+.cell {
+  background: #0f1419;
+  display: flex; align-items: center; justify-content: center;
+  cursor: default; position: relative; transition: background 0.1s;
+}
+.cell.type-b { background: #141c28; }
+
+/* subtle cell-type marker */
+.cell::before {
+  content: '';
+  position: absolute;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  opacity: 0.18;
+  background: #6e7681;
+  pointer-events: none;
+}
+.cell.type-b::before { border-radius: 1px; transform: rotate(45deg); }
+
+.cell.clickable { cursor: pointer; }
+.cell.clickable:hover { background: rgba(255,255,255,0.05); }
+.cell.type-b.clickable:hover { background: rgba(255,255,255,0.05); }
+
+/* pieces */
+.piece {
+  width: calc(var(--cell) * 0.62);
+  height: calc(var(--cell) * 0.62);
+  border-radius: 50%;
+  position: relative;
+  z-index: 1;
+}
+.piece.p1 { background: #f59e0b; box-shadow: 0 0 0 2px #78350f; }
+.piece.p2 { background: #818cf8; box-shadow: 0 0 0 2px #312e81; }
+
+/* win highlight */
+.cell.win-cell .piece.p1 { background: #fbbf24; box-shadow: 0 0 14px 4px rgba(245,158,11,0.8); }
+.cell.win-cell .piece.p2 { background: #a5b4fc; box-shadow: 0 0 14px 4px rgba(129,140,248,0.8); }
+
+/* lose highlight */
+.cell.lose-cell .piece.p1,
+.cell.lose-cell .piece.p2 { box-shadow: 0 0 14px 4px rgba(248,113,113,0.8); }
+.cell.lose-cell .piece.p1 { background: #fca5a5; }
+.cell.lose-cell .piece.p2 { background: #fca5a5; }
+
+/* hover preview */
+.cell.clickable.preview-p1:not(:has(.piece)):hover::after,
+.cell.clickable.preview-p2:not(:has(.piece)):hover::after {
+  content: '';
+  position: absolute;
+  width: calc(var(--cell) * 0.62);
+  height: calc(var(--cell) * 0.62);
+  border-radius: 50%;
+  opacity: 0.2;
+}
+.cell.clickable.preview-p1:not(:has(.piece)):hover::after { background: #f59e0b; }
+.cell.clickable.preview-p2:not(:has(.piece)):hover::after { background: #818cf8; }
+
+/* pop-in animation */
+@keyframes popIn {
+  0%   { transform: scale(0.2); opacity: 0; }
+  65%  { transform: scale(1.25); }
+  100% { transform: scale(1);   opacity: 1; }
+}
+.pop-enter-active { animation: popIn 0.2s cubic-bezier(0.34,1.56,0.64,1); }
+
+/* ── Mode bar ─────────────────────────────────────────────────────── */
+.mode-bar {
+  display: flex; gap: 6px; margin-bottom: 20px;
+  flex-wrap: wrap; justify-content: center;
+  width: calc(var(--cell) * 5 + 4px);
+}
+.mode-btn {
+  background: #161b22; border: 1px solid #30363d; color: #8b949e;
+  border-radius: 20px; padding: 6px 14px; font-size: 0.82rem;
+  font-weight: 600; font-family: inherit; cursor: pointer; transition: all 0.15s;
+}
+.mode-btn:hover:not(.active) { border-color: #6e7681; color: #c9d1d9; }
+.mode-btn.active { background: #1a1400; border-color: #f59e0b; color: #fbbf24; }
+
+/* ── Buttons ──────────────────────────────────────────────────────── */
+.btn-row { display: flex; gap: 10px; }
+.new-game-btn {
+  background: #1a1400; border: 1px solid #f59e0b; color: #fbbf24;
+  border-radius: 10px; padding: 11px 40px; font-size: 0.92rem; font-weight: 700;
+  font-family: inherit; cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s, box-shadow 0.15s; letter-spacing: 0.04em;
+}
+.new-game-btn:hover  { opacity: 0.85; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(245,158,11,0.25); }
+.new-game-btn:active { transform: translateY(0); box-shadow: none; }
+.reset-scores-btn {
+  background: none; border: 1px solid #30363d; color: #6e7681;
+  border-radius: 10px; padding: 11px 14px; font-size: 0.9rem;
+  font-family: inherit; cursor: pointer; transition: color 0.15s, border-color 0.15s;
+}
+.reset-scores-btn:hover { color: #c9d1d9; border-color: #6e7681; }
+</style>
+</head>
+<body>
+<div id="app" :dir="isRTL ? 'rtl' : 'ltr'">
+
+  <div class="top-bar">
+    <a class="back-link" href="index.html">{{ UI.back }}</a>
+    <div class="lang-toggle">
+      <button class="lang-btn" :class="{active: lang==='en'}" @click="setLang('en')">EN</button>
+      <button class="lang-btn" :class="{active: lang==='he'}" @click="setLang('he')">עב</button>
+    </div>
+  </div>
+
+  <h1>SQUAVA</h1>
+
+  <div class="score-bar" dir="ltr">
+    <div class="score-item score-p1" :class="{active: phase==='playing' && turn===1 && !aiThink}">
+      <div class="score-label">{{ UI.p1 }}</div>
+      <div class="score-val">{{ scores[0] }}</div>
+    </div>
+    <div class="score-item score-draw">
+      <div class="score-label">{{ UI.draws }}</div>
+      <div class="score-val">{{ scores[2] }}</div>
+    </div>
+    <div class="score-item score-p2" :class="{active: phase==='playing' && turn===2 && !aiThink}">
+      <div class="score-label">{{ UI.p2 }}</div>
+      <div class="score-val">{{ scores[1] }}</div>
+    </div>
+  </div>
+
+  <div class="status" :class="statusClass">
+    <template v-if="isRTL">
+      <template v-if="phase === 'won'">
+        <span>{{ UI.wonVerb }}</span>
+        <span :style="{color: winner===1?'#f59e0b':'#818cf8'}">{{ winner===1 ? UI.p1 : UI.p2 }}</span>
+        <span>🎉</span>
+      </template>
+      <template v-else-if="phase === 'lost'">
+        <span>{{ UI.lostVerb }}</span>
+        <span :style="{color: winner===1?'#f59e0b':'#818cf8'}">{{ winner===1 ? UI.p1 : UI.p2 }}</span>
+      </template>
+      <template v-else-if="phase === 'draw'">
+        <span>{{ UI.draw }}</span>
+      </template>
+      <template v-else>
+        <span v-if="!aiThink" class="turn-dot" :class="turn===1?'dot-p1':'dot-p2'"></span>
+        <span>{{ aiThink ? UI.thinking : UI.turnWord }}</span>
+        <span :style="{color: turn===1?'#f59e0b':'#818cf8'}">{{ turn===1 ? UI.p1 : UI.p2 }}</span>
+      </template>
+    </template>
+    <template v-else>
+      <template v-if="phase === 'won'">
+        <span :style="{color: winner===1?'#f59e0b':'#818cf8'}">{{ winner===1 ? UI.p1 : UI.p2 }}</span>
+        <span>{{ UI.wonVerb }}</span>
+        <span>🎉</span>
+      </template>
+      <template v-else-if="phase === 'lost'">
+        <span :style="{color: winner===1?'#f59e0b':'#818cf8'}">{{ winner===1 ? UI.p1 : UI.p2 }}</span>
+        <span>{{ UI.lostVerb }}</span>
+      </template>
+      <template v-else-if="phase === 'draw'">
+        <span>{{ UI.draw }}</span>
+      </template>
+      <template v-else>
+        <span v-if="!aiThink" class="turn-dot" :class="turn===1?'dot-p1':'dot-p2'"></span>
+        <span :style="{color: turn===1?'#f59e0b':'#818cf8'}">{{ turn===1 ? UI.p1 : UI.p2 }}</span>
+        <span>{{ aiThink ? UI.thinking : UI.turnWord }}</span>
+      </template>
+    </template>
+  </div>
+
+  <div class="board">
+    <div
+      v-for="(cell, i) in board"
+      :key="i"
+      class="cell"
+      :class="{
+        'type-b':    (Math.floor(i/5) + i%5) % 2 === 1,
+        clickable:   canClick(i),
+        'win-cell':  highlightLine && highlightLine.includes(i) && phase === 'won',
+        'lose-cell': highlightLine && highlightLine.includes(i) && phase === 'lost',
+        'preview-p1': !cell && phase === 'playing' && turn === 1,
+        'preview-p2': !cell && phase === 'playing' && turn === 2 && mode === '2p',
+      }"
+      @click="clickCell(i)">
+      <transition name="pop">
+        <div v-if="cell" :key="cell + '-' + i" class="piece" :class="cell === 1 ? 'p1' : 'p2'"></div>
+      </transition>
+    </div>
+  </div>
+
+  <div class="mode-bar">
+    <button class="mode-btn" :class="{active: mode==='2p'}"   @click="setMode('2p')">{{ UI.mode2p }}</button>
+    <button class="mode-btn" :class="{active: mode==='easy'}" @click="setMode('easy')">{{ UI.modeEasy }}</button>
+    <button class="mode-btn" :class="{active: mode==='hard'}" @click="setMode('hard')">{{ UI.modeHard }}</button>
+  </div>
+
+  <div class="btn-row">
+    <button class="new-game-btn" @click="newGame">{{ UI.newGame }}</button>
+    <button class="reset-scores-btn" @click="resetScores" :title="UI.resetScores">↺</button>
+  </div>
+
+</div>
+<script>
+const { createApp, ref, computed } = Vue;
+
+const STRINGS = {
+  back:        { en: 'All Games',       he: 'כל המשחקים' },
+  p1:          { en: 'Amber',           he: 'כתום' },
+  p2:          { en: 'Indigo',          he: 'סגול' },
+  draws:       { en: 'Draws',           he: 'תיקו' },
+  wonVerb:     { en: 'wins!',           he: 'ניצח!' },
+  lostVerb:    { en: 'made 3 in a row', he: 'שלישייה — הפסיד' },
+  turnWord:    { en: "'s turn",         he: 'תור' },
+  draw:        { en: "It's a draw!",    he: 'תיקו!' },
+  thinking:    { en: 'Thinking…',       he: 'המחשב חושב…' },
+  newGame:     { en: 'New Game',        he: 'משחק חדש' },
+  resetScores: { en: 'Reset scores',    he: 'אפס ניקוד' },
+  mode2p:      { en: '👥 2 Players',   he: '👥 2 שחקנים' },
+  modeEasy:    { en: '🤖 Easy',        he: '🤖 קל' },
+  modeHard:    { en: '🤖 Hard',        he: '🤖 קשה' },
+};
+
+// All 4-cell lines on a 5×5 board (horizontal, vertical, diagonal)
+const LINES4 = (() => {
+  const lines = [];
+  for (let r = 0; r < 5; r++)
+    for (let c = 0; c <= 1; c++) // 2 windows of 4 per row
+      lines.push([r*5+c, r*5+c+1, r*5+c+2, r*5+c+3]);
+  for (let c = 0; c < 5; c++)
+    for (let r = 0; r <= 1; r++)
+      lines.push([r*5+c, (r+1)*5+c, (r+2)*5+c, (r+3)*5+c]);
+  for (let r = 0; r <= 1; r++)
+    for (let c = 0; c <= 1; c++)
+      lines.push([r*5+c, (r+1)*5+c+1, (r+2)*5+c+2, (r+3)*5+c+3]);
+  for (let r = 0; r <= 1; r++)
+    for (let c = 3; c < 5; c++)
+      lines.push([r*5+c, (r+1)*5+c-1, (r+2)*5+c-2, (r+3)*5+c-3]);
+  return lines;
+})();
+
+const DIRS = [[0,1],[1,0],[1,1],[1,-1]];
+
+function runThrough(board, player, idx, dr, dc) {
+  const row = Math.floor(idx / 5), col = idx % 5;
+  const cells = [idx];
+  let r = row + dr, c = col + dc;
+  while (r >= 0 && r < 5 && c >= 0 && c < 5 && board[r*5+c] === player) {
+    cells.push(r*5+c); r += dr; c += dc;
+  }
+  r = row - dr; c = col - dc;
+  while (r >= 0 && r < 5 && c >= 0 && c < 5 && board[r*5+c] === player) {
+    cells.unshift(r*5+c); r -= dr; c -= dc;
+  }
+  return cells;
+}
+
+// Returns { result: 'win'|'lose', line } or null
+function checkMove(board, player, idx) {
+  let winLine = null, loseLine = null;
+  for (const [dr, dc] of DIRS) {
+    const cells = runThrough(board, player, idx, dr, dc);
+    if (cells.length >= 4 && !winLine) winLine = cells;
+    else if (cells.length === 3 && !loseLine) loseLine = cells;
+  }
+  if (winLine) return { result: 'win', line: winLine };
+  if (loseLine) return { result: 'lose', line: loseLine };
+  return null;
+}
+
+function evaluate(board, player) {
+  const opp = 3 - player;
+  let score = 0;
+  for (const line of LINES4) {
+    const mine  = line.filter(i => board[i] === player).length;
+    const theirs = line.filter(i => board[i] === opp).length;
+    if (theirs === 0) score += [0, 1, 10, 80][mine];
+    if (mine === 0)   score -= [0, 1, 10, 80][theirs];
+  }
+  return score;
+}
+
+function negamax(board, player, depth, alpha, beta) {
+  if (board.every(c => c !== 0)) return 0;
+  if (depth === 0) return evaluate(board, player);
+
+  for (let i = 0; i < 25; i++) {
+    if (board[i] !== 0) continue;
+    board[i] = player;
+    const res = checkMove(board, player, i);
+    let score;
+    if (res) {
+      score = res.result === 'win' ? (1000 - depth) : (-1000 + depth);
+    } else {
+      score = -negamax(board, 3 - player, depth - 1, -beta, -alpha);
+    }
+    board[i] = 0;
+    if (score > alpha) alpha = score;
+    if (alpha >= beta) return alpha;
+  }
+  return alpha;
+}
+
+function getBestMove(board, player) {
+  let best = -Infinity, move = -1;
+  for (let i = 0; i < 25; i++) {
+    if (board[i] !== 0) continue;
+    board[i] = player;
+    const res = checkMove(board, player, i);
+    let score;
+    if (res) {
+      score = res.result === 'win' ? 999 : -999;
+    } else {
+      score = -negamax(board, 3 - player, 5, -Infinity, Infinity);
+    }
+    board[i] = 0;
+    if (score > best) { best = score; move = i; }
+  }
+  return move;
+}
+
+function getRandomMove(board) {
+  const empty = [];
+  for (let i = 0; i < 25; i++) if (board[i] === 0) empty.push(i);
+  return empty.length ? empty[Math.floor(Math.random() * empty.length)] : -1;
+}
+
+const PALETTES = {
+  1: ['#f59e0b','#fbbf24','#fde68a','#fb923c','#f97316'],
+  2: ['#818cf8','#a5b4fc','#c7d2fe','#6366f1','#7c3aed'],
+};
+
+function launchFireworks(player) {
+  const canvas = document.createElement('canvas');
+  canvas.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:200;';
+  canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+  document.body.appendChild(canvas);
+  const ctx = canvas.getContext('2d');
+  const cols = PALETTES[player];
+  const particles = [];
+  function burst(x, y) {
+    for (let i = 0; i < 65; i++) {
+      const angle = Math.PI * 2 * i / 65, spd = 2 + Math.random() * 6;
+      particles.push({ x, y, vx: Math.cos(angle)*spd, vy: Math.sin(angle)*spd - 2,
+        alpha: 1, color: cols[Math.floor(Math.random()*cols.length)], r: 2+Math.random()*3 });
+    }
+  }
+  const end = Date.now() + 3000; let lb = 0;
+  function frame(now) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (now - lb > 420 && Date.now() < end - 500) {
+      burst(canvas.width*(0.2+Math.random()*0.6), canvas.height*(0.1+Math.random()*0.4)); lb = now;
+    }
+    for (const p of particles) {
+      p.x+=p.vx; p.y+=p.vy; p.vy+=0.12; p.alpha-=0.016;
+      if (p.alpha<=0) continue;
+      ctx.globalAlpha=p.alpha; ctx.fillStyle=p.color;
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill();
+    }
+    ctx.globalAlpha=1;
+    particles.splice(0,particles.length,...particles.filter(p=>p.alpha>0));
+    if (Date.now()<end||particles.length>0) requestAnimationFrame(frame);
+    else document.body.removeChild(canvas);
+  }
+  burst(canvas.width*0.5, canvas.height*0.35);
+  requestAnimationFrame(frame);
+}
+
+const SAVE_KEY = 'squava-save';
+
+createApp({
+  setup() {
+    const lang          = ref('en');
+    const mode          = ref('2p');
+    const board         = ref(Array(25).fill(0));
+    const turn          = ref(1);
+    const phase         = ref('playing'); // 'playing' | 'won' | 'lost' | 'draw'
+    const winner        = ref(null);
+    const highlightLine = ref(null);
+    const scores        = ref([0, 0, 0]); // [p1, p2, draws]
+    const aiThink       = ref(false);
+
+    const isRTL = computed(() => lang.value === 'he');
+    const UI    = computed(() => {
+      const l = lang.value;
+      return Object.fromEntries(Object.entries(STRINGS).map(([k,v]) => [k, v[l] ?? v.en]));
+    });
+
+    const statusClass = computed(() => {
+      if (phase.value === 'won')  return winner.value === 1 ? 'won-p1' : 'won-p2';
+      if (phase.value === 'lost') return winner.value === 1 ? 'won-p1' : 'won-p2'; // winner = survivor
+      if (phase.value === 'draw') return 'draw';
+      return '';
+    });
+
+    function canClick(i) {
+      if (phase.value !== 'playing') return false;
+      if (board.value[i] !== 0)     return false;
+      if (aiThink.value)             return false;
+      if (mode.value !== '2p' && turn.value === 2) return false;
+      return true;
+    }
+
+    function endGame(result, line, mover) {
+      highlightLine.value = line;
+      const s = [...scores.value];
+      if (result === 'win') {
+        phase.value = 'won';
+        winner.value = mover;
+        s[mover - 1]++;
+        launchFireworks(mover);
+      } else if (result === 'lose') {
+        // mover made 3 in a row → they lose, opponent wins
+        phase.value = 'lost';
+        winner.value = 3 - mover; // survivor
+        s[(3 - mover) - 1]++;
+      } else {
+        phase.value = 'draw';
+        winner.value = null;
+        s[2]++;
+      }
+      scores.value = s;
+      save();
+    }
+
+    function makeMove(i) {
+      const b = [...board.value];
+      b[i] = turn.value;
+      board.value = b;
+
+      const res = checkMove(b, turn.value, i);
+      if (res) { endGame(res.result, res.line, turn.value); return; }
+      if (b.every(c => c !== 0)) { endGame('draw', null, 0); return; }
+
+      turn.value = turn.value === 1 ? 2 : 1;
+
+      if (mode.value !== '2p' && turn.value === 2) {
+        aiThink.value = true;
+        setTimeout(() => {
+          aiThink.value = false;
+          const move = mode.value === 'hard'
+            ? getBestMove([...board.value], 2)
+            : getRandomMove([...board.value]);
+          if (move >= 0) makeMove(move);
+        }, 380);
+      }
+    }
+
+    function clickCell(i) {
+      if (!canClick(i)) return;
+      makeMove(i);
+    }
+
+    function newGame() {
+      board.value = Array(25).fill(0);
+      turn.value = 1;
+      phase.value = 'playing';
+      winner.value = null;
+      highlightLine.value = null;
+      aiThink.value = false;
+    }
+
+    function resetScores() { scores.value = [0, 0, 0]; save(); }
+    function setLang(l)    { lang.value = l; save(); }
+    function setMode(m)    { mode.value = m; newGame(); save(); }
+
+    function save() {
+      try { localStorage.setItem(SAVE_KEY, JSON.stringify({ lang: lang.value, mode: mode.value, scores: scores.value })); }
+      catch (_) {}
+    }
+    function load() {
+      try {
+        const d = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}');
+        if (d.lang)   lang.value   = d.lang;
+        if (d.mode)   mode.value   = d.mode;
+        if (d.scores) scores.value = d.scores;
+      } catch (_) {}
+    }
+
+    load();
+
+    return {
+      lang, mode, board, turn, phase, winner, highlightLine, scores, aiThink,
+      isRTL, UI, statusClass,
+      canClick, clickCell, newGame, resetScores, setLang, setMode,
+    };
+  }
+}).mount('#app');
+</script>
+</body>
+</html>
