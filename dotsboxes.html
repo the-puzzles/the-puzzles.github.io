@@ -216,19 +216,21 @@ h1 {
     <svg class="board-svg" viewBox="0 0 320 320">
 
       <!-- Claimed box fills -->
-      <rect v-for="box in boxList" :key="'b'+box.idx"
-        v-if="box.owner"
-        :x="box.x+2" :y="box.y+2" :width="box.size-4" :height="box.size-4"
-        :class="box.owner===1 ? 'box-fill-p1' : 'box-fill-p2'"
-        rx="4"/>
+      <template v-for="box in boxList" :key="'b'+box.idx">
+        <rect v-if="box.owner"
+          :x="box.x+2" :y="box.y+2" :width="box.size-4" :height="box.size-4"
+          :class="box.owner===1 ? 'box-fill-p1' : 'box-fill-p2'"
+          rx="4"/>
+      </template>
 
       <!-- Player marker dots inside claimed boxes -->
-      <circle v-for="box in boxList" :key="'bd'+box.idx"
-        v-if="box.owner"
-        :cx="box.x + box.size/2" :cy="box.y + box.size/2"
-        r="5"
-        :fill="box.owner===1 ? '#f472b6' : '#38bdf8'"
-        opacity="0.7"/>
+      <template v-for="box in boxList" :key="'bd'+box.idx">
+        <circle v-if="box.owner"
+          :cx="box.x + box.size/2" :cy="box.y + box.size/2"
+          r="5"
+          :fill="box.owner===1 ? '#f472b6' : '#38bdf8'"
+          opacity="0.7"/>
+      </template>
 
       <!-- Horizontal lines -->
       <g v-for="hl in hLineList" :key="'h'+hl.idx">
