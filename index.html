@@ -95,6 +95,7 @@ header {
 .card.sprouts:hover     { border-color: #10b981; box-shadow: 0 12px 40px rgba(16,185,129,0.15); }
 .card.morris:hover      { border-color: #8b5cf6; box-shadow: 0 12px 40px rgba(139,92,246,0.15); }
 .card.squava:hover      { border-color: #f59e0b; box-shadow: 0 12px 40px rgba(245,158,11,0.15); }
+.card.dotsboxes:hover   { border-color: #38bdf8; box-shadow: 0 12px 40px rgba(56,189,248,0.15); }
 .card.morse:hover       { border-color: #fbbf24; box-shadow: 0 12px 40px rgba(251,191,36,0.15); }
 .card.wordladder:hover  { border-color: #22d3ee; box-shadow: 0 12px 40px rgba(34,211,238,0.15); }
 .card.braille:hover     { border-color: #a78bfa; box-shadow: 0 12px 40px rgba(167,139,250,0.15); }
@@ -121,6 +122,7 @@ header {
 .sprouts    .card-icon { background: #091c14; }
 .morris     .card-icon { background: #120d1f; }
 .squava     .card-icon { background: #1a1400; }
+.dotsboxes  .card-icon { background: #0c1e2e; }
 
 .card-title {
   font-size: 1.5rem;
@@ -199,6 +201,12 @@ header {
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+.dotsboxes .card-title {
+  background: linear-gradient(135deg, #f472b6, #38bdf8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
 
 /* ── Preview board ───────────────────────────────────────────────────── */
 .preview {
@@ -263,6 +271,7 @@ header {
 .sprouts     .rule-dot { background: #10b981; }
 .morris      .rule-dot { background: #8b5cf6; }
 .squava      .rule-dot { background: #f59e0b; }
+.dotsboxes   .rule-dot { background: #38bdf8; }
 
 /* ── Play button ─────────────────────────────────────────────────────── */
 .play-btn {
@@ -296,6 +305,7 @@ header {
 .sprouts     .play-btn { background: #091c14; color: #34d399; border: 1px solid #10b981; }
 .morris      .play-btn { background: #120d1f; color: #a78bfa; border: 1px solid #8b5cf6; }
 .squava      .play-btn { background: #1a1400; color: #fbbf24; border: 1px solid #f59e0b; }
+.dotsboxes   .play-btn { background: #0c1e2e; color: #7dd3fc; border: 1px solid #38bdf8; }
 
 .play-arrow { font-size: 1rem; transition: transform 0.15s; }
 .play-btn:hover .play-arrow { transform: translateX(3px); }
@@ -734,6 +744,57 @@ footer {
     </div>
 
     <div class="play-btn">Play X O <span class="play-arrow">→</span></div>
+  </a>
+
+  <!-- ── Dots & Boxes ─────────────────────────────────────────────── -->
+  <a class="card dotsboxes" href="dotsboxes.html">
+    <div class="card-header">
+      <div class="card-icon">⬛</div>
+      <div class="card-title">DOTS &amp; BOXES</div>
+    </div>
+
+    <div class="preview" style="grid-template-columns:1fr;padding:10px 16px;">
+      <svg viewBox="0 0 120 120" style="width:120px;height:120px;display:block;margin:0 auto;">
+        <!-- boxes -->
+        <rect x="4" y="4" width="52" height="52" rx="3" fill="rgba(244,114,182,0.22)"/>
+        <circle cx="30" cy="30" r="5" fill="#f472b6" opacity="0.7"/>
+        <rect x="64" y="64" width="52" height="52" rx="3" fill="rgba(56,189,248,0.22)"/>
+        <circle cx="90" cy="90" r="5" fill="#38bdf8" opacity="0.7"/>
+        <!-- lines -->
+        <line x1="4" y1="4" x2="56" y2="4" stroke="#f472b6" stroke-width="3" stroke-linecap="round"/>
+        <line x1="4" y1="56" x2="56" y2="56" stroke="#f472b6" stroke-width="3" stroke-linecap="round"/>
+        <line x1="4" y1="4" x2="4" y2="56" stroke="#f472b6" stroke-width="3" stroke-linecap="round"/>
+        <line x1="56" y1="4" x2="56" y2="56" stroke="#f472b6" stroke-width="3" stroke-linecap="round"/>
+        <line x1="64" y1="64" x2="116" y2="64" stroke="#38bdf8" stroke-width="3" stroke-linecap="round"/>
+        <line x1="64" y1="116" x2="116" y2="116" stroke="#38bdf8" stroke-width="3" stroke-linecap="round"/>
+        <line x1="64" y1="64" x2="64" y2="116" stroke="#38bdf8" stroke-width="3" stroke-linecap="round"/>
+        <line x1="116" y1="64" x2="116" y2="116" stroke="#38bdf8" stroke-width="3" stroke-linecap="round"/>
+        <!-- partial lines -->
+        <line x1="56" y1="4" x2="116" y2="4" stroke="#6e7681" stroke-width="2" stroke-linecap="round" opacity="0.4"/>
+        <line x1="4" y1="56" x2="4" y2="116" stroke="#6e7681" stroke-width="2" stroke-linecap="round" opacity="0.4"/>
+        <!-- dots -->
+        <circle cx="4" cy="4" r="4" fill="#c9d1d9"/>
+        <circle cx="60" cy="4" r="4" fill="#c9d1d9"/>
+        <circle cx="116" cy="4" r="4" fill="#c9d1d9"/>
+        <circle cx="4" cy="60" r="4" fill="#c9d1d9"/>
+        <circle cx="60" cy="60" r="4" fill="#c9d1d9"/>
+        <circle cx="116" cy="60" r="4" fill="#c9d1d9"/>
+        <circle cx="4" cy="116" r="4" fill="#c9d1d9"/>
+        <circle cx="60" cy="116" r="4" fill="#c9d1d9"/>
+        <circle cx="116" cy="116" r="4" fill="#c9d1d9"/>
+      </svg>
+    </div>
+
+    <p class="card-tagline">The classic pencil-and-paper game. Connect dots to claim boxes — close the 4th side and score a point, then go again!</p>
+
+    <div class="card-rules">
+      <div class="rule"><div class="rule-dot"></div><span>Draw a line between two adjacent dots</span></div>
+      <div class="rule"><div class="rule-dot"></div><span>Close the 4th side of a box to claim it and take another turn</span></div>
+      <div class="rule"><div class="rule-dot"></div><span>Most boxes at the end wins</span></div>
+      <div class="rule"><div class="rule-dot"></div><span>3×3, 4×4, or 5×5 grid · 2-player or vs computer</span></div>
+    </div>
+
+    <div class="play-btn">Play Dots &amp; Boxes <span class="play-arrow">→</span></div>
   </a>
 
   <!-- ── Squava ────────────────────────────────────────────────────── -->

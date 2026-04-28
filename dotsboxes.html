@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dots &amp; Boxes</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0d1117">
+<link rel="apple-touch-icon" href="icon.svg">
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root { --board: min(320px, calc(100vw - 32px)); }
+
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: #0d1117; color: #c9d1d9;
+  min-height: 100vh; display: flex; flex-direction: column;
+  align-items: center; padding: 16px 16px 48px;
+  user-select: none; -webkit-user-select: none;
+}
+
+/* ── Top bar ──────────────────────────────────────────────────────── */
+.top-bar {
+  width: 100%; max-width: 480px; display: flex;
+  justify-content: space-between; align-items: center; margin-bottom: 20px;
+}
+.back-link {
+  color: #6e7681; text-decoration: none; font-size: 0.85rem;
+  transition: color 0.15s; display: inline-flex; align-items: center; gap: 4px;
+}
+.back-link:hover { color: #c9d1d9; }
+[dir="ltr"] .back-link::before { content: '←'; }
+[dir="rtl"] .back-link::after  { content: '→'; }
+.lang-toggle { display: flex; gap: 4px; }
+.lang-btn {
+  background: none; border: 1px solid #30363d; color: #6e7681;
+  border-radius: 6px; padding: 4px 8px; font-size: 0.78rem; font-weight: 700;
+  font-family: inherit; cursor: pointer; transition: all 0.15s;
+}
+.lang-btn.active  { background: #0c1e2e; border-color: #38bdf8; color: #7dd3fc; }
+.lang-btn:hover:not(.active) { color: #c9d1d9; border-color: #6e7681; }
+
+/* ── Title ────────────────────────────────────────────────────────── */
+h1 {
+  font-size: 1.9rem; font-weight: 900; letter-spacing: 0.06em;
+  margin-bottom: 24px; text-align: center; line-height: 1.2;
+  background: linear-gradient(135deg, #f472b6, #38bdf8);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+
+/* ── Score bar ────────────────────────────────────────────────────── */
+.score-bar {
+  display: flex; width: var(--board);
+  background: #161b22; border: 1px solid #21262d;
+  border-radius: 14px; overflow: hidden; margin-bottom: 14px;
+}
+.score-item {
+  flex: 1; padding: 12px 8px 14px;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  position: relative; transition: background 0.2s;
+}
+.score-item + .score-item { border-inline-start: 1px solid #21262d; }
+.score-item::after {
+  content: ''; position: absolute; bottom: 0; left: 12px; right: 12px;
+  height: 3px; border-radius: 2px 2px 0 0;
+  transform: scaleX(0); transition: transform 0.25s ease;
+}
+.score-p1.active  { background: rgba(244,114,182,0.07); }
+.score-p1.active::after { background: #f472b6; transform: scaleX(1); }
+.score-p2.active  { background: rgba(56,189,248,0.07); }
+.score-p2.active::after { background: #38bdf8; transform: scaleX(1); }
+
+.score-label { font-size: 0.68rem; color: #6e7681; text-transform: uppercase; letter-spacing: 0.12em; font-weight: 700; }
+.score-val   { font-size: 2rem; font-weight: 800; line-height: 1; min-width: 1.2ch; text-align: center; }
+.score-p1 .score-val   { color: #f472b6; }
+.score-draw .score-val { color: #6e7681; }
+.score-p2 .score-val   { color: #38bdf8; }
+
+/* ── Status ───────────────────────────────────────────────────────── */
+.status {
+  height: 2.2rem; font-size: 1.05rem; font-weight: 700; color: #c9d1d9;
+  margin-bottom: 4px; display: flex; align-items: center; justify-content: center;
+  gap: 6px;
+}
+.status.won-p1 { color: #f472b6; }
+.status.won-p2 { color: #38bdf8; }
+.status.draw   { color: #8b949e; }
+.turn-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; animation: pulse 1.4s ease infinite; }
+.turn-dot.dot-p1 { background: #f472b6; }
+.turn-dot.dot-p2 { background: #38bdf8; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.65)} }
+
+/* in-game box score */
+.box-score {
+  font-size: 0.8rem; color: #6e7681; margin-bottom: 12px; height: 1rem;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.box-score span { font-weight: 700; }
+.box-score .s1 { color: #f472b6; }
+.box-score .s2 { color: #38bdf8; }
+
+/* ── Board ────────────────────────────────────────────────────────── */
+.board-wrap {
+  width: var(--board); height: var(--board); margin-bottom: 20px; position: relative;
+}
+.board-svg { width: 100%; height: 100%; display: block; overflow: visible; }
+
+/* SVG elements */
+.box-fill-p1 { fill: rgba(244,114,182,0.22); }
+.box-fill-p2 { fill: rgba(56,189,248,0.22); }
+.dot { fill: #c9d1d9; }
+.line-drawn { stroke: #58a6ff; stroke-width: 3; stroke-linecap: round; }
+.line-hover { stroke: #6e7681; stroke-width: 3; stroke-linecap: round; opacity: 0.5; }
+.line-hit { stroke: transparent; stroke-width: 14; cursor: pointer; fill: none; }
+.line-hit:hover + .line-preview { display: block; }
+.line-preview { display: none; stroke: #6e7681; stroke-width: 3; stroke-linecap: round; opacity: 0.45; stroke-dasharray: 5 4; }
+
+/* ── Mode / Size bars ─────────────────────────────────────────────── */
+.mode-bar {
+  display: flex; gap: 6px; margin-bottom: 10px;
+  flex-wrap: wrap; justify-content: center; width: var(--board);
+}
+.mode-btn {
+  background: #161b22; border: 1px solid #30363d; color: #8b949e;
+  border-radius: 20px; padding: 6px 14px; font-size: 0.82rem;
+  font-weight: 600; font-family: inherit; cursor: pointer; transition: all 0.15s;
+}
+.mode-btn:hover:not(.active) { border-color: #6e7681; color: #c9d1d9; }
+.mode-btn.active { background: #0c1e2e; border-color: #38bdf8; color: #7dd3fc; }
+
+/* ── Buttons ──────────────────────────────────────────────────────── */
+.btn-row { display: flex; gap: 10px; margin-top: 10px; }
+.new-game-btn {
+  background: #0c1e2e; border: 1px solid #38bdf8; color: #7dd3fc;
+  border-radius: 10px; padding: 11px 40px; font-size: 0.92rem; font-weight: 700;
+  font-family: inherit; cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s, box-shadow 0.15s; letter-spacing: 0.04em;
+}
+.new-game-btn:hover  { opacity: 0.85; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(56,189,248,0.25); }
+.new-game-btn:active { transform: translateY(0); box-shadow: none; }
+.reset-scores-btn {
+  background: none; border: 1px solid #30363d; color: #6e7681;
+  border-radius: 10px; padding: 11px 14px; font-size: 0.9rem;
+  font-family: inherit; cursor: pointer; transition: color 0.15s, border-color 0.15s;
+}
+.reset-scores-btn:hover { color: #c9d1d9; border-color: #6e7681; }
+</style>
+</head>
+<body>
+<div id="app" :dir="isRTL ? 'rtl' : 'ltr'">
+
+  <div class="top-bar">
+    <a class="back-link" href="index.html">{{ UI.back }}</a>
+    <div class="lang-toggle">
+      <button class="lang-btn" :class="{active:lang==='en'}" @click="setLang('en')">EN</button>
+      <button class="lang-btn" :class="{active:lang==='he'}" @click="setLang('he')">עב</button>
+    </div>
+  </div>
+
+  <h1>{{ UI.title }}</h1>
+
+  <div class="score-bar" dir="ltr">
+    <div class="score-item score-p1" :class="{active: phase==='playing' && turn===1 && !aiThink}">
+      <div class="score-label">{{ UI.p1 }}</div>
+      <div class="score-val">{{ scores[0] }}</div>
+    </div>
+    <div class="score-item score-draw">
+      <div class="score-label">{{ UI.ties }}</div>
+      <div class="score-val">{{ scores[2] }}</div>
+    </div>
+    <div class="score-item score-p2" :class="{active: phase==='playing' && turn===2 && !aiThink}">
+      <div class="score-label">{{ UI.p2 }}</div>
+      <div class="score-val">{{ scores[1] }}</div>
+    </div>
+  </div>
+
+  <div class="status" :class="statusClass">
+    <template v-if="isRTL">
+      <template v-if="phase==='over' && winner">
+        <span>{{ UI.wonVerb }}</span>
+        <span :style="{color: winner===1?'#f472b6':'#38bdf8'}">{{ winner===1?UI.p1:UI.p2 }}</span>
+        <span>🎉</span>
+      </template>
+      <template v-else-if="phase==='over'"><span>{{ UI.draw }}</span></template>
+      <template v-else>
+        <span v-if="!aiThink" class="turn-dot" :class="turn===1?'dot-p1':'dot-p2'"></span>
+        <span>{{ aiThink ? UI.thinking : UI.turnWord }}</span>
+        <span :style="{color: turn===1?'#f472b6':'#38bdf8'}">{{ turn===1?UI.p1:UI.p2 }}</span>
+      </template>
+    </template>
+    <template v-else>
+      <template v-if="phase==='over' && winner">
+        <span :style="{color: winner===1?'#f472b6':'#38bdf8'}">{{ winner===1?UI.p1:UI.p2 }}</span>
+        <span>{{ UI.wonVerb }}</span><span>🎉</span>
+      </template>
+      <template v-else-if="phase==='over'"><span>{{ UI.draw }}</span></template>
+      <template v-else>
+        <span v-if="!aiThink" class="turn-dot" :class="turn===1?'dot-p1':'dot-p2'"></span>
+        <span :style="{color: turn===1?'#f472b6':'#38bdf8'}">{{ turn===1?UI.p1:UI.p2 }}</span>
+        <span>{{ aiThink ? UI.thinking : UI.turnWord }}</span>
+      </template>
+    </template>
+  </div>
+
+  <!-- in-game box score -->
+  <div class="box-score" v-if="phase==='playing' || phase==='over'">
+    <span class="s1">{{ p1Boxes }}</span>
+    <span>—</span>
+    <span class="s2">{{ p2Boxes }}</span>
+  </div>
+
+  <!-- Board -->
+  <div class="board-wrap">
+    <svg class="board-svg" viewBox="0 0 320 320">
+
+      <!-- Claimed box fills -->
+      <rect v-for="box in boxList" :key="'b'+box.idx"
+        v-if="box.owner"
+        :x="box.x+2" :y="box.y+2" :width="box.size-4" :height="box.size-4"
+        :class="box.owner===1 ? 'box-fill-p1' : 'box-fill-p2'"
+        rx="4"/>
+
+      <!-- Player marker dots inside claimed boxes -->
+      <circle v-for="box in boxList" :key="'bd'+box.idx"
+        v-if="box.owner"
+        :cx="box.x + box.size/2" :cy="box.y + box.size/2"
+        r="5"
+        :fill="box.owner===1 ? '#f472b6' : '#38bdf8'"
+        opacity="0.7"/>
+
+      <!-- Horizontal lines -->
+      <g v-for="hl in hLineList" :key="'h'+hl.idx">
+        <line v-if="hl.drawn" class="line-drawn"
+          :x1="hl.x1" :y1="hl.y1" :x2="hl.x2" :y2="hl.y2"
+          :stroke="hl.player===1?'#f472b6':'#38bdf8'"/>
+        <template v-if="!hl.drawn && canDraw">
+          <line :x1="hl.x1" :y1="hl.y1" :x2="hl.x2" :y2="hl.y2"
+            class="line-hit"
+            @click="clickLine('h', hl.idx)"
+            @mouseenter="hover='h'+hl.idx" @mouseleave="hover=null"/>
+          <line v-if="hover==='h'+hl.idx" class="line-hover"
+            :x1="hl.x1" :y1="hl.y1" :x2="hl.x2" :y2="hl.y2"
+            :stroke="turn===1?'#f472b6':'#38bdf8'"/>
+        </template>
+      </g>
+
+      <!-- Vertical lines -->
+      <g v-for="vl in vLineList" :key="'v'+vl.idx">
+        <line v-if="vl.drawn" class="line-drawn"
+          :x1="vl.x1" :y1="vl.y1" :x2="vl.x2" :y2="vl.y2"
+          :stroke="vl.player===1?'#f472b6':'#38bdf8'"/>
+        <template v-if="!vl.drawn && canDraw">
+          <line :x1="vl.x1" :y1="vl.y1" :x2="vl.x2" :y2="vl.y2"
+            class="line-hit"
+            @click="clickLine('v', vl.idx)"
+            @mouseenter="hover='v'+vl.idx" @mouseleave="hover=null"/>
+          <line v-if="hover==='v'+vl.idx" class="line-hover"
+            :x1="vl.x1" :y1="vl.y1" :x2="vl.x2" :y2="vl.y2"
+            :stroke="turn===1?'#f472b6':'#38bdf8'"/>
+        </template>
+      </g>
+
+      <!-- Dots -->
+      <circle v-for="dot in dotList" :key="'d'+dot.idx"
+        :cx="dot.x" :cy="dot.y" r="4" class="dot"/>
+
+    </svg>
+  </div>
+
+  <!-- Mode -->
+  <div class="mode-bar">
+    <button class="mode-btn" :class="{active:mode==='2p'}"   @click="setMode('2p')">{{ UI.mode2p }}</button>
+    <button class="mode-btn" :class="{active:mode==='easy'}" @click="setMode('easy')">{{ UI.modeEasy }}</button>
+    <button class="mode-btn" :class="{active:mode==='hard'}" @click="setMode('hard')">{{ UI.modeHard }}</button>
+  </div>
+
+  <!-- Size -->
+  <div class="mode-bar">
+    <button class="mode-btn" :class="{active:N===3}" @click="setSize(3)">3×3</button>
+    <button class="mode-btn" :class="{active:N===4}" @click="setSize(4)">4×4</button>
+    <button class="mode-btn" :class="{active:N===5}" @click="setSize(5)">5×5</button>
+  </div>
+
+  <div class="btn-row">
+    <button class="new-game-btn" @click="newGame">{{ UI.newGame }}</button>
+    <button class="reset-scores-btn" @click="resetScores" :title="UI.resetScores">↺</button>
+  </div>
+
+</div>
+<script>
+const { createApp, ref, computed } = Vue;
+
+const STRINGS = {
+  back:        { en: 'All Games',        he: 'כל המשחקים' },
+  title:       { en: 'Dots & Boxes',     he: 'נקודות וריבועים' },
+  p1:          { en: 'Pink',             he: 'ורוד' },
+  p2:          { en: 'Blue',             he: 'כחול' },
+  ties:        { en: 'Ties',             he: 'תיקו' },
+  wonVerb:     { en: 'wins!',            he: 'ניצח!' },
+  turnWord:    { en: "'s turn",          he: 'תור' },
+  draw:        { en: "It's a tie!",      he: 'תיקו!' },
+  thinking:    { en: 'Thinking…',        he: 'המחשב חושב…' },
+  newGame:     { en: 'New Game',         he: 'משחק חדש' },
+  resetScores: { en: 'Reset scores',     he: 'אפס ניקוד' },
+  mode2p:      { en: '👥 2 Players',    he: '👥 2 שחקנים' },
+  modeEasy:    { en: '🤖 Easy',         he: '🤖 קל' },
+  modeHard:    { en: '🤖 Hard',         he: '🤖 קשה' },
+};
+
+const SVG_MARGIN = 28;
+const SVG_USABLE = 264;
+
+function hIdx(r, c, n) { return r * n + c; }
+function vIdx(r, c, n) { return r * (n + 1) + c; }
+function bIdx(r, c, n) { return r * n + c; }
+
+function sidesOf(r, c, h, v, n) {
+  return (h[hIdx(r,   c, n)] ? 1 : 0)
+       + (h[hIdx(r+1, c, n)] ? 1 : 0)
+       + (v[vIdx(r, c,   n)] ? 1 : 0)
+       + (v[vIdx(r, c+1, n)] ? 1 : 0);
+}
+
+function adjBoxes(lineType, r, c, n) {
+  if (lineType === 'h') {
+    const a = [];
+    if (r > 0) a.push([r-1, c]);
+    if (r < n) a.push([r,   c]);
+    return a;
+  } else {
+    const a = [];
+    if (c > 0) a.push([r, c-1]);
+    if (c < n) a.push([r, c  ]);
+    return a;
+  }
+}
+
+// Apply one line; returns { h, v, boxes, claimed }
+function applyLine(h, v, boxes, player, lineType, idx, n) {
+  const nh = [...h], nv = [...v], nb = [...boxes];
+  if (lineType === 'h') nh[idx] = player;
+  else                  nv[idx] = player;
+
+  let claimed = 0;
+  for (let r = 0; r < n; r++)
+    for (let c = 0; c < n; c++)
+      if (!nb[bIdx(r,c,n)] && sidesOf(r, c, nh, nv, n) === 4) {
+        nb[bIdx(r,c,n)] = player;
+        claimed++;
+      }
+  return { h: nh, v: nv, boxes: nb, claimed };
+}
+
+// Hard AI heuristic
+function getHardMove(h, v, boxes, n) {
+  const moves = [];
+  for (let r = 0; r <= n; r++)
+    for (let c = 0; c < n; c++)
+      if (!h[hIdx(r,c,n)]) moves.push({ type:'h', idx: hIdx(r,c,n), r, c });
+  for (let r = 0; r < n; r++)
+    for (let c = 0; c <= n; c++)
+      if (!v[vIdx(r,c,n)]) moves.push({ type:'v', idx: vIdx(r,c,n), r, c });
+
+  if (!moves.length) return null;
+
+  // 1. Complete a box (4th side)
+  for (const m of moves) {
+    const adj = adjBoxes(m.type, m.r, m.c, n);
+    if (adj.some(([r,c]) => !boxes[bIdx(r,c,n)] && sidesOf(r,c,h,v,n) === 3))
+      return m;
+  }
+
+  // 2. Safe moves (not 3rd side of any box)
+  const safe = moves.filter(m =>
+    !adjBoxes(m.type, m.r, m.c, n).some(([r,c]) => !boxes[bIdx(r,c,n)] && sidesOf(r,c,h,v,n) === 2)
+  );
+  if (safe.length) return safe[Math.floor(Math.random() * safe.length)];
+
+  // 3. All moves open boxes — sacrifice smallest chain
+  let best = moves[0], bestLen = Infinity;
+  for (const m of moves) {
+    const sh = [...h], sv = [...v];
+    if (m.type === 'h') sh[m.idx] = 1; else sv[m.idx] = 1;
+    let chain = 0;
+    for (let r = 0; r < n; r++)
+      for (let c = 0; c < n; c++)
+        if (!boxes[bIdx(r,c,n)] && sidesOf(r,c,sh,sv,n) === 3) chain++;
+    if (chain < bestLen) { bestLen = chain; best = m; }
+  }
+  return best;
+}
+
+function getRandomMove(h, v, n) {
+  const moves = [];
+  for (let r = 0; r <= n; r++)
+    for (let c = 0; c < n; c++)
+      if (!h[hIdx(r,c,n)]) moves.push({ type:'h', idx: hIdx(r,c,n) });
+  for (let r = 0; r < n; r++)
+    for (let c = 0; c <= n; c++)
+      if (!v[vIdx(r,c,n)]) moves.push({ type:'v', idx: vIdx(r,c,n) });
+  return moves.length ? moves[Math.floor(Math.random() * moves.length)] : null;
+}
+
+const PALETTES = {
+  1: ['#f472b6','#fb7185','#fda4af','#fbbf24','#f97316'],
+  2: ['#38bdf8','#7dd3fc','#bae6fd','#34d399','#22d3ee'],
+};
+
+function launchFireworks(player) {
+  const canvas = document.createElement('canvas');
+  canvas.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:200;';
+  canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+  document.body.appendChild(canvas);
+  const ctx = canvas.getContext('2d');
+  const cols = PALETTES[player];
+  const parts = [];
+  function burst(x, y) {
+    for (let i = 0; i < 65; i++) {
+      const a = Math.PI*2*i/65, s = 2+Math.random()*6;
+      parts.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-2,alpha:1,color:cols[Math.floor(Math.random()*cols.length)],r:2+Math.random()*3});
+    }
+  }
+  const end = Date.now()+3000; let lb=0;
+  function frame(now) {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    if (now-lb>420&&Date.now()<end-500){burst(canvas.width*(0.2+Math.random()*0.6),canvas.height*(0.1+Math.random()*0.4));lb=now;}
+    for (const p of parts){p.x+=p.vx;p.y+=p.vy;p.vy+=0.12;p.alpha-=0.016;if(p.alpha<=0)continue;ctx.globalAlpha=p.alpha;ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();}
+    ctx.globalAlpha=1;
+    parts.splice(0,parts.length,...parts.filter(p=>p.alpha>0));
+    if (Date.now()<end||parts.length>0) requestAnimationFrame(frame); else document.body.removeChild(canvas);
+  }
+  burst(canvas.width*0.5,canvas.height*0.35); requestAnimationFrame(frame);
+}
+
+const SAVE_KEY = 'dotsboxes-save';
+
+createApp({
+  setup() {
+    const lang    = ref('en');
+    const mode    = ref('2p');
+    const N       = ref(4);
+    const hLines  = ref([]);  // 0=undrawn, 1=P1, 2=P2
+    const vLines  = ref([]);
+    const boxes   = ref([]);  // 0=unclaimed, 1=P1, 2=P2
+    const turn    = ref(1);
+    const phase   = ref('playing');
+    const winner  = ref(null);
+    const scores  = ref([0, 0, 0]);
+    const aiThink = ref(false);
+    const hover   = ref(null);
+
+    const isRTL = computed(() => lang.value === 'he');
+    const UI    = computed(() => {
+      const l = lang.value;
+      return Object.fromEntries(Object.entries(STRINGS).map(([k,v]) => [k, v[l]??v.en]));
+    });
+
+    const spacing = computed(() => SVG_USABLE / N.value);
+
+    function dotXY(k) { return SVG_MARGIN + k * spacing.value; }
+
+    const dotList = computed(() => {
+      const n = N.value, list = [];
+      for (let r = 0; r <= n; r++)
+        for (let c = 0; c <= n; c++)
+          list.push({ idx: r*(n+1)+c, x: dotXY(c), y: dotXY(r) });
+      return list;
+    });
+
+    const hLineList = computed(() => {
+      const n = N.value, sp = spacing.value, list = [];
+      for (let r = 0; r <= n; r++)
+        for (let c = 0; c < n; c++) {
+          const idx = hIdx(r, c, n);
+          list.push({
+            idx, r, c,
+            x1: dotXY(c), y1: dotXY(r), x2: dotXY(c+1), y2: dotXY(r),
+            drawn: hLines.value[idx] > 0,
+            player: hLines.value[idx],
+          });
+        }
+      return list;
+    });
+
+    const vLineList = computed(() => {
+      const n = N.value, list = [];
+      for (let r = 0; r < n; r++)
+        for (let c = 0; c <= n; c++) {
+          const idx = vIdx(r, c, n);
+          list.push({
+            idx, r, c,
+            x1: dotXY(c), y1: dotXY(r), x2: dotXY(c), y2: dotXY(r+1),
+            drawn: vLines.value[idx] > 0,
+            player: vLines.value[idx],
+          });
+        }
+      return list;
+    });
+
+    const boxList = computed(() => {
+      const n = N.value, sp = spacing.value, list = [];
+      for (let r = 0; r < n; r++)
+        for (let c = 0; c < n; c++)
+          list.push({
+            idx: bIdx(r,c,n),
+            x: dotXY(c), y: dotXY(r), size: sp,
+            owner: boxes.value[bIdx(r,c,n)],
+          });
+      return list;
+    });
+
+    const p1Boxes = computed(() => boxes.value.filter(b => b===1).length);
+    const p2Boxes = computed(() => boxes.value.filter(b => b===2).length);
+
+    const canDraw = computed(() =>
+      phase.value === 'playing' && !aiThink.value && (mode.value === '2p' || turn.value === 1)
+    );
+
+    const statusClass = computed(() => {
+      if (phase.value === 'over') return winner.value===1 ? 'won-p1' : winner.value===2 ? 'won-p2' : 'draw';
+      return '';
+    });
+
+    function initBoard() {
+      const n = N.value;
+      hLines.value = new Array((n+1) * n).fill(0);
+      vLines.value = new Array(n * (n+1)).fill(0);
+      boxes.value  = new Array(n * n).fill(0);
+    }
+
+    function makeMove(lineType, idx) {
+      const n = N.value;
+      const { h, v, boxes: nb, claimed } = applyLine(
+        [...hLines.value], [...vLines.value], [...boxes.value], turn.value, lineType, idx, n
+      );
+      hLines.value = h; vLines.value = v; boxes.value = nb;
+      hover.value = null;
+
+      const total = n * n;
+      const p1 = nb.filter(b=>b===1).length, p2 = nb.filter(b=>b===2).length;
+      if (p1 + p2 === total) {
+        phase.value = 'over';
+        const s = [...scores.value];
+        if (p1 > p2)      { winner.value = 1; s[0]++; launchFireworks(1); }
+        else if (p2 > p1) { winner.value = 2; s[1]++; launchFireworks(2); }
+        else              { winner.value = 0; s[2]++; }
+        scores.value = s;
+        save(); return;
+      }
+
+      if (claimed === 0) turn.value = turn.value === 1 ? 2 : 1;
+
+      if (mode.value !== '2p' && turn.value === 2 && phase.value === 'playing') {
+        triggerAI();
+      }
+    }
+
+    function triggerAI() {
+      aiThink.value = true;
+      setTimeout(() => {
+        const m = mode.value === 'hard'
+          ? getHardMove([...hLines.value], [...vLines.value], [...boxes.value], N.value)
+          : getRandomMove([...hLines.value], [...vLines.value], N.value);
+        aiThink.value = false;
+        if (m) makeMove(m.type, m.idx);
+      }, 320);
+    }
+
+    function clickLine(type, idx) {
+      if (!canDraw.value) return;
+      if (type === 'h' && hLines.value[idx]) return;
+      if (type === 'v' && vLines.value[idx]) return;
+      makeMove(type, idx);
+    }
+
+    function newGame() {
+      initBoard();
+      turn.value = 1; phase.value = 'playing'; winner.value = null;
+      aiThink.value = false; hover.value = null;
+    }
+
+    function resetScores() { scores.value = [0, 0, 0]; save(); }
+    function setLang(l) { lang.value = l; save(); }
+    function setMode(m) { mode.value = m; newGame(); save(); }
+    function setSize(n) { N.value = n; newGame(); save(); }
+
+    function save() {
+      try { localStorage.setItem(SAVE_KEY, JSON.stringify({ lang: lang.value, mode: mode.value, N: N.value, scores: scores.value })); }
+      catch (_) {}
+    }
+    function load() {
+      try {
+        const d = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}');
+        if (d.lang)   lang.value   = d.lang;
+        if (d.mode)   mode.value   = d.mode;
+        if (d.N)      N.value      = d.N;
+        if (d.scores) scores.value = d.scores;
+      } catch (_) {}
+    }
+
+    load(); initBoard();
+
+    return {
+      lang, mode, N, hLines, vLines, boxes, turn, phase, winner, scores, aiThink, hover,
+      isRTL, UI, dotList, hLineList, vLineList, boxList, p1Boxes, p2Boxes,
+      canDraw, statusClass,
+      clickLine, newGame, resetScores, setLang, setMode, setSize,
+    };
+  }
+}).mount('#app');
+</script>
+</body>
+</html>
