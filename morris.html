@@ -539,7 +539,7 @@ function evaluate(board, placed) {
 
 function minimax(board, placed, player, depth, alpha, beta, maxDepth) {
   const res = checkWinner(board);
-  if (res) return res.winner === 2 ? 1000 + depth : -1000 - depth;
+  if (res) return res.winner === 2 ? 1000 - depth : -1000 + depth;
   if (depth >= maxDepth) return evaluate(board, placed);
 
   const moving = isMovingPhase(placed);
@@ -548,8 +548,7 @@ function minimax(board, placed, player, depth, alpha, beta, maxDepth) {
     : getPlacingMoves(board);
 
   if (moves.length === 0) {
-    // current player can't move → loses
-    return player === 2 ? -900 - depth : 900 + depth;
+    return player === 2 ? -900 + depth : 900 - depth;
   }
 
   const maximizing = player === 2;
