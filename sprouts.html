@@ -11,6 +11,8 @@
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
+:root { --board: min(320px, calc(100vw - 32px)); }
+
 body {
   font-family: 'Segoe UI', system-ui, sans-serif;
   background: #0d1117;
@@ -78,7 +80,7 @@ h1 {
 /* ── Score ───────────────────────────────────────────────────────── */
 .score-bar {
   display: flex;
-  width: 320px;
+  width: var(--board);
   background: #161b22;
   border: 1px solid #21262d;
   border-radius: 14px;
@@ -158,7 +160,7 @@ h1 {
 
 /* ── Board ───────────────────────────────────────────────────────── */
 .board-wrap {
-  width: 320px; height: 320px;
+  width: var(--board); height: var(--board);
   margin-bottom: 20px;
   background: #0d1117;
   border: 1px solid #21262d;
@@ -197,7 +199,7 @@ h1 {
 /* ── Mode / dots bars ────────────────────────────────────────────── */
 .mode-bar {
   display: flex; gap: 6px; margin-bottom: 10px;
-  flex-wrap: wrap; justify-content: center; width: 320px;
+  flex-wrap: wrap; justify-content: center; width: var(--board);
 }
 .mode-btn {
   background: #161b22; border: 1px solid #30363d; color: #8b949e;
@@ -307,7 +309,7 @@ h1 {
         :class="dot.conns>=3 ? 'dot-label-dead' : ''"
       >{{ 3 - dot.conns }}</text>
     </svg>
-    <button class="reset-view-btn" @click="resetView" title="Reset view">⊙</button>
+    <button class="reset-view-btn" @click="fitAll" title="Fit all dots">⊙</button>
   </div>
 
   <div class="mode-bar">
@@ -661,7 +663,7 @@ createApp({
       ];
       edges.value=[...edges.value,{id:neid++,fromId,toId,midId:midDot.id,path,pts,player:current.value}];
       selected.value=null;
-      ensureVisible(midDot);
+      fitAll();
 
       if(!hasValidMoves()){
         phase.value='won';
@@ -730,15 +732,6 @@ createApp({
     }
 
     /* ── Pan / zoom ───────────────────────────────────────────────── */
-    function ensureVisible(pt) {
-      const v=view.value, pad=50;
-      if(pt.x>=v.x+pad&&pt.x<=v.x+v.w-pad&&pt.y>=v.y+pad&&pt.y<=v.y+v.h-pad) return;
-      const nx=Math.min(v.x,pt.x-pad), ny=Math.min(v.y,pt.y-pad);
-      const ex=Math.max(v.x+v.w,pt.x+pad), ey=Math.max(v.y+v.h,pt.y+pad);
-      const side=Math.max(ex-nx,ey-ny);
-      const cx=(nx+ex)/2, cy=(ny+ey)/2;
-      view.value={x:cx-side/2,y:cy-side/2,w:side,h:side};
-    }
     function clientToSVG(cx,cy){
       const r=svgEl.value.getBoundingClientRect(),v=view.value;
       return{x:v.x+(cx-r.left)/r.width*v.w,y:v.y+(cy-r.top)/r.height*v.h};
@@ -770,7 +763,18 @@ createApp({
       dragStart=null;dragDelta=0;isPanning.value=false;
     }
     function onSvgMouseLeave(){dragStart=null;isPanning.value=false;}
-    function resetView(){view.value={x:0,y:0,w:320,h:320};}
+    function fitAll(){
+      const live=dots.value.filter(d=>d.conns<3);
+      const all=live.length?live:dots.value;
+      if(!all.length){view.value={x:0,y:0,w:320,h:320};return;}
+      const pad=60;
+      const xs=all.map(d=>d.x), ys=all.map(d=>d.y);
+      const x0=Math.min(...xs)-pad, y0=Math.min(...ys)-pad;
+      const x1=Math.max(...xs)+pad, y1=Math.max(...ys)+pad;
+      const side=Math.max(x1-x0, y1-y0, 200);
+      const cx=(x0+x1)/2, cy=(y0+y1)/2;
+      view.value={x:cx-side/2,y:cy-side/2,w:side,h:side};
+    }
 
     function dotNear(cx,cy){
       const rect=svgEl.value.getBoundingClientRect();
@@ -870,7 +874,7 @@ createApp({
     return {
       lang,mode,startDots,dots,edges,selected,current,phase,scores,aiThink,isPanning,flashMsg,
       svgEl,viewBox,isRTL,UI,statusText,statusClass,
-      dotVisClass,dotHitClass,clickDot,deselect,resetView,
+      dotVisClass,dotHitClass,clickDot,deselect,fitAll,
       onWheel,onSvgMouseDown,onSvgMouseMove,onSvgMouseUp,onSvgMouseLeave,
       onTouchStart,onTouchMove,onTouchEnd,
       newGame,setMode,setStartDots,setLang,resetScores,
