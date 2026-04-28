@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sprouts</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0d1117">
+<link rel="apple-touch-icon" href="icon.svg">
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: #0d1117;
+  color: #c9d1d9;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 16px 48px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* ── Top bar ─────────────────────────────────────────────────────── */
+.top-bar {
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+.back-link {
+  color: #6e7681;
+  text-decoration: none;
+  font-size: 0.85rem;
+  transition: color 0.15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.back-link:hover { color: #c9d1d9; }
+[dir="ltr"] .back-link::before { content: '←'; }
+[dir="rtl"] .back-link::after  { content: '→'; }
+.lang-toggle { display: flex; gap: 4px; }
+.lang-btn {
+  background: none;
+  border: 1px solid #30363d;
+  color: #6e7681;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.lang-btn.active  { background: #091c14; border-color: #10b981; color: #34d399; }
+.lang-btn:hover:not(.active) { color: #c9d1d9; border-color: #6e7681; }
+
+/* ── Title ───────────────────────────────────────────────────────── */
+h1 {
+  font-size: 3rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  margin-bottom: 24px;
+  text-align: center;
+  line-height: 1;
+  background: linear-gradient(135deg, #10b981, #6ee7b7);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Score ───────────────────────────────────────────────────────── */
+.score-bar {
+  display: flex;
+  width: 320px;
+  background: #161b22;
+  border: 1px solid #21262d;
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+.score-item {
+  flex: 1;
+  padding: 12px 8px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  position: relative;
+  transition: background 0.2s;
+}
+.score-item + .score-item { border-inline-start: 1px solid #21262d; }
+.score-item::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 12px; right: 12px;
+  height: 3px;
+  border-radius: 2px 2px 0 0;
+  transform: scaleX(0);
+  transition: transform 0.25s ease;
+}
+.score-p1.active { background: rgba(244,114,182,0.06); }
+.score-p1.active::after { background: #f472b6; transform: scaleX(1); }
+.score-p2.active { background: rgba(96,165,250,0.06); }
+.score-p2.active::after { background: #60a5fa; transform: scaleX(1); }
+
+.score-label {
+  font-size: 0.68rem;
+  color: #6e7681;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: 700;
+}
+.score-val {
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1;
+  min-width: 1.2ch;
+  text-align: center;
+}
+.score-p1 .score-val { color: #f472b6; }
+.score-p2 .score-val { color: #60a5fa; }
+
+/* ── Status ──────────────────────────────────────────────────────── */
+.status {
+  height: 2.2rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #c9d1d9;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.status.p1-turn { color: #f472b6; }
+.status.p2-turn { color: #60a5fa; }
+.status.won     { color: #34d399; }
+
+.turn-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  animation: pulse 1.4s ease infinite;
+}
+.turn-dot.p1 { background: #f472b6; }
+.turn-dot.p2 { background: #60a5fa; }
+@keyframes pulse {
+  0%, 100% { opacity: 1;   transform: scale(1);   }
+  50%       { opacity: 0.4; transform: scale(0.65); }
+}
+
+/* ── Board ───────────────────────────────────────────────────────── */
+.board-wrap {
+  width: 320px;
+  height: 320px;
+  margin-bottom: 20px;
+  background: #0d1117;
+  border: 1px solid #21262d;
+  border-radius: 16px;
+  overflow: hidden;
+}
+.board-svg { width: 100%; height: 100%; }
+
+.edge-path {
+  fill: none;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* dot hit areas are transparent, larger circles rendered before visible dots */
+.dot-hit   { cursor: pointer; }
+.dot-hit.dead { cursor: default; }
+
+.dot-vis { pointer-events: none; }
+.dot-live     { fill: #34d399; }
+.dot-dead     { fill: #374151; }
+.dot-selected { fill: #fbbf24; filter: drop-shadow(0 0 7px rgba(251,191,36,0.85)); }
+
+/* ── Mode bar ────────────────────────────────────────────────────── */
+.mode-bar {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  justify-content: center;
+  width: 320px;
+}
+.mode-btn {
+  background: #161b22;
+  border: 1px solid #30363d;
+  color: #8b949e;
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.mode-btn:hover:not(.active) { border-color: #6e7681; color: #c9d1d9; }
+.mode-btn.active { background: #091c14; border-color: #10b981; color: #34d399; }
+
+/* ── Buttons ─────────────────────────────────────────────────────── */
+.btn-row { display: flex; gap: 10px; }
+.new-game-btn {
+  background: #091c14;
+  border: 1px solid #10b981;
+  color: #34d399;
+  border-radius: 10px;
+  padding: 11px 40px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s, box-shadow 0.15s;
+  letter-spacing: 0.04em;
+}
+.new-game-btn:hover  { opacity: 0.85; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(16,185,129,0.2); }
+.new-game-btn:active { transform: translateY(0); box-shadow: none; }
+
+.reset-scores-btn {
+  background: none;
+  border: 1px solid #30363d;
+  color: #6e7681;
+  border-radius: 10px;
+  padding: 11px 14px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.reset-scores-btn:hover { color: #c9d1d9; border-color: #6e7681; }
+</style>
+</head>
+<body>
+<div id="app" :dir="isRTL ? 'rtl' : 'ltr'">
+
+  <div class="top-bar">
+    <a class="back-link" href="index.html">{{ UI.back }}</a>
+    <div class="lang-toggle">
+      <button class="lang-btn" :class="{active: lang==='en'}" @click="setLang('en')">EN</button>
+      <button class="lang-btn" :class="{active: lang==='he'}" @click="setLang('he')">עב</button>
+      <button class="lang-btn" :class="{active: lang==='es'}" @click="setLang('es')">ES</button>
+      <button class="lang-btn" :class="{active: lang==='ar'}" @click="setLang('ar')">عر</button>
+    </div>
+  </div>
+
+  <h1>SPROUTS</h1>
+
+  <div class="score-bar" dir="ltr">
+    <div class="score-item score-p1" :class="{active: phase === 'playing' && current === 1}">
+      <div class="score-label">{{ UI.p1label }}</div>
+      <div class="score-val">{{ scores[1] }}</div>
+    </div>
+    <div class="score-item score-p2" :class="{active: phase === 'playing' && current === 2}">
+      <div class="score-label">{{ UI.p2label }}</div>
+      <div class="score-val">{{ scores[2] }}</div>
+    </div>
+  </div>
+
+  <div class="status" :class="statusClass">
+    <span v-if="phase === 'playing'" class="turn-dot" :class="current === 1 ? 'p1' : 'p2'"></span>
+    <span>{{ statusText }}</span>
+    <span v-if="phase === 'won'">🎉</span>
+  </div>
+
+  <div class="board-wrap">
+    <svg class="board-svg" viewBox="0 0 320 320" @click.self="deselect">
+      <path
+        v-for="edge in edges"
+        :key="edge.id"
+        class="edge-path"
+        :d="edge.path"
+        :stroke="edge.player === 1 ? '#f472b6' : '#60a5fa'"
+        stroke-opacity="0.8"
+      />
+      <!-- Transparent hit targets (rendered first, under visible dots) -->
+      <circle
+        v-for="dot in dots"
+        :key="'h' + dot.id"
+        :cx="dot.x" :cy="dot.y" r="18"
+        fill="transparent"
+        class="dot-hit"
+        :class="{ dead: dot.conns >= 3 || phase !== 'playing' }"
+        @click.stop="clickDot(dot.id)"
+      />
+      <!-- Visible dots -->
+      <circle
+        v-for="dot in dots"
+        :key="dot.id"
+        :cx="dot.x" :cy="dot.y" r="9"
+        class="dot-vis"
+        :class="dotVisClass(dot)"
+      />
+    </svg>
+  </div>
+
+  <div class="mode-bar">
+    <button class="mode-btn" :class="{active: startDots===2}" @click="setStartDots(2)">{{ UI.dots2 }}</button>
+    <button class="mode-btn" :class="{active: startDots===3}" @click="setStartDots(3)">{{ UI.dots3 }}</button>
+    <button class="mode-btn" :class="{active: startDots===4}" @click="setStartDots(4)">{{ UI.dots4 }}</button>
+  </div>
+
+  <div class="btn-row">
+    <button class="new-game-btn" @click="newGame">{{ UI.newGame }}</button>
+    <button class="reset-scores-btn" @click="resetScores" :title="UI.resetScores">↺</button>
+  </div>
+
+</div>
+
+<script>
+const { createApp, ref, computed } = Vue;
+
+const STRINGS = {
+  back:        { en: 'All Games',     he: 'כל המשחקים',   es: 'Todos los juegos', ar: 'كل الألعاب' },
+  p1label:     { en: 'Player 1',      he: 'שחקן 1',        es: 'Jugador 1',        ar: 'لاعب 1' },
+  p2label:     { en: 'Player 2',      he: 'שחקן 2',        es: 'Jugador 2',        ar: 'لاعب 2' },
+  p1:          { en: 'Player 1',      he: 'שחקן 1',        es: 'Jugador 1',        ar: 'لاعب 1' },
+  p2:          { en: 'Player 2',      he: 'שחקן 2',        es: 'Jugador 2',        ar: 'لاعب 2' },
+  turnSuffix:  { en: "'s turn",       he: 'תור',           es: 'turno',            ar: 'دور' },
+  wins:        { en: 'wins!',         he: 'ניצח!',         es: '¡gana!',           ar: 'فاز!' },
+  newGame:     { en: 'New Game',      he: 'משחק חדש',      es: 'Nueva partida',    ar: 'لعبة جديدة' },
+  resetScores: { en: 'Reset scores',  he: 'אפס ניקוד',     es: 'Reiniciar puntos', ar: 'إعادة النقاط' },
+  dots2:       { en: '2 dots',        he: '2 נקודות',      es: '2 puntos',         ar: '2 نقاط' },
+  dots3:       { en: '3 dots',        he: '3 נקודות',      es: '3 puntos',         ar: '3 نقاط' },
+  dots4:       { en: '4 dots',        he: '4 נקודות',      es: '4 puntos',         ar: '4 نقاط' },
+};
+
+const PALETTES = {
+  1: ['#f43f5e','#f472b6','#fb7185','#fda4af','#fbbf24','#fb923c'],
+  2: ['#3b82f6','#60a5fa','#93c5fd','#38bdf8','#06b6d4','#a5f3fc'],
+};
+
+function launchFireworks(player) {
+  const canvas = document.createElement('canvas');
+  canvas.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:200;';
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
+  document.body.appendChild(canvas);
+  const ctx = canvas.getContext('2d');
+  const cols = PALETTES[player];
+  const particles = [];
+
+  function burst(x, y) {
+    for (let i = 0; i < 65; i++) {
+      const angle = Math.PI * 2 * i / 65;
+      const spd   = 2 + Math.random() * 6;
+      particles.push({ x, y, vx: Math.cos(angle)*spd, vy: Math.sin(angle)*spd - 2,
+        alpha: 1, color: cols[Math.floor(Math.random()*cols.length)], r: 2 + Math.random()*3 });
+    }
+  }
+
+  const end = Date.now() + 3000;
+  let lastBurst = 0;
+  function frame(now) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (now - lastBurst > 420 && Date.now() < end - 500) {
+      burst(canvas.width*(0.2 + Math.random()*0.6), canvas.height*(0.1 + Math.random()*0.4));
+      lastBurst = now;
+    }
+    for (const p of particles) {
+      p.x += p.vx; p.y += p.vy; p.vy += 0.12; p.alpha -= 0.016;
+      if (p.alpha <= 0) continue;
+      ctx.globalAlpha = p.alpha;
+      ctx.fillStyle = p.color;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    particles.splice(0, particles.length, ...particles.filter(p => p.alpha > 0));
+    if (Date.now() < end || particles.length > 0) requestAnimationFrame(frame);
+    else document.body.removeChild(canvas);
+  }
+  burst(canvas.width*0.5, canvas.height*0.35);
+  requestAnimationFrame(frame);
+}
+
+const SAVE_KEY = 'sprouts-save';
+
+createApp({
+  setup() {
+    let nextId    = 0;
+    let nextEdgeId = 0;
+
+    const lang      = ref('en');
+    const startDots = ref(2);
+    const dots      = ref([]);
+    const edges     = ref([]);
+    const selected  = ref(null);
+    const current   = ref(1);
+    const phase     = ref('playing');
+    const scores    = ref({ 1: 0, 2: 0 });
+
+    const isRTL = computed(() => lang.value === 'he' || lang.value === 'ar');
+
+    const UI = computed(() => {
+      const l = lang.value;
+      return Object.fromEntries(Object.entries(STRINGS).map(([k, v]) => [k, v[l] || v.en]));
+    });
+
+    const statusText = computed(() => {
+      const ui = UI.value;
+      const whose = current.value === 1 ? ui.p1 : ui.p2;
+      if (phase.value === 'won') return `${whose} ${ui.wins}`;
+      if (isRTL.value) return `${ui.turnSuffix} ${whose}`;
+      return `${whose}${ui.turnSuffix}`;
+    });
+
+    const statusClass = computed(() => {
+      if (phase.value === 'won') return 'won';
+      return current.value === 1 ? 'p1-turn' : 'p2-turn';
+    });
+
+    function dotVisClass(dot) {
+      if (dot.id === selected.value) return 'dot-selected';
+      if (dot.conns >= 3) return 'dot-dead';
+      return 'dot-live';
+    }
+
+    // ── Geometry helpers ──────────────────────────────────────────────
+
+    function quadMid(p0, cp, p2) {
+      return {
+        x: 0.25*p0.x + 0.5*cp.x + 0.25*p2.x,
+        y: 0.25*p0.y + 0.5*cp.y + 0.25*p2.y,
+      };
+    }
+
+    function cubicMid(p0, p1, p2, p3) {
+      return {
+        x: 0.125*p0.x + 0.375*p1.x + 0.375*p2.x + 0.125*p3.x,
+        y: 0.125*p0.y + 0.375*p1.y + 0.375*p2.y + 0.125*p3.y,
+      };
+    }
+
+    function edgesBetween(id1, id2) {
+      return edges.value.filter(e =>
+        (e.fromId === id1 && e.toId === id2) || (e.fromId === id2 && e.toId === id1)
+      ).length;
+    }
+
+    function selfLoopCount(id) {
+      return edges.value.filter(e => e.fromId === id && e.toId === id).length;
+    }
+
+    function getEdgeData(fromDot, toDot) {
+      if (fromDot.id === toDot.id) {
+        const count = selfLoopCount(fromDot.id);
+        const cx = 160, cy = 160;
+        const base = Math.atan2(fromDot.y - cy, fromDot.x - cx) + count * 1.3;
+        const r = 70, spread = 0.55;
+        const cp1 = { x: fromDot.x + Math.cos(base - spread)*r*1.7, y: fromDot.y + Math.sin(base - spread)*r*1.7 };
+        const cp2 = { x: fromDot.x + Math.cos(base + spread)*r*1.7, y: fromDot.y + Math.sin(base + spread)*r*1.7 };
+        const mid = cubicMid(fromDot, cp1, cp2, fromDot);
+        return {
+          path: `M ${fromDot.x} ${fromDot.y} C ${cp1.x} ${cp1.y} ${cp2.x} ${cp2.y} ${fromDot.x} ${fromDot.y}`,
+          mid,
+        };
+      }
+
+      const count = edgesBetween(fromDot.id, toDot.id);
+      const mx = (fromDot.x + toDot.x) / 2;
+      const my = (fromDot.y + toDot.y) / 2;
+      const dx = toDot.x - fromDot.x;
+      const dy = toDot.y - fromDot.y;
+      const len = Math.hypot(dx, dy) || 1;
+      const nx = -dy / len;
+      const ny =  dx / len;
+      const sign   = count % 2 === 0 ? 1 : -1;
+      const mag    = 35 + Math.floor(count / 2) * 50;
+      const cp = { x: mx + nx * sign * mag, y: my + ny * sign * mag };
+      return {
+        path: `M ${fromDot.x} ${fromDot.y} Q ${cp.x} ${cp.y} ${toDot.x} ${toDot.y}`,
+        mid: quadMid(fromDot, cp, toDot),
+      };
+    }
+
+    // ── Game logic ────────────────────────────────────────────────────
+
+    function hasValidMoves() {
+      const live = dots.value.filter(d => d.conns < 3);
+      if (live.length >= 2) return true;
+      if (live.length === 1 && live[0].conns <= 1) return true;
+      return false;
+    }
+
+    function makeMove(fromId, toId) {
+      const fromDot = dots.value.find(d => d.id === fromId);
+      const toDot   = dots.value.find(d => d.id === toId);
+      const { path, mid } = getEdgeData(fromDot, toDot);
+
+      const midDot = { id: nextId++, x: Math.round(mid.x), y: Math.round(mid.y), conns: 2 };
+
+      const isSelf = fromId === toId;
+      dots.value = [
+        ...dots.value.map(d => {
+          if (d.id === fromId && isSelf) return { ...d, conns: d.conns + 2 };
+          if (d.id === fromId || d.id === toId) return { ...d, conns: d.conns + 1 };
+          return d;
+        }),
+        midDot,
+      ];
+
+      edges.value = [...edges.value, { id: nextEdgeId++, fromId, toId, path, player: current.value }];
+      selected.value = null;
+
+      if (!hasValidMoves()) {
+        phase.value = 'won';
+        scores.value = { ...scores.value, [current.value]: scores.value[current.value] + 1 };
+        launchFireworks(current.value);
+        save();
+        return;
+      }
+
+      current.value = current.value === 1 ? 2 : 1;
+    }
+
+    function clickDot(id) {
+      if (phase.value !== 'playing') return;
+      const dot = dots.value.find(d => d.id === id);
+
+      if (selected.value === null) {
+        if (dot.conns >= 3) return;
+        selected.value = id;
+        return;
+      }
+
+      if (selected.value === id) {
+        if (dot.conns <= 1) makeMove(id, id);
+        else selected.value = null;
+        return;
+      }
+
+      if (dot.conns >= 3) { selected.value = null; return; }
+      makeMove(selected.value, id);
+    }
+
+    function deselect() { selected.value = null; }
+
+    function newGame() {
+      nextId     = 0;
+      nextEdgeId = 0;
+      const n  = startDots.value;
+      const cx = 160, cy = 160, r = 90;
+      const angleOffset = n === 2 ? 0 : -Math.PI / 2;
+      const initDots = [];
+      for (let i = 0; i < n; i++) {
+        const a = 2 * Math.PI * i / n + angleOffset;
+        initDots.push({ id: nextId++, x: Math.round(cx + r*Math.cos(a)), y: Math.round(cy + r*Math.sin(a)), conns: 0 });
+      }
+      dots.value     = initDots;
+      edges.value    = [];
+      selected.value = null;
+      current.value  = 1;
+      phase.value    = 'playing';
+    }
+
+    function setStartDots(n) { startDots.value = n; newGame(); save(); }
+    function setLang(l)      { lang.value = l; save(); }
+
+    function resetScores() {
+      scores.value = { 1: 0, 2: 0 };
+      newGame();
+      save();
+    }
+
+    function save() {
+      try {
+        localStorage.setItem(SAVE_KEY, JSON.stringify({
+          lang: lang.value, startDots: startDots.value, scores: scores.value,
+        }));
+      } catch {}
+    }
+
+    function load() {
+      try {
+        const s = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null');
+        if (!s) return;
+        if (s.lang)      lang.value      = s.lang;
+        if (s.startDots) startDots.value = s.startDots;
+        if (s.scores)    scores.value    = s.scores;
+      } catch {}
+    }
+
+    load();
+    newGame();
+
+    return {
+      lang, startDots, dots, edges, selected, current, phase, scores,
+      isRTL, UI, statusText, statusClass,
+      dotVisClass, clickDot, deselect, newGame, setStartDots, setLang, resetScores,
+    };
+  }
+}).mount('#app');
+</script>
+</body>
+</html>

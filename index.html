@@ -92,6 +92,7 @@ header {
 .card.outlines:hover    { border-color: #34d399; box-shadow: 0 12px 40px rgba(52,211,153,0.15); }
 .card.wordsearch:hover  { border-color: #fb923c; box-shadow: 0 12px 40px rgba(251,146,60,0.15); }
 .card.xo:hover          { border-color: #f43f5e; box-shadow: 0 12px 40px rgba(244,63,94,0.15); }
+.card.sprouts:hover     { border-color: #10b981; box-shadow: 0 12px 40px rgba(16,185,129,0.15); }
 .card.morse:hover       { border-color: #fbbf24; box-shadow: 0 12px 40px rgba(251,191,36,0.15); }
 .card.wordladder:hover  { border-color: #22d3ee; box-shadow: 0 12px 40px rgba(34,211,238,0.15); }
 .card.braille:hover     { border-color: #a78bfa; box-shadow: 0 12px 40px rgba(167,139,250,0.15); }
@@ -115,6 +116,7 @@ header {
 .wordladder .card-icon { background: #0c1e24; }
 .braille    .card-icon { background: #1e1528; }
 .xo         .card-icon { background: #1a0d0f; }
+.sprouts    .card-icon { background: #091c14; }
 
 .card-title {
   font-size: 1.5rem;
@@ -171,6 +173,12 @@ header {
 }
 .xo .card-title {
   background: linear-gradient(135deg, #f43f5e, #fb923c);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.sprouts .card-title {
+  background: linear-gradient(135deg, #10b981, #6ee7b7);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -236,6 +244,7 @@ header {
 .wordladder  .rule-dot { background: #22d3ee; }
 .braille     .rule-dot { background: #a78bfa; }
 .xo          .rule-dot { background: #f43f5e; }
+.sprouts     .rule-dot { background: #10b981; }
 
 /* ── Play button ─────────────────────────────────────────────────────── */
 .play-btn {
@@ -266,6 +275,7 @@ header {
 .wordladder  .play-btn { background: #0c2233; color: #22d3ee; border: 1px solid #22d3ee; }
 .braille     .play-btn { background: #2e1065; color: #a78bfa; border: 1px solid #a78bfa; }
 .xo          .play-btn { background: #1a0d0f; color: #f472b6; border: 1px solid #f43f5e; }
+.sprouts     .play-btn { background: #091c14; color: #34d399; border: 1px solid #10b981; }
 
 .play-arrow { font-size: 1rem; transition: transform 0.15s; }
 .play-btn:hover .play-arrow { transform: translateX(3px); }
@@ -704,6 +714,37 @@ footer {
     </div>
 
     <div class="play-btn">Play X O <span class="play-arrow">→</span></div>
+  </a>
+
+  <!-- ── Sprouts ──────────────────────────────────────────────────── -->
+  <a class="card sprouts" href="sprouts.html">
+    <div class="card-header">
+      <div class="card-icon">🌱</div>
+      <div class="card-title">SPROUTS</div>
+    </div>
+
+    <!-- Mini preview: dots connected by curves with a mid-dot -->
+    <div class="preview" style="grid-template-columns: 1fr; padding: 14px 20px;">
+      <svg viewBox="0 0 180 90" style="width:180px;height:90px;display:block;margin:0 auto;">
+        <path d="M 30 45 Q 90 10 150 45" fill="none" stroke="#34d399" stroke-width="2" stroke-opacity="0.8"/>
+        <path d="M 30 45 Q 90 80 150 45" fill="none" stroke="#6ee7b7" stroke-width="2" stroke-opacity="0.6"/>
+        <circle cx="30"  cy="45" r="6" fill="#34d399"/>
+        <circle cx="150" cy="45" r="6" fill="#34d399"/>
+        <circle cx="90"  cy="23" r="5" fill="#6ee7b7" opacity="0.9"/>
+        <circle cx="90"  cy="67" r="5" fill="#a7f3d0" opacity="0.7"/>
+      </svg>
+    </div>
+
+    <p class="card-tagline">A pen-and-paper classic by John Conway. Connect dots with curves, sprouting a new dot on each line — until no move is possible.</p>
+
+    <div class="card-rules">
+      <div class="rule"><div class="rule-dot"></div><span>Draw a curve between any two live dots (or a loop)</span></div>
+      <div class="rule"><div class="rule-dot"></div><span>Place a new dot on every curve you draw</span></div>
+      <div class="rule"><div class="rule-dot"></div><span>A dot dies when it has 3 connections</span></div>
+      <div class="rule"><div class="rule-dot"></div><span>Last player to move wins · 2, 3, or 4 starting dots</span></div>
+    </div>
+
+    <div class="play-btn">Play Sprouts <span class="play-arrow">→</span></div>
   </a>
 
   </div><!-- /cards classic -->
