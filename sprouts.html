@@ -405,11 +405,17 @@ function segIntersectPt(a, b, c, d) {
   return { x: a.x+t*ABx, y: a.y+t*ABy };
 }
 
-// True if curves properly cross — ignores intersections near dots shared by both curves
+// True if curves properly cross.
+// Skips the first/last 9% of each curve (handles endpoint segments including
+// the far end of self-loops returning to their start dot).
+// Any crossing in the interior is still excluded if it falls within DOT_R
+// of a dot that is a shared endpoint of both curves.
 function curvesProperlyIntersect(pts1, pts2, sharedDots) {
-  const DOT_R = 11; // just beyond visual dot radius (9)
-  for (let i=0; i<pts1.length-1; i++) {
-    for (let j=0; j<pts2.length-1; j++) {
+  const DOT_R = 14;
+  const n1=pts1.length-1, n2=pts2.length-1;
+  const s1=Math.max(1,Math.floor(n1*0.09)), s2=Math.max(1,Math.floor(n2*0.09));
+  for (let i=s1; i<n1-s1; i++) {
+    for (let j=s2; j<n2-s2; j++) {
       if (!segCross(pts1[i],pts1[i+1],pts2[j],pts2[j+1])) continue;
       if (sharedDots.length) {
         const ix = segIntersectPt(pts1[i],pts1[i+1],pts2[j],pts2[j+1]);
@@ -501,7 +507,7 @@ createApp({
     const view      = ref({x:0,y:0,w:320,h:320});
     const svgEl     = ref(null);
 
-    let dragStart=null, dragDelta=0, touchDotId=null, touchMoves=0, pinchState=null, flashTimer=null;
+    let dragStart=null, dragDelta=0, touchDotId=null, touchStartClient=null, touchLastClient=null, pinchState=null, flashTimer=null;
 
     /* ── Computed ─────────────────────────────────────────────────── */
     const isRTL   = computed(() => lang.value==='he'||lang.value==='ar');
@@ -705,17 +711,21 @@ createApp({
     function resetView(){view.value={x:0,y:0,w:320,h:320};}
 
     function dotNear(cx,cy){
+      const rect=svgEl.value.getBoundingClientRect();
+      const svgR=30*view.value.w/rect.width; // 30 screen-px → svg units
       const pt=clientToSVG(cx,cy);
-      return dots.value.find(d=>Math.hypot(d.x-pt.x,d.y-pt.y)<22)||null;
+      return dots.value.find(d=>Math.hypot(d.x-pt.x,d.y-pt.y)<svgR)||null;
     }
     function onTouchStart(e){
       if(e.touches.length===1){
         const t=e.touches[0];
         const dot=dotNear(t.clientX,t.clientY);
-        if(dot){touchDotId=dot.id;touchMoves=0;}
+        touchStartClient={x:t.clientX,y:t.clientY};
+        touchLastClient={x:t.clientX,y:t.clientY};
+        if(dot){touchDotId=dot.id;}
         else{touchDotId=null;const v=view.value;dragStart={x:t.clientX,y:t.clientY,vx:v.x,vy:v.y};dragDelta=0;}
       }else if(e.touches.length===2){
-        touchDotId=null;
+        touchDotId=null;touchStartClient=null;
         const[t0,t1]=e.touches;
         const dist=Math.hypot(t0.clientX-t1.clientX,t0.clientY-t1.clientY);
         const mid=clientToSVG((t0.clientX+t1.clientX)/2,(t0.clientY+t1.clientY)/2);
@@ -725,9 +735,10 @@ createApp({
     }
     function onTouchMove(e){
       if(e.touches.length===1){
-        if(touchDotId!==null){touchMoves++;return;}
-        if(!dragStart)return;
         const t=e.touches[0];
+        touchLastClient={x:t.clientX,y:t.clientY};
+        if(touchDotId!==null) return; // don't pan when tracking a dot
+        if(!dragStart)return;
         const dx=t.clientX-dragStart.x,dy=t.clientY-dragStart.y;
         dragDelta=Math.hypot(dx,dy);
         if(dragDelta>5){
@@ -744,8 +755,13 @@ createApp({
     }
     function onTouchEnd(e){
       if(e.touches.length>0)return;
-      if(touchDotId!==null&&touchMoves<3)clickDot(touchDotId);
-      touchDotId=null;touchMoves=0;dragStart=null;dragDelta=0;pinchState=null;isPanning.value=false;
+      if(touchDotId!==null){
+        const moved=touchStartClient&&touchLastClient
+          ? Math.hypot(touchLastClient.x-touchStartClient.x, touchLastClient.y-touchStartClient.y)
+          : 999;
+        if(moved<10) clickDot(touchDotId);
+      }
+      touchDotId=null;touchStartClient=null;touchLastClient=null;dragStart=null;dragDelta=0;pinchState=null;isPanning.value=false;
     }
 
     /* ── Game management ──────────────────────────────────────────── */
