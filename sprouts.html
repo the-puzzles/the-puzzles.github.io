@@ -174,7 +174,7 @@ h1 {
 .board-svg.panning { cursor: grabbing; }
 .edge-path { fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
 .dot-hit   { cursor: pointer; }
-.dot-hit.dead { cursor: default; }
+.dot-hit.dead { cursor: default; pointer-events: none; }
 .dot-vis { pointer-events: none; }
 .dot-live     { fill: #34d399; }
 .dot-dead     { fill: #374151; }
@@ -736,7 +736,15 @@ createApp({
       const rect=svgEl.value.getBoundingClientRect();
       const svgR=30*view.value.w/rect.width; // 30 screen-px → svg units
       const pt=clientToSVG(cx,cy);
-      return dots.value.find(d=>Math.hypot(d.x-pt.x,d.y-pt.y)<svgR)||null;
+      // Among live dots within radius, return the closest one.
+      // Dead dots are excluded so they never steal taps from nearby live dots.
+      let best=null, bestDist=svgR;
+      for(const d of dots.value){
+        if(d.conns>=3) continue;
+        const dist=Math.hypot(d.x-pt.x,d.y-pt.y);
+        if(dist<bestDist){bestDist=dist;best=d;}
+      }
+      return best;
     }
     function onTouchStart(e){
       if(e.touches.length===1){
