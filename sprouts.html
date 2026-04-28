@@ -602,13 +602,22 @@ createApp({
         return null;
       }
 
+      // Prefer routes whose midpoint stays on the board so dots remain tappable.
+      // ABS_CPS corners are always in [0,320] (convex combination), so they pass.
+      // Large perpendicular offsets can push the mid off-screen; try those last.
+      function midOK(m){return m.x>=-20&&m.x<=340&&m.y>=-20&&m.y<=340;}
       for (const offset of EDGE_OFFSETS) {
         const c=makeEdgeCurve(fd, td, offset);
-        if(!crosses(c.pts)) return c;
+        if(midOK(c.mid)&&!crosses(c.pts)) return c;
       }
       for (const {x,y} of ABS_CPS) {
         const c=makeEdgeCurveAbs(fd, td, x, y);
-        if(!crosses(c.pts)) return c;
+        if(!crosses(c.pts)) return c; // ABS_CPS are always in-bounds
+      }
+      // Last resort: allow off-screen midpoints (view will auto-expand)
+      for (const offset of EDGE_OFFSETS) {
+        const c=makeEdgeCurve(fd, td, offset);
+        if(!midOK(c.mid)&&!crosses(c.pts)) return c;
       }
       return null;
     }
@@ -652,6 +661,7 @@ createApp({
       ];
       edges.value=[...edges.value,{id:neid++,fromId,toId,midId:midDot.id,path,pts,player:current.value}];
       selected.value=null;
+      ensureVisible(midDot);
 
       if(!hasValidMoves()){
         phase.value='won';
@@ -720,6 +730,15 @@ createApp({
     }
 
     /* ── Pan / zoom ───────────────────────────────────────────────── */
+    function ensureVisible(pt) {
+      const v=view.value, pad=50;
+      if(pt.x>=v.x+pad&&pt.x<=v.x+v.w-pad&&pt.y>=v.y+pad&&pt.y<=v.y+v.h-pad) return;
+      const nx=Math.min(v.x,pt.x-pad), ny=Math.min(v.y,pt.y-pad);
+      const ex=Math.max(v.x+v.w,pt.x+pad), ey=Math.max(v.y+v.h,pt.y+pad);
+      const side=Math.max(ex-nx,ey-ny);
+      const cx=(nx+ex)/2, cy=(ny+ey)/2;
+      view.value={x:cx-side/2,y:cy-side/2,w:side,h:side};
+    }
     function clientToSVG(cx,cy){
       const r=svgEl.value.getBoundingClientRect(),v=view.value;
       return{x:v.x+(cx-r.left)/r.width*v.w,y:v.y+(cy-r.top)/r.height*v.h};
