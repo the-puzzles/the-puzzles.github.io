@@ -401,12 +401,20 @@ function evaluate(board, player) {
   return score;
 }
 
+// Center-proximity order for move ordering (index 12 = center)
+const MOVE_ORDER = [...Array(25).keys()].sort((a, b) => {
+  const da = Math.abs(Math.floor(a/5)-2) + Math.abs((a%5)-2);
+  const db = Math.abs(Math.floor(b/5)-2) + Math.abs((b%5)-2);
+  return da - db;
+});
+
 function negamax(board, player, depth, alpha, beta) {
-  if (board.every(c => c !== 0)) return 0;
   if (depth === 0) return evaluate(board, player);
 
-  for (let i = 0; i < 25; i++) {
+  let hasMove = false;
+  for (const i of MOVE_ORDER) {
     if (board[i] !== 0) continue;
+    hasMove = true;
     board[i] = player;
     const res = checkMove(board, player, i);
     let score;
@@ -419,23 +427,27 @@ function negamax(board, player, depth, alpha, beta) {
     if (score > alpha) alpha = score;
     if (alpha >= beta) return alpha;
   }
-  return alpha;
+  return hasMove ? alpha : 0; // 0 = draw if no moves
 }
 
 function getBestMove(board, player) {
-  let best = -Infinity, move = -1;
-  for (let i = 0; i < 25; i++) {
-    if (board[i] !== 0) continue;
+  const empty = MOVE_ORDER.filter(i => board[i] === 0);
+  // Adaptive depth: shallower when many empty cells remain
+  const depth = empty.length > 18 ? 2 : empty.length > 12 ? 3 : empty.length > 6 ? 4 : 6;
+
+  let best = -Infinity, move = empty[0];
+  for (const i of empty) {
     board[i] = player;
     const res = checkMove(board, player, i);
     let score;
     if (res) {
       score = res.result === 'win' ? 999 : -999;
     } else {
-      score = -negamax(board, 3 - player, 5, -Infinity, Infinity);
+      score = -negamax(board, 3 - player, depth, -Infinity, Infinity);
     }
     board[i] = 0;
     if (score > best) { best = score; move = i; }
+    if (best >= 999) break; // instant win found
   }
   return move;
 }
