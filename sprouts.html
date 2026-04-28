@@ -405,16 +405,16 @@ function segIntersectPt(a, b, c, d) {
   return { x: a.x+t*ABx, y: a.y+t*ABy };
 }
 
-// True if the two sampled curves cross each other (ignoring intersections near any dot)
-function curvesCross(pts1, pts2, allDots) {
-  const DOT_R = 22;
-  const n1=pts1.length-1, n2=pts2.length-1;
-  const s1=Math.max(1,Math.floor(n1*0.09)), s2=Math.max(1,Math.floor(n2*0.09));
-  for (let i=s1; i<n1-s1; i++) {
-    for (let j=s2; j<n2-s2; j++) {
+// True if curves properly cross — ignores intersections near dots shared by both curves
+function curvesProperlyIntersect(pts1, pts2, sharedDots) {
+  const DOT_R = 11; // just beyond visual dot radius (9)
+  for (let i=0; i<pts1.length-1; i++) {
+    for (let j=0; j<pts2.length-1; j++) {
       if (!segCross(pts1[i],pts1[i+1],pts2[j],pts2[j+1])) continue;
-      const ix = segIntersectPt(pts1[i],pts1[i+1],pts2[j],pts2[j+1]);
-      if (ix && allDots.some(d => Math.hypot(d.x-ix.x, d.y-ix.y) < DOT_R)) continue;
+      if (sharedDots.length) {
+        const ix = segIntersectPt(pts1[i],pts1[i+1],pts2[j],pts2[j+1]);
+        if (ix && sharedDots.some(d => Math.hypot(d.x-ix.x, d.y-ix.y) < DOT_R)) continue;
+      }
       return true;
     }
   }
@@ -535,22 +535,34 @@ createApp({
 
     /* ── Route finding ────────────────────────────────────────────── */
     function findRoute(fd, td) {
-      const existingPts = edges.value.map(e=>e.pts);
-      const allDots     = dots.value;
-      const noCross = pts => !existingPts.some(ep=>curvesCross(pts, ep, allDots));
+      const edgesArr = edges.value;
+      const dotsMap  = new Map(dots.value.map(d=>[d.id,d]));
+      const newIds   = new Set([fd.id, td.id]);
+
+      // For each existing edge, find dots shared with the new curve.
+      // Only crossings near shared dots are legal (shared connections);
+      // everything else is a genuine crossing.
+      function crosses(candPts) {
+        return edgesArr.some(edge => {
+          const shared = [edge.fromId, edge.toId, edge.midId]
+            .filter(id => id != null && newIds.has(id))
+            .map(id => dotsMap.get(id)).filter(Boolean);
+          return curvesProperlyIntersect(candPts, edge.pts, shared);
+        });
+      }
 
       if (fd.id===td.id) {
         const base=Math.atan2(fd.y-160, fd.x-160);
         for (const [da,rm] of LOOP_VARIANTS) {
           const c=makeLoopCurve(fd, base+da, rm);
-          if(noCross(c.pts)) return c;
+          if(!crosses(c.pts)) return c;
         }
         return null;
       }
 
       for (const offset of EDGE_OFFSETS) {
         const c=makeEdgeCurve(fd, td, offset);
-        if(noCross(c.pts)) return c;
+        if(!crosses(c.pts)) return c;
       }
       return null;
     }
@@ -589,7 +601,7 @@ createApp({
         }),
         midDot,
       ];
-      edges.value=[...edges.value,{id:neid++,fromId,toId,path,pts,player:current.value}];
+      edges.value=[...edges.value,{id:neid++,fromId,toId,midId:midDot.id,path,pts,player:current.value}];
       selected.value=null;
 
       if(!hasValidMoves()){
