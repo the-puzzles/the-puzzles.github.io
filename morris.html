@@ -480,7 +480,7 @@ function checkWinner(board) {
 
 function getPlacingMoves(board) {
   const moves = [];
-  for (let i = 0; i < 9; i++) if (board[i] === 0) moves.push({ type: 'place', to: i });
+  for (let i = 0; i < 9; i++) if (i !== 4 && board[i] === 0) moves.push({ type: 'place', to: i });
   return moves;
 }
 
@@ -688,7 +688,7 @@ createApp({
       if (aiThink.value) return '';
       const b = board.value;
       const ph = gamePhase.value;
-      if (ph === 'placing' && b[idx] === 0 && (mode.value === '2p' || turn.value === 1)) return 'can-place';
+      if (ph === 'placing' && idx !== 4 && b[idx] === 0 && (mode.value === '2p' || turn.value === 1)) return 'can-place';
       if (ph === 'moving') {
         // own piece → selectable
         if (b[idx] === turn.value && (mode.value === '2p' || turn.value === 1)) return 'can-select';
@@ -766,6 +766,7 @@ createApp({
       const ph = gamePhase.value;
 
       if (ph === 'placing') {
+        if (idx === 4) return;
         if (b[idx] !== 0) return;
         if (placed.value[turn.value - 1] >= 3) return;
         const { board: nb, placed: np } = applyMove([...b], [...placed.value], { type: 'place', to: idx }, turn.value);
