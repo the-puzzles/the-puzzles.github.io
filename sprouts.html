@@ -293,8 +293,8 @@ h1 {
         :class="dotHitClass(dot)"
         @mousedown.stop
         @click.stop="clickDot(dot.id)"
-        @touchstart.stop.prevent="onDotTouchStart(dot.id, $event)"
-        @touchend.stop="onDotTouchEnd(dot.id, $event)"
+        @touchstart.prevent="onDotTouchStart(dot.id, $event)"
+        @touchend="onDotTouchEnd(dot.id, $event)"
       />
       <circle
         v-for="dot in dots"
