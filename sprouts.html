@@ -167,6 +167,7 @@ h1 {
   border-radius: 16px;
   overflow: hidden;
   position: relative;
+  touch-action: none;
 }
 .board-svg {
   width: 100%; height: 100%;
@@ -268,13 +269,10 @@ h1 {
       :class="{ panning: isPanning }"
       :viewBox="viewBox"
       @wheel.prevent="onWheel"
-      @mousedown="onSvgMouseDown"
-      @mousemove="onSvgMouseMove"
-      @mouseup="onSvgMouseUp"
-      @mouseleave="onSvgMouseLeave"
-      @touchstart.prevent="onTouchStart"
-      @touchmove.prevent="onTouchMove"
-      @touchend="onTouchEnd"
+      @pointerdown="onPointerDown"
+      @pointermove="onPointerMove"
+      @pointerup="onPointerUp"
+      @pointercancel="onPointerCancel"
     >
       <path
         v-for="edge in edges"
@@ -291,10 +289,7 @@ h1 {
         fill="transparent"
         class="dot-hit"
         :class="dotHitClass(dot)"
-        @mousedown.stop
-        @click.stop="clickDot(dot.id)"
-        @touchstart.prevent="onDotTouchStart(dot.id, $event)"
-        @touchend="onDotTouchEnd(dot.id, $event)"
+        @click.stop="onDotClick(dot.id)"
       />
       <circle
         v-for="dot in dots"
@@ -311,7 +306,7 @@ h1 {
         :class="dot.conns>=3 ? 'dot-label-dead' : ''"
       >{{ 3 - dot.conns }}</text>
     </svg>
-    <button class="reset-view-btn" @click="fitAll" title="Fit all dots">⊙</button>
+    <button class="reset-view-btn" @click="fitAll" title="Fit all">⊙ fit</button>
   </div>
 
   <div class="mode-bar">
@@ -547,7 +542,7 @@ createApp({
     const view      = ref({x:0,y:0,w:320,h:320});
     const svgEl     = ref(null);
 
-    let dragStart=null, dragDelta=0, dotTouchId=null, dotTouchStartPt=null, pinchState=null, flashTimer=null;
+    let dragStart=null, dragDelta=0, pinchState=null, activePointers=new Map(), suppressClick=false, flashTimer=null;
 
     /* ── Computed ─────────────────────────────────────────────────── */
     const isRTL   = computed(() => lang.value==='he'||lang.value==='ar');
@@ -744,27 +739,66 @@ createApp({
       const nw=Math.max(80,Math.min(960,v.w*scale));
       view.value={x:pt.x-(pt.x-v.x)*(nw/v.w),y:pt.y-(pt.y-v.y)*(nw/v.h),w:nw,h:nw};
     }
-    function onSvgMouseDown(e){
-      if(e.button!==0)return;
-      const v=view.value;
-      dragStart={x:e.clientX,y:e.clientY,vx:v.x,vy:v.y}; dragDelta=0;
+    function onDotClick(id){
+      if(suppressClick){suppressClick=false;return;}
+      clickDot(id);
     }
-    function onSvgMouseMove(e){
-      if(!dragStart)return;
-      const dx=e.clientX-dragStart.x,dy=e.clientY-dragStart.y;
-      dragDelta=Math.hypot(dx,dy);
-      if(dragDelta>3){
-        isPanning.value=true;
-        const r=svgEl.value.getBoundingClientRect(),v=view.value;
-        view.value={...v,x:dragStart.vx-dx*(v.w/r.width),y:dragStart.vy-dy*(v.h/r.height)};
+    function resetPointerState(){
+      dragStart=null;dragDelta=0;pinchState=null;activePointers.clear();isPanning.value=false;
+    }
+    function onPointerDown(e){
+      if(e.pointerType==='mouse'&&e.button!==0) return;
+      activePointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+      suppressClick=false;
+      if(activePointers.size===1){
+        const v=view.value;
+        dragStart={x:e.clientX,y:e.clientY,vx:v.x,vy:v.y};dragDelta=0;pinchState=null;
+      } else if(activePointers.size===2){
+        dragStart=null;
+        const pts=[...activePointers.values()];
+        const dist=Math.hypot(pts[1].x-pts[0].x,pts[1].y-pts[0].y);
+        const mid=clientToSVG((pts[0].x+pts[1].x)/2,(pts[0].y+pts[1].y)/2);
+        const v=view.value;
+        pinchState={dist,w:v.w,svgX:mid.x,svgY:mid.y,vx:v.x,vy:v.y};
       }
     }
-    function onSvgMouseUp(){
-      if(!dragStart)return;
-      if(dragDelta<=3)deselect();
-      dragStart=null;dragDelta=0;isPanning.value=false;
+    function onPointerMove(e){
+      if(!activePointers.has(e.pointerId)) return;
+      activePointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+      if(activePointers.size===1&&dragStart){
+        const dx=e.clientX-dragStart.x,dy=e.clientY-dragStart.y;
+        dragDelta=Math.hypot(dx,dy);
+        if(dragDelta>5){
+          isPanning.value=true;
+          const r=svgEl.value.getBoundingClientRect(),v=view.value;
+          view.value={...v,x:dragStart.vx-dx*(v.w/r.width),y:dragStart.vy-dy*(v.h/r.height)};
+        }
+      } else if(activePointers.size===2&&pinchState){
+        const pts=[...activePointers.values()];
+        const dist=Math.hypot(pts[1].x-pts[0].x,pts[1].y-pts[0].y);
+        const nw=Math.max(80,Math.min(960,pinchState.w*pinchState.dist/dist));
+        const cx=pinchState.svgX,cy=pinchState.svgY;
+        view.value={x:cx-(cx-pinchState.vx)*(nw/pinchState.w),y:cy-(cy-pinchState.vy)*(nw/pinchState.w),w:nw,h:nw};
+      }
     }
-    function onSvgMouseLeave(){dragStart=null;isPanning.value=false;}
+    function onPointerUp(e){
+      if(!activePointers.has(e.pointerId)) return;
+      if(dragDelta>5) suppressClick=true;
+      activePointers.delete(e.pointerId);
+      if(activePointers.size===0){
+        if(dragDelta<=3) deselect();
+        dragStart=null;dragDelta=0;pinchState=null;isPanning.value=false;
+      } else if(activePointers.size===1&&pinchState){
+        pinchState=null;
+        const [,pt]=[...activePointers.entries()][0];
+        const v=view.value;
+        dragStart={x:pt.x,y:pt.y,vx:v.x,vy:v.y};dragDelta=0;
+      }
+    }
+    function onPointerCancel(e){
+      activePointers.delete(e.pointerId);
+      if(activePointers.size===0) resetPointerState();
+    }
     function fitAll(){
       const live=dots.value.filter(d=>d.conns<3);
       const all=live.length?live:dots.value;
@@ -787,68 +821,6 @@ createApp({
       if(vx!==v.x||vy!==v.y||w!==v.w||h!==v.h) view.value={x:vx,y:vy,w,h};
     }
 
-    function dotNear(cx,cy){
-      const rect=svgEl.value.getBoundingClientRect();
-      const svgR=30*view.value.w/rect.width; // 30 screen-px → svg units
-      const pt=clientToSVG(cx,cy);
-      // Among live dots within radius, return the closest one.
-      // Dead dots are excluded so they never steal taps from nearby live dots.
-      let best=null, bestDist=svgR;
-      for(const d of dots.value){
-        if(d.conns>=3) continue;
-        const dist=Math.hypot(d.x-pt.x,d.y-pt.y);
-        if(dist<bestDist){bestDist=dist;best=d;}
-      }
-      return best;
-    }
-    function onDotTouchStart(id, e){
-      if(e.touches.length!==1) return;
-      const t=e.touches[0];
-      dotTouchId=id;
-      dotTouchStartPt={x:t.clientX,y:t.clientY};
-    }
-    function onDotTouchEnd(id, e){
-      if(dotTouchId!==id){dotTouchId=null;dotTouchStartPt=null;return;}
-      const t=e.changedTouches[0];
-      const moved=t&&dotTouchStartPt ? Math.hypot(t.clientX-dotTouchStartPt.x,t.clientY-dotTouchStartPt.y) : 999;
-      dotTouchId=null;dotTouchStartPt=null;
-      if(moved<20) clickDot(id);
-    }
-    function onTouchStart(e){
-      if(e.touches.length===1){
-        const t=e.touches[0];
-        const v=view.value;
-        dragStart={x:t.clientX,y:t.clientY,vx:v.x,vy:v.y};dragDelta=0;
-      }else if(e.touches.length===2){
-        const[t0,t1]=e.touches;
-        const dist=Math.hypot(t0.clientX-t1.clientX,t0.clientY-t1.clientY);
-        const mid=clientToSVG((t0.clientX+t1.clientX)/2,(t0.clientY+t1.clientY)/2);
-        const v=view.value;
-        pinchState={dist,w:v.w,svgX:mid.x,svgY:mid.y,vx:v.x,vy:v.y};dragStart=null;
-      }
-    }
-    function onTouchMove(e){
-      if(e.touches.length===1){
-        if(!dragStart)return;
-        const t=e.touches[0];
-        const dx=t.clientX-dragStart.x,dy=t.clientY-dragStart.y;
-        dragDelta=Math.hypot(dx,dy);
-        if(dragDelta>5){
-          const r=svgEl.value.getBoundingClientRect(),v=view.value;
-          view.value={...v,x:dragStart.vx-dx*(v.w/r.width),y:dragStart.vy-dy*(v.h/r.height)};
-        }
-      }else if(e.touches.length===2&&pinchState){
-        const[t0,t1]=e.touches;
-        const dist=Math.hypot(t0.clientX-t1.clientX,t0.clientY-t1.clientY);
-        const nw=Math.max(80,Math.min(960,pinchState.w*pinchState.dist/dist));
-        const cx=pinchState.svgX,cy=pinchState.svgY;
-        view.value={x:cx-(cx-pinchState.vx)*(nw/pinchState.w),y:cy-(cy-pinchState.vy)*(nw/pinchState.w),w:nw,h:nw};
-      }
-    }
-    function onTouchEnd(e){
-      if(e.touches.length>0)return;
-      dragStart=null;dragDelta=0;pinchState=null;isPanning.value=false;
-    }
 
     /* ── Game management ──────────────────────────────────────────── */
     function newGame(){
@@ -888,8 +860,7 @@ createApp({
       lang,mode,startDots,dots,edges,selected,current,phase,scores,aiThink,isPanning,flashMsg,
       svgEl,viewBox,isRTL,UI,statusText,statusClass,
       dotVisClass,dotHitClass,clickDot,deselect,fitAll,
-      onWheel,onSvgMouseDown,onSvgMouseMove,onSvgMouseUp,onSvgMouseLeave,
-      onTouchStart,onTouchMove,onTouchEnd,onDotTouchStart,onDotTouchEnd,
+      onWheel,onPointerDown,onPointerMove,onPointerUp,onPointerCancel,onDotClick,
       newGame,setMode,setStartDots,setLang,resetScores,
     };
   }
