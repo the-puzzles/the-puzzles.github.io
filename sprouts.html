@@ -574,7 +574,7 @@ createApp({
         const base=Math.atan2(fd.y-160, fd.x-160);
         for (const [da,rm] of LOOP_VARIANTS) {
           const c=makeLoopCurve(fd, base+da, rm);
-          if(!crosses(c.pts)) return c;
+          if(midOK(c.mid)&&!crosses(c.pts)) return c;
         }
         return null;
       }
