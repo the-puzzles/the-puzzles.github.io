@@ -287,12 +287,14 @@ h1 {
       <circle
         v-for="dot in dots"
         :key="'h' + dot.id"
-        :cx="dot.x" :cy="dot.y" r="18"
+        :cx="dot.x" :cy="dot.y" r="24"
         fill="transparent"
         class="dot-hit"
         :class="dotHitClass(dot)"
         @mousedown.stop
         @click.stop="clickDot(dot.id)"
+        @touchstart.stop.prevent="onDotTouchStart(dot.id, $event)"
+        @touchend.stop="onDotTouchEnd(dot.id, $event)"
       />
       <circle
         v-for="dot in dots"
@@ -545,7 +547,7 @@ createApp({
     const view      = ref({x:0,y:0,w:320,h:320});
     const svgEl     = ref(null);
 
-    let dragStart=null, dragDelta=0, touchDotId=null, touchStartClient=null, touchLastClient=null, pinchState=null, flashTimer=null;
+    let dragStart=null, dragDelta=0, dotTouchId=null, dotTouchStartPt=null, pinchState=null, flashTimer=null;
 
     /* ── Computed ─────────────────────────────────────────────────── */
     const isRTL   = computed(() => lang.value==='he'||lang.value==='ar');
@@ -790,16 +792,25 @@ createApp({
       }
       return best;
     }
+    function onDotTouchStart(id, e){
+      if(e.touches.length!==1) return;
+      const t=e.touches[0];
+      dotTouchId=id;
+      dotTouchStartPt={x:t.clientX,y:t.clientY};
+    }
+    function onDotTouchEnd(id, e){
+      if(dotTouchId!==id){dotTouchId=null;dotTouchStartPt=null;return;}
+      const t=e.changedTouches[0];
+      const moved=t&&dotTouchStartPt ? Math.hypot(t.clientX-dotTouchStartPt.x,t.clientY-dotTouchStartPt.y) : 999;
+      dotTouchId=null;dotTouchStartPt=null;
+      if(moved<20) clickDot(id);
+    }
     function onTouchStart(e){
       if(e.touches.length===1){
         const t=e.touches[0];
-        const dot=dotNear(t.clientX,t.clientY);
-        touchStartClient={x:t.clientX,y:t.clientY};
-        touchLastClient={x:t.clientX,y:t.clientY};
-        if(dot){touchDotId=dot.id;}
-        else{touchDotId=null;const v=view.value;dragStart={x:t.clientX,y:t.clientY,vx:v.x,vy:v.y};dragDelta=0;}
+        const v=view.value;
+        dragStart={x:t.clientX,y:t.clientY,vx:v.x,vy:v.y};dragDelta=0;
       }else if(e.touches.length===2){
-        touchDotId=null;touchStartClient=null;
         const[t0,t1]=e.touches;
         const dist=Math.hypot(t0.clientX-t1.clientX,t0.clientY-t1.clientY);
         const mid=clientToSVG((t0.clientX+t1.clientX)/2,(t0.clientY+t1.clientY)/2);
@@ -809,10 +820,8 @@ createApp({
     }
     function onTouchMove(e){
       if(e.touches.length===1){
-        const t=e.touches[0];
-        touchLastClient={x:t.clientX,y:t.clientY};
-        if(touchDotId!==null) return; // don't pan when tracking a dot
         if(!dragStart)return;
+        const t=e.touches[0];
         const dx=t.clientX-dragStart.x,dy=t.clientY-dragStart.y;
         dragDelta=Math.hypot(dx,dy);
         if(dragDelta>5){
@@ -829,13 +838,7 @@ createApp({
     }
     function onTouchEnd(e){
       if(e.touches.length>0)return;
-      if(touchDotId!==null){
-        const moved=touchStartClient&&touchLastClient
-          ? Math.hypot(touchLastClient.x-touchStartClient.x, touchLastClient.y-touchStartClient.y)
-          : 999;
-        if(moved<10) clickDot(touchDotId);
-      }
-      touchDotId=null;touchStartClient=null;touchLastClient=null;dragStart=null;dragDelta=0;pinchState=null;isPanning.value=false;
+      dragStart=null;dragDelta=0;pinchState=null;isPanning.value=false;
     }
 
     /* ── Game management ──────────────────────────────────────────── */
@@ -876,7 +879,7 @@ createApp({
       svgEl,viewBox,isRTL,UI,statusText,statusClass,
       dotVisClass,dotHitClass,clickDot,deselect,fitAll,
       onWheel,onSvgMouseDown,onSvgMouseMove,onSvgMouseUp,onSvgMouseLeave,
-      onTouchStart,onTouchMove,onTouchEnd,
+      onTouchStart,onTouchMove,onTouchEnd,onDotTouchStart,onDotTouchEnd,
       newGame,setMode,setStartDots,setLang,resetScores,
     };
   }
