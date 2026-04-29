@@ -191,7 +191,7 @@ h1 {
 .reset-view-btn {
   position: absolute; bottom: 8px; right: 8px;
   background: rgba(13,17,23,0.85); border: 1px solid #30363d; color: #6e7681;
-  border-radius: 6px; width: 26px; height: 26px; font-size: 0.8rem; cursor: pointer;
+  border-radius: 6px; height: 26px; padding: 0 7px; font-size: 0.78rem; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   transition: color 0.15s, border-color 0.15s; backdrop-filter: blur(4px);
 }
@@ -786,7 +786,7 @@ createApp({
       if(dragDelta>5) suppressClick=true;
       activePointers.delete(e.pointerId);
       if(activePointers.size===0){
-        if(dragDelta<=3) deselect();
+        if(dragDelta<=3 && !e.target.classList.contains('dot-hit')) deselect();
         dragStart=null;dragDelta=0;pinchState=null;isPanning.value=false;
       } else if(activePointers.size===1&&pinchState){
         pinchState=null;
