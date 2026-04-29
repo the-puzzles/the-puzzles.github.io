@@ -171,10 +171,7 @@ h1 {
 }
 .board-svg {
   width: 100%; height: 100%;
-  cursor: grab;
-  touch-action: none;
 }
-.board-svg.panning { cursor: grabbing; }
 .edge-path { fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
 .dot-hit   { cursor: pointer; }
 .dot-hit.dead { cursor: default; pointer-events: none; }
@@ -188,14 +185,6 @@ h1 {
   fill: #0d1117; pointer-events: none;
 }
 .dot-label-dead { fill: #6e7681; }
-.reset-view-btn {
-  position: absolute; bottom: 8px; right: 8px;
-  background: rgba(13,17,23,0.85); border: 1px solid #30363d; color: #6e7681;
-  border-radius: 6px; height: 26px; padding: 0 7px; font-size: 0.78rem; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  transition: color 0.15s, border-color 0.15s; backdrop-filter: blur(4px);
-}
-.reset-view-btn:hover { color: #34d399; border-color: #10b981; }
 
 /* ── Mode / dots bars ────────────────────────────────────────────── */
 .mode-bar {
@@ -264,15 +253,9 @@ h1 {
 
   <div class="board-wrap">
     <svg
-      ref="svgEl"
       class="board-svg"
-      :class="{ panning: isPanning }"
-      :viewBox="viewBox"
-      @wheel.prevent="onWheel"
-      @pointerdown="onPointerDown"
-      @pointermove="onPointerMove"
-      @pointerup="onPointerUp"
-      @pointercancel="onPointerCancel"
+      viewBox="0 0 320 320"
+      @click="onSvgClick"
     >
       <path
         v-for="edge in edges"
@@ -289,7 +272,7 @@ h1 {
         fill="transparent"
         class="dot-hit"
         :class="dotHitClass(dot)"
-        @click.stop="onDotClick(dot.id)"
+        @click.stop="clickDot(dot.id)"
       />
       <circle
         v-for="dot in dots"
@@ -306,7 +289,6 @@ h1 {
         :class="dot.conns>=3 ? 'dot-label-dead' : ''"
       >{{ 3 - dot.conns }}</text>
     </svg>
-    <button class="reset-view-btn" @click="fitAll" title="Fit all">⊙ fit</button>
   </div>
 
   <div class="mode-bar">
@@ -537,16 +519,12 @@ createApp({
     const phase     = ref('playing');
     const scores    = ref({1:0,2:0});
     const aiThink   = ref(false);
-    const isPanning = ref(false);
     const flashMsg  = ref('');
-    const view      = ref({x:0,y:0,w:320,h:320});
-    const svgEl     = ref(null);
 
-    let dragStart=null, dragDelta=0, pinchState=null, activePointers=new Map(), suppressClick=false, flashTimer=null;
+    let flashTimer=null;
 
     /* ── Computed ─────────────────────────────────────────────────── */
     const isRTL   = computed(() => lang.value==='he'||lang.value==='ar');
-    const viewBox = computed(() => `${view.value.x} ${view.value.y} ${view.value.w} ${view.value.h}`);
     const UI      = computed(() => {
       const l=lang.value;
       return Object.fromEntries(Object.entries(STRINGS).map(([k,v])=>[k,v[l]||v.en]));
@@ -601,22 +579,14 @@ createApp({
         return null;
       }
 
-      // Prefer routes whose midpoint stays on the board so dots remain tappable.
-      // ABS_CPS corners are always in [0,320] (convex combination), so they pass.
-      // Large perpendicular offsets can push the mid off-screen; try those last.
-      function midOK(m){return m.x>=-20&&m.x<=340&&m.y>=-20&&m.y<=340;}
+      function midOK(m){return m.x>=15&&m.x<=305&&m.y>=15&&m.y<=305;}
       for (const offset of EDGE_OFFSETS) {
         const c=makeEdgeCurve(fd, td, offset);
         if(midOK(c.mid)&&!crosses(c.pts)) return c;
       }
       for (const {x,y} of ABS_CPS) {
         const c=makeEdgeCurveAbs(fd, td, x, y);
-        if(!crosses(c.pts)) return c; // ABS_CPS are always in-bounds
-      }
-      // Last resort: allow off-screen midpoints (view will auto-expand)
-      for (const offset of EDGE_OFFSETS) {
-        const c=makeEdgeCurve(fd, td, offset);
-        if(!midOK(c.mid)&&!crosses(c.pts)) return c;
+        if(midOK(c.mid)&&!crosses(c.pts)) return c;
       }
       return null;
     }
@@ -660,7 +630,6 @@ createApp({
       ];
       edges.value=[...edges.value,{id:neid++,fromId,toId,midId:midDot.id,path,pts,player:current.value}];
       selected.value=null;
-      ensureVisible(midDot.x,midDot.y);
 
       if(!hasValidMoves()){
         phase.value='won';
@@ -728,99 +697,9 @@ createApp({
       return{fromId:bm.fd.id,toId:bm.td.id};
     }
 
-    /* ── Pan / zoom ───────────────────────────────────────────────── */
-    function clientToSVG(cx,cy){
-      const r=svgEl.value.getBoundingClientRect(),v=view.value;
-      return{x:v.x+(cx-r.left)/r.width*v.w,y:v.y+(cy-r.top)/r.height*v.h};
+    function onSvgClick(e){
+      if(!e.target.classList.contains('dot-hit')) selected.value=null;
     }
-    function onWheel(e){
-      const scale=e.deltaY>0?1.12:0.89;
-      const pt=clientToSVG(e.clientX,e.clientY),v=view.value;
-      const nw=Math.max(80,Math.min(960,v.w*scale));
-      view.value={x:pt.x-(pt.x-v.x)*(nw/v.w),y:pt.y-(pt.y-v.y)*(nw/v.h),w:nw,h:nw};
-    }
-    function onDotClick(id){
-      if(suppressClick){suppressClick=false;return;}
-      clickDot(id);
-    }
-    function resetPointerState(){
-      dragStart=null;dragDelta=0;pinchState=null;activePointers.clear();isPanning.value=false;
-    }
-    function onPointerDown(e){
-      if(e.pointerType==='mouse'&&e.button!==0) return;
-      activePointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
-      suppressClick=false;
-      if(activePointers.size===1){
-        const v=view.value;
-        dragStart={x:e.clientX,y:e.clientY,vx:v.x,vy:v.y};dragDelta=0;pinchState=null;
-      } else if(activePointers.size===2){
-        dragStart=null;
-        const pts=[...activePointers.values()];
-        const dist=Math.hypot(pts[1].x-pts[0].x,pts[1].y-pts[0].y);
-        const mid=clientToSVG((pts[0].x+pts[1].x)/2,(pts[0].y+pts[1].y)/2);
-        const v=view.value;
-        pinchState={dist,w:v.w,svgX:mid.x,svgY:mid.y,vx:v.x,vy:v.y};
-      }
-    }
-    function onPointerMove(e){
-      if(!activePointers.has(e.pointerId)) return;
-      activePointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
-      if(activePointers.size===1&&dragStart){
-        const dx=e.clientX-dragStart.x,dy=e.clientY-dragStart.y;
-        dragDelta=Math.hypot(dx,dy);
-        if(dragDelta>5){
-          isPanning.value=true;
-          const r=svgEl.value.getBoundingClientRect(),v=view.value;
-          view.value={...v,x:dragStart.vx-dx*(v.w/r.width),y:dragStart.vy-dy*(v.h/r.height)};
-        }
-      } else if(activePointers.size===2&&pinchState){
-        const pts=[...activePointers.values()];
-        const dist=Math.hypot(pts[1].x-pts[0].x,pts[1].y-pts[0].y);
-        const nw=Math.max(80,Math.min(960,pinchState.w*pinchState.dist/dist));
-        const cx=pinchState.svgX,cy=pinchState.svgY;
-        view.value={x:cx-(cx-pinchState.vx)*(nw/pinchState.w),y:cy-(cy-pinchState.vy)*(nw/pinchState.w),w:nw,h:nw};
-      }
-    }
-    function onPointerUp(e){
-      if(!activePointers.has(e.pointerId)) return;
-      if(dragDelta>5) suppressClick=true;
-      activePointers.delete(e.pointerId);
-      if(activePointers.size===0){
-        if(dragDelta<=3 && !e.target.classList.contains('dot-hit')) deselect();
-        dragStart=null;dragDelta=0;pinchState=null;isPanning.value=false;
-      } else if(activePointers.size===1&&pinchState){
-        pinchState=null;
-        const [,pt]=[...activePointers.entries()][0];
-        const v=view.value;
-        dragStart={x:pt.x,y:pt.y,vx:v.x,vy:v.y};dragDelta=0;
-      }
-    }
-    function onPointerCancel(e){
-      activePointers.delete(e.pointerId);
-      if(activePointers.size===0) resetPointerState();
-    }
-    function fitAll(){
-      const live=dots.value.filter(d=>d.conns<3);
-      const all=live.length?live:dots.value;
-      if(!all.length){view.value={x:0,y:0,w:320,h:320};return;}
-      const pad=60;
-      const xs=all.map(d=>d.x), ys=all.map(d=>d.y);
-      const x0=Math.min(...xs)-pad, y0=Math.min(...ys)-pad;
-      const x1=Math.max(...xs)+pad, y1=Math.max(...ys)+pad;
-      const side=Math.max(x1-x0, y1-y0, 200);
-      const cx=(x0+x1)/2, cy=(y0+y1)/2;
-      view.value={x:cx-side/2,y:cy-side/2,w:side,h:side};
-    }
-    function ensureVisible(x,y){
-      const pad=50, v=view.value;
-      let {x:vx,y:vy,w,h}=v;
-      if(x-pad<vx){const d=vx-(x-pad);vx-=d;w+=d;}
-      if(y-pad<vy){const d=vy-(y-pad);vy-=d;h+=d;}
-      if(x+pad>vx+w){w=x+pad-vx;}
-      if(y+pad>vy+h){h=y+pad-vy;}
-      if(vx!==v.x||vy!==v.y||w!==v.w||h!==v.h) view.value={x:vx,y:vy,w,h};
-    }
-
 
     /* ── Game management ──────────────────────────────────────────── */
     function newGame(){
@@ -833,7 +712,6 @@ createApp({
       });
       edges.value=[];selected.value=null;current.value=1;
       phase.value='playing';aiThink.value=false;flashMsg.value='';
-      fitAll();
     }
     function setMode(m)      {mode.value=m;      newGame();save();}
     function setStartDots(n) {startDots.value=n; newGame();save();}
@@ -857,10 +735,9 @@ createApp({
     load(); newGame();
 
     return {
-      lang,mode,startDots,dots,edges,selected,current,phase,scores,aiThink,isPanning,flashMsg,
-      svgEl,viewBox,isRTL,UI,statusText,statusClass,
-      dotVisClass,dotHitClass,clickDot,deselect,fitAll,
-      onWheel,onPointerDown,onPointerMove,onPointerUp,onPointerCancel,onDotClick,
+      lang,mode,startDots,dots,edges,selected,current,phase,scores,aiThink,flashMsg,
+      isRTL,UI,statusText,statusClass,
+      dotVisClass,dotHitClass,clickDot,onSvgClick,
       newGame,setMode,setStartDots,setLang,resetScores,
     };
   }
