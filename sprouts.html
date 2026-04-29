@@ -665,7 +665,7 @@ createApp({
       ];
       edges.value=[...edges.value,{id:neid++,fromId,toId,midId:midDot.id,path,pts,player:current.value}];
       selected.value=null;
-      fitAll();
+      ensureVisible(midDot.x,midDot.y);
 
       if(!hasValidMoves()){
         phase.value='won';
@@ -777,6 +777,15 @@ createApp({
       const cx=(x0+x1)/2, cy=(y0+y1)/2;
       view.value={x:cx-side/2,y:cy-side/2,w:side,h:side};
     }
+    function ensureVisible(x,y){
+      const pad=50, v=view.value;
+      let {x:vx,y:vy,w,h}=v;
+      if(x-pad<vx){const d=vx-(x-pad);vx-=d;w+=d;}
+      if(y-pad<vy){const d=vy-(y-pad);vy-=d;h+=d;}
+      if(x+pad>vx+w){w=x+pad-vx;}
+      if(y+pad>vy+h){h=y+pad-vy;}
+      if(vx!==v.x||vy!==v.y||w!==v.w||h!==v.h) view.value={x:vx,y:vy,w,h};
+    }
 
     function dotNear(cx,cy){
       const rect=svgEl.value.getBoundingClientRect();
@@ -852,6 +861,7 @@ createApp({
       });
       edges.value=[];selected.value=null;current.value=1;
       phase.value='playing';aiThink.value=false;flashMsg.value='';
+      fitAll();
     }
     function setMode(m)      {mode.value=m;      newGame();save();}
     function setStartDots(n) {startDots.value=n; newGame();save();}
