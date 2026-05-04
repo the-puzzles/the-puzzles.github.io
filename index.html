@@ -99,6 +99,7 @@ header {
 .card.morse:hover       { border-color: #fbbf24; box-shadow: 0 12px 40px rgba(251,191,36,0.15); }
 .card.wordladder:hover  { border-color: #22d3ee; box-shadow: 0 12px 40px rgba(34,211,238,0.15); }
 .card.braille:hover     { border-color: #a78bfa; box-shadow: 0 12px 40px rgba(167,139,250,0.15); }
+.card.woodoku:hover     { border-color: #a3e635; box-shadow: 0 12px 40px rgba(163,230,53,0.15); }
 
 /* ── Card header ─────────────────────────────────────────────────────── */
 .card-header { display: flex; align-items: center; gap: 14px; }
@@ -123,6 +124,7 @@ header {
 .morris     .card-icon { background: #120d1f; }
 .squava     .card-icon { background: #1a1400; }
 .dotsboxes  .card-icon { background: #0c1e2e; }
+.woodoku    .card-icon { background: #0d1f05; }
 
 .card-title {
   font-size: 1.5rem;
@@ -207,6 +209,12 @@ header {
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+.woodoku .card-title {
+  background: linear-gradient(135deg, #a3e635, #fde047);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
 
 /* ── Preview board ───────────────────────────────────────────────────── */
 .preview {
@@ -272,6 +280,7 @@ header {
 .morris      .rule-dot { background: #8b5cf6; }
 .squava      .rule-dot { background: #f59e0b; }
 .dotsboxes   .rule-dot { background: #38bdf8; }
+.woodoku     .rule-dot { background: #a3e635; }
 
 /* ── Play button ─────────────────────────────────────────────────────── */
 .play-btn {
@@ -467,6 +476,64 @@ footer {
     </div>
 
     <div class="play-btn">Play Colorku <span class="play-arrow">→</span></div>
+  </a>
+
+  <!-- ── Woodoku ───────────────────────────────────────────────── -->
+  <a class="card woodoku" href="woodoku.html">
+    <div class="card-header">
+      <div class="card-icon">▦</div>
+      <div class="card-title">WOODOKU</div>
+    </div>
+
+    <div class="preview" style="grid-template-columns: repeat(6, 36px);">
+      <div class="preview-cell" style="background:#f472b633"></div>
+      <div class="preview-cell" style="background:#f472b633"></div>
+      <div class="preview-cell" style="background:#f472b633"></div>
+      <div class="preview-cell"></div>
+      <div class="preview-cell" style="background:#60a5fa33"></div>
+      <div class="preview-cell"></div>
+      <div class="preview-cell" style="background:#f472b633"></div>
+      <div class="preview-cell"></div>
+      <div class="preview-cell"></div>
+      <div class="preview-cell" style="background:#60a5fa33"></div>
+      <div class="preview-cell" style="background:#60a5fa33"></div>
+      <div class="preview-cell" style="background:#60a5fa33"></div>
+      <div class="preview-cell"></div>
+      <div class="preview-cell"></div>
+      <div class="preview-cell" style="background:#34d39933"></div>
+      <div class="preview-cell" style="background:#34d39933"></div>
+      <div class="preview-cell"></div>
+      <div class="preview-cell"></div>
+      <div class="preview-cell" style="background:#fbbf2433"></div>
+      <div class="preview-cell" style="background:#fbbf2433"></div>
+      <div class="preview-cell" style="background:#34d39933"></div>
+      <div class="preview-cell" style="background:#34d39933"></div>
+      <div class="preview-cell"></div>
+      <div class="preview-cell"></div>
+      <div class="preview-cell" style="background:#fbbf2433"></div>
+      <div class="preview-cell"></div>
+      <div class="preview-cell"></div>
+      <div class="preview-cell"></div>
+      <div class="preview-cell" style="background:#a78bfa33"></div>
+      <div class="preview-cell" style="background:#a78bfa33"></div>
+      <div class="preview-cell"></div>
+      <div class="preview-cell"></div>
+      <div class="preview-cell"></div>
+      <div class="preview-cell"></div>
+      <div class="preview-cell" style="background:#a78bfa33"></div>
+      <div class="preview-cell"></div>
+    </div>
+
+    <p class="card-tagline">Tetris-style blocks meet Sudoku. Fill rows, columns, and 3×3 boxes to clear them — and chain clears for big scores.</p>
+
+    <div class="card-rules">
+      <div class="rule"><div class="rule-dot"></div><span>Pick one of 3 blocks and click the board to place it</span></div>
+      <div class="rule"><div class="rule-dot"></div><span>Complete a row, column, or 3×3 box to clear it</span></div>
+      <div class="rule"><div class="rule-dot"></div><span>Clear multiple lines at once for bonus points</span></div>
+      <div class="rule"><div class="rule-dot"></div><span>Game ends when no block fits anywhere on the board</span></div>
+    </div>
+
+    <div class="play-btn">Play Woodoku <span class="play-arrow">→</span></div>
   </a>
 
   </div><!-- /cards shapes -->
