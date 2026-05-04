@@ -274,6 +274,13 @@ h1 .w2 { color: #fde047; }
   font-size: 1rem;
 }
 .over-play-btn:hover { background: #142b07; border-color: #a3e635; color: #a3e635; }
+.view-board-btn {
+  background: none; border: none; color: #6e7681;
+  font-size: 0.8rem; font-family: inherit; cursor: pointer;
+  margin-top: 12px; text-decoration: underline;
+  transition: color 0.15s;
+}
+.view-board-btn:hover { color: #c9d1d9; }
 
 .fade-enter-active, .fade-leave-active { transition: opacity 0.2s; }
 .fade-enter-from,  .fade-leave-to      { opacity: 0; }
@@ -338,7 +345,7 @@ h1 .w2 { color: #fde047; }
   </div>
 
   <transition name="fade">
-    <div v-if="gameOver" class="over-overlay" @click.self="newGame">
+    <div v-if="gameOver && showOverlay" class="over-overlay" @click.self="showOverlay = false">
       <div class="over-box">
         <div class="over-title">{{ t('over') }}</div>
         <div class="over-score-label">{{ t('score') }}</div>
@@ -346,6 +353,7 @@ h1 .w2 { color: #fde047; }
         <div v-if="isNewBest && score > 0" class="over-best-badge">★ {{ t('newBest') }}</div>
         <div v-else class="over-prev">{{ t('best') }}: {{ best }}</div>
         <button class="btn over-play-btn" @click="newGame">{{ t('newGame') }}</button>
+        <div><button class="view-board-btn" @click="showOverlay = false">{{ t('viewBoard') }}</button></div>
       </div>
     </div>
   </transition>
@@ -355,8 +363,8 @@ h1 .w2 { color: #fde047; }
 const { createApp, ref, computed, watch, onMounted, onUnmounted } = Vue;
 
 const T = {
-  en: { back:'Back', score:'SCORE', best:'BEST', pick:'Pick a block', place:'Click board to place', over:'Game Over', newGame:'New Game', newBest:'New Best!' },
-  he: { back:'חזרה', score:'ניקוד', best:'שיא', pick:'בחר קוביה', place:'לחץ להנחה', over:'המשחק נגמר', newGame:'משחק חדש', newBest:'שיא חדש!' },
+  en: { back:'Back', score:'SCORE', best:'BEST', pick:'Pick a block', place:'Click board to place', over:'Game Over', newGame:'New Game', newBest:'New Best!', viewBoard:'View board' },
+  he: { back:'חזרה', score:'ניקוד', best:'שיא', pick:'בחר קוביה', place:'לחץ להנחה', over:'המשחק נגמר', newGame:'משחק חדש', newBest:'שיא חדש!', viewBoard:'צפה בלוח' },
 };
 
 const SHAPES = [
@@ -464,8 +472,9 @@ createApp({
     const hoverCell = ref(null);
     const score     = ref(0);
     const best      = ref(+(localStorage.getItem(SAVE_KEY+'-best') || 0));
-    const gameOver  = ref(false);
-    const isNewBest = ref(false);
+    const gameOver    = ref(false);
+    const showOverlay = ref(false);
+    const isNewBest   = ref(false);
     const clearing  = ref(new Set());
     const busy      = ref(false);
     const boardRef  = ref(null);
@@ -643,7 +652,7 @@ createApp({
         for (let r = 0; r < N; r++)
           for (let c = 0; c < N; c++)
             if (fits(b, s.cells, r, c)) { ok = true; break outer; }
-      if (!ok) gameOver.value = true;
+      if (!ok) { gameOver.value = true; showOverlay.value = true; }
     }
 
     function newGame() {
@@ -652,8 +661,9 @@ createApp({
       selected.value  = null;
       hoverCell.value = null;
       score.value     = 0;
-      gameOver.value  = false;
-      isNewBest.value = false;
+      gameOver.value    = false;
+      showOverlay.value = false;
+      isNewBest.value   = false;
       clearing.value  = new Set();
       busy.value      = false;
     }
@@ -679,7 +689,7 @@ createApp({
 
     return {
       lang, isRTL, t, board, queue, selected, hoverCell,
-      score, best, gameOver, isNewBest, boardRef,
+      score, best, gameOver, showOverlay, isNewBest, boardRef,
       statusText, ghost, ghostOK,
       cellClass, cellStyle, selectShape, onCellClick,
       shapeGridStyle, shapeCells, newGame,
