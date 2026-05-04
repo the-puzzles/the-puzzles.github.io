@@ -233,7 +233,7 @@ h1 .w2 { color: #fde047; }
 
   <div class="status" :class="{'game-over': gameOver}">{{ statusText }}</div>
 
-  <div class="board" @mouseleave="hoverCell = null">
+  <div class="board" ref="boardRef" @mouseleave="hoverCell = null">
     <div
       v-for="i in 81" :key="i"
       class="cell"
@@ -267,7 +267,7 @@ h1 .w2 { color: #fde047; }
 
 </div>
 <script>
-const { createApp, ref, computed, watch } = Vue;
+const { createApp, ref, computed, watch, onMounted, onUnmounted } = Vue;
 
 const T = {
   en: { back:'Back', score:'SCORE', best:'BEST', pick:'Pick a block', place:'Click board to place', over:'Game Over', newGame:'New Game' },
@@ -382,6 +382,49 @@ createApp({
     const gameOver  = ref(false);
     const clearing  = ref(new Set());
     const busy      = ref(false);
+    const boardRef  = ref(null);
+
+    // ── Touch handling (mobile ghost preview + placement) ─────────────
+    let touchActive = false;
+
+    function cellFromTouch(touch) {
+      const el = document.elementFromPoint(touch.clientX, touch.clientY);
+      if (!el || !el.classList.contains('cell')) return null;
+      const idx = [...el.parentElement.children].indexOf(el);
+      return idx >= 0 ? [~~(idx/N), idx%N] : null;
+    }
+
+    function onTouchStart(e) {
+      if (selected.value === null || busy.value || gameOver.value) return;
+      e.preventDefault();
+      touchActive = true;
+      hoverCell.value = cellFromTouch(e.touches[0]);
+    }
+    function onTouchMove(e) {
+      if (!touchActive) return;
+      e.preventDefault();
+      hoverCell.value = cellFromTouch(e.touches[0]);
+    }
+    function onTouchEnd(e) {
+      if (!touchActive) return;
+      touchActive = false;
+      e.preventDefault();
+      if (hoverCell.value) onCellClick(hoverCell.value[0], hoverCell.value[1]);
+      hoverCell.value = null;
+    }
+
+    onMounted(() => {
+      const el = boardRef.value;
+      el.addEventListener('touchstart', onTouchStart, { passive: false });
+      el.addEventListener('touchmove',  onTouchMove,  { passive: false });
+      el.addEventListener('touchend',   onTouchEnd,   { passive: false });
+    });
+    onUnmounted(() => {
+      const el = boardRef.value;
+      el.removeEventListener('touchstart', onTouchStart);
+      el.removeEventListener('touchmove',  onTouchMove);
+      el.removeEventListener('touchend',   onTouchEnd);
+    });
 
     const statusText = computed(() =>
       gameOver.value ? t('over') : selected.value !== null ? t('place') : t('pick')
@@ -549,7 +592,7 @@ createApp({
 
     return {
       lang, isRTL, t, board, queue, selected, hoverCell,
-      score, best, gameOver,
+      score, best, gameOver, boardRef,
       statusText, ghost, ghostOK,
       cellClass, cellStyle, selectShape, onCellClick,
       shapeGridStyle, shapeCells, newGame,
