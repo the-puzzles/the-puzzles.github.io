@@ -259,6 +259,7 @@ h1 {
 
   <div class="board-wrap">
     <div
+      ref="boardRef"
       class="board"
       :style="{ gridTemplateColumns: `repeat(${level.size}, ${cellSize}px)` }"
     >
@@ -853,20 +854,69 @@ createApp({
       saveTimer = setTimeout(saveState, 400);
     }, { deep: true });
 
+    // ── Board-local touch: scroll prevention + drag-to-fill ──────────
+    const boardRef = ref(null);
+    let boardTouchActive = false;
+    let lastTouchCell = null;
+
+    function cellFromTouch(touch) {
+      const el = document.elementFromPoint(touch.clientX, touch.clientY);
+      const cell = el ? el.closest('.cell') : null;
+      if (!cell || cell.parentElement !== boardRef.value) return null;
+      const idx = [...boardRef.value.children].indexOf(cell);
+      if (idx < 0) return null;
+      return [~~(idx / level.value.size), idx % level.value.size];
+    }
+    function onBoardTouchStart(e) {
+      if (!selectedColor.value && !eraserMode.value) return;
+      const pos = cellFromTouch(e.touches[0]);
+      if (!pos) return;
+      e.preventDefault();
+      boardTouchActive = true;
+      lastTouchCell = pos;
+      onCellClick(pos[0], pos[1]);
+    }
+    function onBoardTouchMove(e) {
+      if (!boardTouchActive) return;
+      e.preventDefault();
+      const pos = cellFromTouch(e.touches[0]);
+      if (!pos) return;
+      const [r, c] = pos;
+      if (lastTouchCell && r === lastTouchCell[0] && c === lastTouchCell[1]) return;
+      lastTouchCell = pos;
+      if (selectedColor.value && !isGiven(r, c) && userGrid.value[r][c] === null)
+        onCellClick(r, c);
+      else if (eraserMode.value && !isGiven(r, c) && userGrid.value[r][c] !== null)
+        onCellClick(r, c);
+    }
+    function onBoardTouchEnd(e) {
+      if (!boardTouchActive) return;
+      boardTouchActive = false;
+      lastTouchCell = null;
+      e.preventDefault();
+    }
+
     onMounted(() => {
       window.addEventListener('keydown', handleKey);
       window.addEventListener('resize', onResize);
+      boardRef.value.addEventListener('touchstart', onBoardTouchStart, { passive: false });
+      boardRef.value.addEventListener('touchmove',  onBoardTouchMove,  { passive: false });
+      boardRef.value.addEventListener('touchend',   onBoardTouchEnd,   { passive: false });
     });
     onUnmounted(() => {
       clearTimeout(saveTimer);
       window.removeEventListener('keydown', handleKey);
       window.removeEventListener('resize', onResize);
+      boardRef.value.removeEventListener('touchstart', onBoardTouchStart);
+      boardRef.value.removeEventListener('touchmove',  onBoardTouchMove);
+      boardRef.value.removeEventListener('touchend',   onBoardTouchEnd);
     });
 
     return {
       currentLevelIdx, selectedColor, eraserMode,
       history, completedLevels, showWin, errorMsg,
       mode, randomLevel, difficulty,
+      boardRef,
       level, cellSize, userGrid, fullGrid, conflictSet,
       emptyCells, isSolved,
       COLOR_HEX, LEVELS,
