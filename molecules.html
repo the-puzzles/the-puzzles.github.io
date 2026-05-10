@@ -242,6 +242,7 @@ svg.board {
   flex-shrink: 0;
 }
 .bp-btn:hover { border-color: #6e7681; color: #c9d1d9; }
+.bp-btn { touch-action: manipulation; }
 .bp-btn.active {
   background: var(--accent-dim);
   border-color: var(--accent);
@@ -291,6 +292,7 @@ svg.board {
   transition: all 0.15s;
 }
 .btn:hover { border-color: #6e7681; color: #fff; }
+.btn { touch-action: manipulation; }
 .btn.primary {
   background: var(--accent-dim);
   border-color: var(--accent);
@@ -299,18 +301,6 @@ svg.board {
 .btn.primary:hover { background: #065f46cc; }
 .btn.danger { border-color: #f87171; color: #f87171; }
 .btn.danger:hover { background: #1a0000; }
-
-/* ── Bond order legend ──────────────────────────────────────── */
-.legend {
-  display: flex;
-  gap: 16px;
-  margin-top: 10px;
-  font-size: 0.75rem;
-  color: #6e7681;
-  align-items: center;
-}
-.legend-item { display: flex; align-items: center; gap: 6px; }
-.legend-svg { width: 32px; height: 14px; }
 
 /* ── Valence reference ──────────────────────────────────────── */
 .valence-ref {
@@ -342,6 +332,23 @@ svg.board {
 [dir="rtl"] .controls    { direction: rtl; }
 [dir="rtl"] .overlay-card { direction: rtl; text-align: right; }
 [dir="rtl"] .mol-fun     { text-align: right; }
+
+/* ── Mobile ─────────────────────────────────────────────────── */
+@media (max-width: 480px) {
+  body { padding: 8px 8px 28px; }
+  h1 { font-size: 1.4rem; margin-bottom: 2px; }
+  .score-bar { gap: 8px; margin-bottom: 10px; }
+  .score-pill { padding: 4px 10px; min-width: 60px; }
+  .score-pill .value { font-size: 1.1rem; }
+  .score-pill .label { font-size: 0.6rem; }
+  .level-dot { width: 6px; height: 6px; }
+  .action-area { min-height: 90px; }
+  .bp-buttons { width: 100%; }
+  .bp-btn { flex: 1; width: auto; min-width: 0; height: 52px; }
+  .controls { gap: 8px; }
+  .btn { padding: 9px 14px; font-size: 0.82rem; }
+  .overlay-card { padding: 24px 20px; }
+}
 
 /* ── Win overlay ────────────────────────────────────────────── */
 .overlay {
@@ -471,6 +478,8 @@ svg.board {
       <g v-for="atom in atoms" :key="atom.id" class="atom-group"
          @click.stop="selectAtom(atom)"
          @touchend.prevent.stop="selectAtom(atom)">
+        <!-- enlarged touch target -->
+        <circle :cx="atom.x" :cy="atom.y" r="30" fill="transparent" />
         <!-- selected ring -->
         <circle v-if="selectedId === atom.id"
           :cx="atom.x" :cy="atom.y" :r="atom.r + 6"
