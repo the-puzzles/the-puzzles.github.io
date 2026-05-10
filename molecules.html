@@ -164,7 +164,6 @@ svg.board {
 /* ── Bond lines ─────────────────────────────────────────────── */
 .bond { cursor: pointer; }
 .bond line { stroke-linecap: round; }
-.bond:hover line { opacity: 0.7; }
 
 /* ── Atom circles ───────────────────────────────────────────── */
 .atom-group { cursor: pointer; }
@@ -176,6 +175,100 @@ svg.board {
   font-weight: 700;
   pointer-events: none;
 }
+
+/* ── Neighbor pulse animation ───────────────────────────────── */
+@keyframes neighbor-pulse {
+  0%, 100% { opacity: 0.5; r: 0; }
+  50%       { opacity: 1;   r: 6; }
+}
+.neighbor-ring { animation: neighbor-pulse 1.2s ease-in-out infinite; }
+
+/* ── Action area (bond picker + legend) ─────────────────────── */
+.action-area {
+  width: 100%;
+  max-width: 560px;
+  min-height: 72px;
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Bond picker — shown when a bond is active */
+.bond-picker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+.bp-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.bp-atom {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  font-size: 0.9rem;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+.bp-connector {
+  width: 60px; height: 20px;
+  flex-shrink: 0;
+}
+.bp-buttons {
+  display: flex;
+  gap: 8px;
+}
+.bp-btn {
+  background: #161b22;
+  border: 2px solid #30363d;
+  border-radius: 10px;
+  width: 62px; height: 44px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6e7681;
+  font-size: 1rem;
+  font-weight: 700;
+  font-family: inherit;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.bp-btn:hover { border-color: #6e7681; color: #c9d1d9; }
+.bp-btn.active {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Atom-selected hint */
+.atom-hint {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #6e7681;
+  font-size: 0.88rem;
+}
+
+/* Idle legend */
+.legend {
+  display: flex;
+  gap: 14px;
+  font-size: 0.75rem;
+  color: #6e7681;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.legend-item { display: flex; align-items: center; gap: 5px; }
+.legend-svg { width: 32px; height: 14px; }
 
 /* ── Bottom controls ────────────────────────────────────────── */
 .controls {
@@ -332,44 +425,43 @@ svg.board {
 
       <!-- Bond lines -->
       <g v-for="bond in bonds" :key="bond.key" class="bond"
-         @click="cycleBond(bond)" @touchend.prevent.stop="cycleBond(bond)">
-        <!-- available slot: dashed gray when no bond drawn -->
+         @click="selectBond(bond)" @touchend.prevent.stop="selectBond(bond)">
+        <!-- selected glow -->
+        <line v-if="activeBondKey === bond.key"
+          :x1="bond.ax" :y1="bond.ay" :x2="bond.bx" :y2="bond.by"
+          stroke="#fbbf24" stroke-width="14" stroke-linecap="round" opacity="0.18" />
+        <!-- available slot: dashed when no bond drawn -->
         <line v-if="bond.order === 0"
           :x1="bond.ax" :y1="bond.ay" :x2="bond.bx" :y2="bond.by"
-          stroke="#3d444d" stroke-width="2" stroke-dasharray="6 5" stroke-linecap="round" />
-        <!-- single bond: one centered line -->
+          :stroke="activeBondKey === bond.key ? '#fbbf24' : '#3d444d'"
+          stroke-width="2" stroke-dasharray="6 5" stroke-linecap="round" />
+        <!-- single bond -->
         <line v-if="bond.order === 1"
           :x1="bond.ax" :y1="bond.ay" :x2="bond.bx" :y2="bond.by"
-          stroke="#6ee7b7" stroke-width="3" stroke-linecap="round" />
-        <!-- double bond: two parallel lines -->
+          :stroke="activeBondKey === bond.key ? '#fbbf24' : '#6ee7b7'"
+          stroke-width="3" stroke-linecap="round" />
+        <!-- double bond -->
         <line v-if="bond.order === 2"
           :x1="bond.ax" :y1="bond.ay" :x2="bond.bx" :y2="bond.by"
-          stroke="#6ee7b7" stroke-width="2.5" stroke-linecap="round"
-          :transform="offsetTransform(bond, -4)" />
+          :stroke="activeBondKey === bond.key ? '#fbbf24' : '#6ee7b7'"
+          stroke-width="2.5" stroke-linecap="round" :transform="offsetTransform(bond, -4)" />
         <line v-if="bond.order === 2"
           :x1="bond.ax" :y1="bond.ay" :x2="bond.bx" :y2="bond.by"
-          stroke="#6ee7b7" stroke-width="2.5" stroke-linecap="round"
-          :transform="offsetTransform(bond, 4)" />
-        <!-- triple bond: three parallel lines -->
+          :stroke="activeBondKey === bond.key ? '#fbbf24' : '#6ee7b7'"
+          stroke-width="2.5" stroke-linecap="round" :transform="offsetTransform(bond, 4)" />
+        <!-- triple bond -->
         <line v-if="bond.order === 3"
           :x1="bond.ax" :y1="bond.ay" :x2="bond.bx" :y2="bond.by"
-          stroke="#6ee7b7" stroke-width="2" stroke-linecap="round"
-          :transform="offsetTransform(bond, -5)" />
+          :stroke="activeBondKey === bond.key ? '#fbbf24' : '#6ee7b7'"
+          stroke-width="2" stroke-linecap="round" :transform="offsetTransform(bond, -5)" />
         <line v-if="bond.order === 3"
           :x1="bond.ax" :y1="bond.ay" :x2="bond.bx" :y2="bond.by"
-          stroke="#6ee7b7" stroke-width="2" stroke-linecap="round" />
+          :stroke="activeBondKey === bond.key ? '#fbbf24' : '#6ee7b7'"
+          stroke-width="2" stroke-linecap="round" />
         <line v-if="bond.order === 3"
           :x1="bond.ax" :y1="bond.ay" :x2="bond.bx" :y2="bond.by"
-          stroke="#6ee7b7" stroke-width="2" stroke-linecap="round"
-          :transform="offsetTransform(bond, 5)" />
-        <!-- order badge at midpoint -->
-        <g v-if="bond.order > 0">
-          <circle :cx="(bond.ax+bond.bx)/2" :cy="(bond.ay+bond.by)/2" r="9"
-            fill="#0d1117" stroke="#30363d" stroke-width="1" />
-          <text :x="(bond.ax+bond.bx)/2" :y="(bond.ay+bond.by)/2"
-            text-anchor="middle" dominant-baseline="central"
-            font-size="9" font-weight="700" fill="#6ee7b7" pointer-events="none">{{ bond.order }}</text>
-        </g>
+          :stroke="activeBondKey === bond.key ? '#fbbf24' : '#6ee7b7'"
+          stroke-width="2" stroke-linecap="round" :transform="offsetTransform(bond, 5)" />
         <!-- fat invisible hit target -->
         <line :x1="bond.ax" :y1="bond.ay" :x2="bond.bx" :y2="bond.by"
           stroke="transparent" stroke-width="18" />
@@ -379,10 +471,15 @@ svg.board {
       <g v-for="atom in atoms" :key="atom.id" class="atom-group"
          @click.stop="selectAtom(atom)"
          @touchend.prevent.stop="selectAtom(atom)">
-        <!-- selection ring -->
+        <!-- selected ring -->
         <circle v-if="selectedId === atom.id"
-          :cx="atom.x" :cy="atom.y" :r="atom.r + 5"
-          fill="none" stroke="#fff" stroke-width="2" opacity="0.7" />
+          :cx="atom.x" :cy="atom.y" :r="atom.r + 6"
+          fill="none" stroke="#fff" stroke-width="2.5" opacity="0.8" />
+        <!-- neighbor pulse ring (when another atom is selected and this is reachable) -->
+        <circle v-if="reachableIds.has(atom.id)"
+          class="neighbor-ring"
+          :cx="atom.x" :cy="atom.y" :r="atom.r + 8"
+          fill="none" stroke="#fbbf24" stroke-width="2" />
         <circle :cx="atom.x" :cy="atom.y" :r="atom.r"
           :fill="atom.color" :stroke="atom.stroke"
           stroke-width="2" />
@@ -402,39 +499,85 @@ svg.board {
     </svg>
   </div>
 
-  <div class="legend">
-    <div class="legend-item">
-      <svg class="legend-svg" viewBox="0 0 32 14">
-        <line x1="2" y1="7" x2="30" y2="7" stroke="#6e7681" stroke-width="2.5" stroke-linecap="round"/>
-      </svg>
-      {{ t('single') }}
-    </div>
-    <div class="legend-item">
-      <svg class="legend-svg" viewBox="0 0 32 14">
-        <line x1="2" y1="4" x2="30" y2="4" stroke="#6e7681" stroke-width="2.5" stroke-linecap="round"/>
-        <line x1="2" y1="10" x2="30" y2="10" stroke="#6e7681" stroke-width="2.5" stroke-linecap="round"/>
-      </svg>
-      {{ t('double') }}
-    </div>
-    <div class="legend-item">
-      <svg class="legend-svg" viewBox="0 0 32 14">
-        <line x1="2" y1="2" x2="30" y2="2" stroke="#6e7681" stroke-width="2" stroke-linecap="round"/>
-        <line x1="2" y1="7" x2="30" y2="7" stroke="#6e7681" stroke-width="2" stroke-linecap="round"/>
-        <line x1="2" y1="12" x2="30" y2="12" stroke="#6e7681" stroke-width="2" stroke-linecap="round"/>
-      </svg>
-      {{ t('triple') }}
-    </div>
-    <span style="color:#30363d">|</span>
-    <span style="font-size:0.72rem">{{ t('tapTip') }}</span>
-  </div>
+  <!-- Action area: bond picker / atom hint / idle legend -->
+  <div class="action-area">
 
-  <!-- Element valence reference -->
-  <div class="valence-ref">
-    <span class="vr-title">{{ t('valenceRef') }}:</span>
-    <span v-for="el in ['H','C','N','O','S','Cl','P']" :key="el" class="vr-el"
-      :style="{ background: ELEMENT_STYLE[el].fill, color: ELEMENT_STYLE[el].text }">
-      {{ el }}<span class="vr-count">×{{ VALENCE[el] }}</span>
-    </span>
+    <!-- Bond selected: show picker -->
+    <div v-if="activeBond" class="bond-picker">
+      <div class="bp-row">
+        <span class="bp-atom" :style="{ background: atomMap[activeBond.ia].color, color: atomMap[activeBond.ia].textColor }">
+          {{ atomMap[activeBond.ia].element }}
+        </span>
+        <svg class="bp-connector" viewBox="0 0 60 20">
+          <line v-if="activeBond.order === 0" x1="4" y1="10" x2="56" y2="10" stroke="#3d444d" stroke-width="2" stroke-dasharray="5 4" stroke-linecap="round"/>
+          <line v-if="activeBond.order === 1" x1="4" y1="10" x2="56" y2="10" stroke="#fbbf24" stroke-width="3" stroke-linecap="round"/>
+          <line v-if="activeBond.order === 2" x1="4" y1="6"  x2="56" y2="6"  stroke="#fbbf24" stroke-width="2.5" stroke-linecap="round"/>
+          <line v-if="activeBond.order === 2" x1="4" y1="14" x2="56" y2="14" stroke="#fbbf24" stroke-width="2.5" stroke-linecap="round"/>
+          <line v-if="activeBond.order === 3" x1="4" y1="4"  x2="56" y2="4"  stroke="#fbbf24" stroke-width="2" stroke-linecap="round"/>
+          <line v-if="activeBond.order === 3" x1="4" y1="10" x2="56" y2="10" stroke="#fbbf24" stroke-width="2" stroke-linecap="round"/>
+          <line v-if="activeBond.order === 3" x1="4" y1="16" x2="56" y2="16" stroke="#fbbf24" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <span class="bp-atom" :style="{ background: atomMap[activeBond.ib].color, color: atomMap[activeBond.ib].textColor }">
+          {{ atomMap[activeBond.ib].element }}
+        </span>
+      </div>
+      <div class="bp-buttons">
+        <button v-for="n in [0,1,2,3]" :key="n" class="bp-btn"
+          :class="{ active: activeBond.order === n }"
+          @click="setBondOrder(n)">
+          <svg v-if="n > 0" width="36" height="18" viewBox="0 0 36 18">
+            <line v-if="n===1" x1="3" y1="9"  x2="33" y2="9"  stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+            <line v-if="n>=2" x1="3" y1="5"  x2="33" y2="5"  stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <line v-if="n>=2" x1="3" y1="13" x2="33" y2="13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <line v-if="n===3" x1="3" y1="9"  x2="33" y2="9"  stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <span v-else style="font-size:1.1rem">✕</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Atom selected: prompt to pick neighbor -->
+    <div v-else-if="selectedId !== null" class="atom-hint">
+      <span class="bp-atom" :style="{ background: atomMap[selectedId].color, color: atomMap[selectedId].textColor }">
+        {{ atomMap[selectedId].element }}
+      </span>
+      <span>{{ t('selectNeighbor') }}</span>
+    </div>
+
+    <!-- Idle: legend + valence reference -->
+    <div v-else style="display:flex;flex-direction:column;align-items:center;gap:10px;width:100%">
+      <div class="legend">
+        <div class="legend-item">
+          <svg class="legend-svg" viewBox="0 0 32 14"><line x1="2" y1="7" x2="30" y2="7" stroke="#6e7681" stroke-width="2.5" stroke-linecap="round"/></svg>
+          {{ t('single') }}
+        </div>
+        <div class="legend-item">
+          <svg class="legend-svg" viewBox="0 0 32 14">
+            <line x1="2" y1="4" x2="30" y2="4" stroke="#6e7681" stroke-width="2.5" stroke-linecap="round"/>
+            <line x1="2" y1="10" x2="30" y2="10" stroke="#6e7681" stroke-width="2.5" stroke-linecap="round"/>
+          </svg>
+          {{ t('double') }}
+        </div>
+        <div class="legend-item">
+          <svg class="legend-svg" viewBox="0 0 32 14">
+            <line x1="2" y1="2"  x2="30" y2="2"  stroke="#6e7681" stroke-width="2" stroke-linecap="round"/>
+            <line x1="2" y1="7"  x2="30" y2="7"  stroke="#6e7681" stroke-width="2" stroke-linecap="round"/>
+            <line x1="2" y1="12" x2="30" y2="12" stroke="#6e7681" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          {{ t('triple') }}
+        </div>
+        <span style="color:#30363d">|</span>
+        <span style="font-size:0.72rem">{{ t('tapTip') }}</span>
+      </div>
+      <div class="valence-ref">
+        <span class="vr-title">{{ t('valenceRef') }}:</span>
+        <span v-for="el in ['H','C','N','O','S','Cl','P']" :key="el" class="vr-el"
+          :style="{ background: ELEMENT_STYLE[el].fill, color: ELEMENT_STYLE[el].text }">
+          {{ el }}<span class="vr-count">×{{ VALENCE[el] }}</span>
+        </span>
+      </div>
+    </div>
+
   </div>
 
   <div class="controls">
@@ -893,7 +1036,8 @@ createApp({
     const hintText = ref('');
     const levelPoints = ref(0);
     const selectedId = ref(null);
-    const touchTarget = ref(null); // for touch tap tracking
+    const activeBondKey = ref(null);
+    const touchTarget = ref(null);
 
     // bonds: map key -> order (0 = absent but exists as pair)
     const bondOrders = ref({});
@@ -925,10 +1069,25 @@ createApp({
       });
     });
 
-    function bondColor(bond) {
-      if (bond.order === 0) return '#30363d';
-      return '#6ee7b7';
-    }
+    const atomMap = computed(() => {
+      const m = {};
+      atoms.value.forEach(a => { m[a.id] = a; });
+      return m;
+    });
+
+    const reachableIds = computed(() => {
+      if (selectedId.value === null) return new Set();
+      const s = new Set();
+      currentLevel.value.pairs.forEach(([a, b]) => {
+        if (a === selectedId.value) s.add(b);
+        if (b === selectedId.value) s.add(a);
+      });
+      return s;
+    });
+
+    const activeBond = computed(() =>
+      activeBondKey.value ? bonds.value.find(b => b.key === activeBondKey.value) ?? null : null
+    );
 
     function offsetTransform(bond, d) {
       const dx = bond.bx - bond.ax, dy = bond.by - bond.ay;
@@ -967,13 +1126,17 @@ createApp({
       return '#9ca3af';
     }
 
-    function cycleBond(bond) {
+    function selectBond(bond) {
       if (won.value) return;
-      const sol = currentLevel.value.solution[bond.key];
-      const maxOrder = sol || 3;
-      const cur = bondOrders.value[bond.key] ?? 0;
-      const next = cur >= maxOrder ? 0 : cur + 1;
-      bondOrders.value = { ...bondOrders.value, [bond.key]: next };
+      showHint.value = false;
+      activeBondKey.value = activeBondKey.value === bond.key ? null : bond.key;
+      selectedId.value = null;
+    }
+
+    function setBondOrder(order) {
+      if (!activeBondKey.value || won.value) return;
+      bondOrders.value = { ...bondOrders.value, [activeBondKey.value]: order };
+      activeBondKey.value = null;
       showHint.value = false;
       checkWin();
     }
@@ -981,33 +1144,29 @@ createApp({
     function selectAtom(atom) {
       if (won.value) return;
       showHint.value = false;
-      if (selectedId.value === null) {
-        selectedId.value = atom.id;
-        return;
+      // If a bond is active, close it
+      if (activeBondKey.value) { activeBondKey.value = null; selectedId.value = null; return; }
+      // Deselect if tapping same atom
+      if (selectedId.value === atom.id) { selectedId.value = null; return; }
+      // If another atom is selected, try to open the bond between them
+      if (selectedId.value !== null) {
+        const ia = selectedId.value, ib = atom.id;
+        const key = bondKey(ia, ib);
+        const pairExists = currentLevel.value.pairs.some(
+          ([a, b]) => (a === ia && b === ib) || (a === ib && b === ia)
+        );
+        if (pairExists) {
+          activeBondKey.value = key;
+          selectedId.value = null;
+          return;
+        }
       }
-      if (selectedId.value === atom.id) {
-        selectedId.value = null;
-        return;
-      }
-      // Try to cycle bond between selectedId and atom.id
-      const ia = selectedId.value, ib = atom.id;
-      const key = bondKey(ia, ib);
-      const pairExists = currentLevel.value.pairs.some(
-        ([a,b]) => (a===ia && b===ib) || (a===ib && b===ia)
-      );
-      if (pairExists) {
-        const sol = currentLevel.value.solution[key];
-        const maxOrder = sol || 3;
-        const cur = bondOrders.value[key] ?? 0;
-        const next = cur >= maxOrder ? 0 : cur + 1;
-        bondOrders.value = { ...bondOrders.value, [key]: next };
-        checkWin();
-      }
-      selectedId.value = null;
+      selectedId.value = atom.id;
     }
 
     function deselect() {
       selectedId.value = null;
+      activeBondKey.value = null;
     }
 
     // Touch: track touchstart target element for tap detection
@@ -1042,12 +1201,12 @@ createApp({
       const wrongs = Object.entries(sol).filter(([k,v]) => (bondOrders.value[k]??0) !== v);
       if (!wrongs.length) return;
       const [k] = wrongs[Math.floor(Math.random() * wrongs.length)];
-      const cur = bondOrders.value[k] ?? 0;
+      // Select the wrong bond so the picker opens on it
+      activeBondKey.value = k;
+      selectedId.value = null;
       const need = sol[k];
       const bondNames = { 1: t('single'), 2: t('double'), 3: t('triple') };
-      hintText.value = cur === 0
-        ? `${t('hintAdd')} ${bondNames[need]}`
-        : `${t('hintChange')} ${bondNames[need]}`;
+      hintText.value = `${t('hintChange')} ${bondNames[need]}`;
       showHint.value = true;
     }
 
@@ -1057,6 +1216,7 @@ createApp({
       showOverlay.value = false;
       showHint.value = false;
       selectedId.value = null;
+      activeBondKey.value = null;
     }
 
     function nextLevel() {
@@ -1104,24 +1264,26 @@ createApp({
     const STRINGS = {
       en: {
         back: 'Games', title: 'Molecules', score: 'Score', best: 'Best', level: 'Level',
-        prompt: 'Select an atom or click a bond to cycle its order',
+        prompt: 'Tap a bond or an atom to start bonding',
         win: 'Molecule complete!', complete: 'Complete!', pts: 'pts',
         next: 'Next Molecule', restart: 'Play Again',
         reset: 'Reset', resetScores: 'Reset Scores', hint: 'Hint',
         single: 'single', double: 'double', triple: 'triple',
-        tapTip: 'Tap bond or select 2 atoms',
+        tapTip: 'Tap a bond or two atoms',
+        selectNeighbor: '→ now tap a connected atom',
         hintAdd: 'Add a', hintChange: 'Change bond to',
         valenceRef: 'Bond count',
         arrow: '→',
       },
       he: {
         back: 'משחקים', title: 'מולקולות', score: 'ניקוד', best: 'שיא', level: 'שלב',
-        prompt: 'בחר אטום או לחץ על קשר לשינוי סדר',
+        prompt: 'הקש קשר או אטום להתחלת קישור',
         win: 'המולקולה הושלמה!', complete: 'הושלם!', pts: 'נק׳',
         next: 'מולקולה הבאה', restart: 'שחק שוב',
         reset: 'אפס שלב', resetScores: 'אפס ניקודים', hint: 'רמז',
         single: 'יחיד', double: 'כפול', triple: 'משולש',
-        tapTip: 'הקש קשר או בחר 2 אטומים',
+        tapTip: 'הקש קשר או שני אטומים',
+        selectNeighbor: '← הקש אטום מחובר',
         hintAdd: 'הוסף קשר', hintChange: 'שנה קשר ל-',
         valenceRef: 'מספר קשרים',
         arrow: '←',
@@ -1170,9 +1332,9 @@ createApp({
     return {
       lang, isRTL, t, levels, levelIdx, currentLevel,
       score, best, won, showOverlay, showHint, hintText, levelPoints,
-      selectedId, atoms, bonds,
-      bondColor, offsetTransform, valenceLeft, valenceFill, valenceTextFill,
-      selectAtom, deselect, cycleBond, showHintFn, resetLevel, nextLevel, restart, resetScores,
+      selectedId, activeBondKey, activeBond, atomMap, reachableIds, atoms, bonds,
+      offsetTransform, valenceLeft, valenceFill, valenceTextFill,
+      selectAtom, selectBond, setBondOrder, deselect, showHintFn, resetLevel, nextLevel, restart, resetScores,
       onSvgTouchStart, onSvgTouchEnd,
       SVG_W, SVG_H,
       ELEMENT_STYLE, VALENCE,
