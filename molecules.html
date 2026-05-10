@@ -1,0 +1,1184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Molecules — Bond Builder</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0d1117">
+<link rel="apple-touch-icon" href="icon.svg">
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --accent: #34d399;
+  --accent-dim: #065f46;
+}
+
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: #0d1117;
+  color: #c9d1d9;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 16px 48px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* ── Top bar ───────────────────────────────────────────────── */
+.top-bar {
+  width: 100%;
+  max-width: 560px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.back-link {
+  color: #6e7681;
+  text-decoration: none;
+  font-size: 0.85rem;
+  transition: color 0.15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.back-link:hover { color: #c9d1d9; }
+[dir="ltr"] .back-link::before { content: '←'; }
+[dir="rtl"] .back-link::after  { content: '→'; }
+.lang-toggle { display: flex; gap: 4px; }
+.lang-btn {
+  background: none;
+  border: 1px solid #30363d;
+  color: #6e7681;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.lang-btn.active { background: #052e16; border-color: #34d399; color: #34d399; }
+.lang-btn:hover:not(.active) { color: #c9d1d9; border-color: #6e7681; }
+
+/* ── Title ─────────────────────────────────────────────────── */
+h1 {
+  font-size: 2rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  margin-bottom: 4px;
+  text-align: center;
+}
+h1 .accent { color: var(--accent); }
+
+/* ── Score bar ─────────────────────────────────────────────── */
+.score-bar {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 14px;
+}
+.score-pill {
+  background: #161b22;
+  border: 1px solid #21262d;
+  border-radius: 20px;
+  padding: 6px 18px;
+  text-align: center;
+  min-width: 80px;
+}
+.score-pill .label { font-size: 0.65rem; color: #6e7681; letter-spacing: 0.08em; text-transform: uppercase; }
+.score-pill .value { font-size: 1.3rem; font-weight: 700; color: var(--accent); }
+
+/* ── Level strip ────────────────────────────────────────────── */
+.level-strip {
+  width: 100%;
+  max-width: 560px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  gap: 8px;
+}
+.level-name {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #c9d1d9;
+}
+.level-formula {
+  font-size: 0.9rem;
+  color: #6e7681;
+  font-family: monospace;
+}
+.level-dots {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.level-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #21262d;
+  transition: background 0.2s;
+}
+.level-dot.done { background: var(--accent); }
+.level-dot.current { background: #6e7681; }
+
+/* ── Status ─────────────────────────────────────────────────── */
+.status {
+  height: 2.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #6e7681;
+  margin-bottom: 10px;
+  transition: color 0.2s;
+}
+.status.win  { color: var(--accent); }
+.status.hint { color: #fbbf24; }
+
+/* ── Canvas ─────────────────────────────────────────────────── */
+.canvas-wrap {
+  width: 100%;
+  max-width: 560px;
+  background: #161b22;
+  border: 1px solid #21262d;
+  border-radius: 16px;
+  overflow: hidden;
+  touch-action: none;
+  position: relative;
+}
+svg.board {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* ── Bond lines ─────────────────────────────────────────────── */
+.bond { cursor: pointer; }
+.bond line { stroke-linecap: round; }
+.bond:hover line { opacity: 0.7; }
+
+/* ── Atom circles ───────────────────────────────────────────── */
+.atom-group { cursor: pointer; }
+
+/* ── Valence badge ──────────────────────────────────────────── */
+.valence-badge {
+  font-size: 9px;
+  font-family: monospace;
+  font-weight: 700;
+  pointer-events: none;
+}
+
+/* ── Bottom controls ────────────────────────────────────────── */
+.controls {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.btn {
+  background: #161b22;
+  border: 1px solid #30363d;
+  color: #c9d1d9;
+  border-radius: 8px;
+  padding: 9px 20px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn:hover { border-color: #6e7681; color: #fff; }
+.btn.primary {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.btn.primary:hover { background: #065f46cc; }
+.btn.danger { border-color: #f87171; color: #f87171; }
+.btn.danger:hover { background: #1a0000; }
+
+/* ── Bond order legend ──────────────────────────────────────── */
+.legend {
+  display: flex;
+  gap: 16px;
+  margin-top: 10px;
+  font-size: 0.75rem;
+  color: #6e7681;
+  align-items: center;
+}
+.legend-item { display: flex; align-items: center; gap: 6px; }
+.legend-svg { width: 32px; height: 14px; }
+
+/* ── Valence reference ──────────────────────────────────────── */
+.valence-ref {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  margin-top: 10px;
+  width: 100%;
+  max-width: 560px;
+}
+.vr-title { font-size: 0.75rem; color: #6e7681; font-weight: 600; }
+.vr-el {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px 8px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+.vr-count { font-size: 0.7rem; opacity: 0.85; font-weight: 700; }
+
+/* ── RTL overrides ──────────────────────────────────────────── */
+[dir="rtl"] .level-strip { direction: rtl; }
+[dir="rtl"] .status      { direction: rtl; }
+[dir="rtl"] .legend      { direction: rtl; }
+[dir="rtl"] .controls    { direction: rtl; }
+[dir="rtl"] .overlay-card { direction: rtl; text-align: right; }
+[dir="rtl"] .mol-fun     { text-align: right; }
+
+/* ── Win overlay ────────────────────────────────────────────── */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: #0d111799;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+.overlay-card {
+  background: #161b22;
+  border: 1px solid var(--accent);
+  border-radius: 20px;
+  padding: 36px 48px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  box-shadow: 0 0 40px #34d39940;
+}
+.overlay-card h2 { font-size: 2rem; color: var(--accent); }
+.overlay-card .mol-name { font-size: 1.1rem; color: #c9d1d9; }
+.overlay-card .mol-fun  { font-size: 0.85rem; color: #6e7681; max-width: 280px; line-height: 1.5; }
+.overlay-card .points   { font-size: 1.4rem; font-weight: 700; color: var(--accent); }
+</style>
+</head>
+<body>
+<div id="app" :dir="isRTL ? 'rtl' : 'ltr'">
+
+  <div class="top-bar">
+    <a class="back-link" href="index.html">{{ t('back') }}</a>
+    <div class="lang-toggle">
+      <button class="lang-btn" :class="{active: lang==='en'}" @click="lang='en'">EN</button>
+      <button class="lang-btn" :class="{active: lang==='he'}" @click="lang='he'">עב</button>
+    </div>
+  </div>
+
+  <h1><span class="accent">⬡</span> {{ t('title') }}</h1>
+
+  <div class="score-bar">
+    <div class="score-pill">
+      <div class="label">{{ t('score') }}</div>
+      <div class="value">{{ score }}</div>
+    </div>
+    <div class="score-pill">
+      <div class="label">{{ t('best') }}</div>
+      <div class="value">{{ best }}</div>
+    </div>
+    <div class="score-pill">
+      <div class="label">{{ t('level') }}</div>
+      <div class="value">{{ levelIdx + 1 }}</div>
+    </div>
+  </div>
+
+  <div class="level-strip">
+    <div>
+      <div class="level-name">{{ currentLevel.name[lang] }}</div>
+      <div class="level-formula">{{ currentLevel.formula }}</div>
+    </div>
+    <div class="level-dots">
+      <div v-for="(lv, i) in levels" :key="i" class="level-dot"
+        :class="{ done: i < levelIdx, current: i === levelIdx }"></div>
+    </div>
+  </div>
+
+  <div class="status" :class="{ win: won, hint: showHint && !won }">
+    <template v-if="won">{{ t('win') }}</template>
+    <template v-else-if="showHint">{{ hintText }}</template>
+    <template v-else>{{ t('prompt') }}</template>
+  </div>
+
+  <div class="canvas-wrap">
+    <svg class="board" :viewBox="`0 0 ${SVG_W} ${SVG_H}`"
+         :width="SVG_W" :height="SVG_H"
+         @click.self="deselect"
+         @touchstart.prevent="onSvgTouchStart"
+         @touchend.prevent="onSvgTouchEnd">
+
+      <!-- Bond lines -->
+      <g v-for="bond in bonds" :key="bond.key" class="bond"
+         @click="cycleBond(bond)" @touchend.prevent.stop="cycleBond(bond)">
+        <!-- available slot: dashed gray when no bond drawn -->
+        <line v-if="bond.order === 0"
+          :x1="bond.ax" :y1="bond.ay" :x2="bond.bx" :y2="bond.by"
+          stroke="#3d444d" stroke-width="2" stroke-dasharray="6 5" stroke-linecap="round" />
+        <!-- single bond: one centered line -->
+        <line v-if="bond.order === 1"
+          :x1="bond.ax" :y1="bond.ay" :x2="bond.bx" :y2="bond.by"
+          stroke="#6ee7b7" stroke-width="3" stroke-linecap="round" />
+        <!-- double bond: two parallel lines -->
+        <line v-if="bond.order === 2"
+          :x1="bond.ax" :y1="bond.ay" :x2="bond.bx" :y2="bond.by"
+          stroke="#6ee7b7" stroke-width="2.5" stroke-linecap="round"
+          :transform="offsetTransform(bond, -4)" />
+        <line v-if="bond.order === 2"
+          :x1="bond.ax" :y1="bond.ay" :x2="bond.bx" :y2="bond.by"
+          stroke="#6ee7b7" stroke-width="2.5" stroke-linecap="round"
+          :transform="offsetTransform(bond, 4)" />
+        <!-- triple bond: three parallel lines -->
+        <line v-if="bond.order === 3"
+          :x1="bond.ax" :y1="bond.ay" :x2="bond.bx" :y2="bond.by"
+          stroke="#6ee7b7" stroke-width="2" stroke-linecap="round"
+          :transform="offsetTransform(bond, -5)" />
+        <line v-if="bond.order === 3"
+          :x1="bond.ax" :y1="bond.ay" :x2="bond.bx" :y2="bond.by"
+          stroke="#6ee7b7" stroke-width="2" stroke-linecap="round" />
+        <line v-if="bond.order === 3"
+          :x1="bond.ax" :y1="bond.ay" :x2="bond.bx" :y2="bond.by"
+          stroke="#6ee7b7" stroke-width="2" stroke-linecap="round"
+          :transform="offsetTransform(bond, 5)" />
+        <!-- order badge at midpoint -->
+        <g v-if="bond.order > 0">
+          <circle :cx="(bond.ax+bond.bx)/2" :cy="(bond.ay+bond.by)/2" r="9"
+            fill="#0d1117" stroke="#30363d" stroke-width="1" />
+          <text :x="(bond.ax+bond.bx)/2" :y="(bond.ay+bond.by)/2"
+            text-anchor="middle" dominant-baseline="central"
+            font-size="9" font-weight="700" fill="#6ee7b7" pointer-events="none">{{ bond.order }}</text>
+        </g>
+        <!-- fat invisible hit target -->
+        <line :x1="bond.ax" :y1="bond.ay" :x2="bond.bx" :y2="bond.by"
+          stroke="transparent" stroke-width="18" />
+      </g>
+
+      <!-- Atoms -->
+      <g v-for="atom in atoms" :key="atom.id" class="atom-group"
+         @click.stop="selectAtom(atom)"
+         @touchend.prevent.stop="selectAtom(atom)">
+        <!-- selection ring -->
+        <circle v-if="selectedId === atom.id"
+          :cx="atom.x" :cy="atom.y" :r="atom.r + 5"
+          fill="none" stroke="#fff" stroke-width="2" opacity="0.7" />
+        <circle :cx="atom.x" :cy="atom.y" :r="atom.r"
+          :fill="atom.color" :stroke="atom.stroke"
+          stroke-width="2" />
+        <text :x="atom.x" :y="atom.y" text-anchor="middle" dominant-baseline="central"
+          :font-size="atom.element.length > 1 ? 11 : 14" font-weight="800"
+          :fill="atom.textColor" pointer-events="none">{{ atom.element }}</text>
+        <!-- valence remaining badge -->
+        <g v-if="!won">
+          <circle :cx="atom.x + atom.r * 0.65" :cy="atom.y - atom.r * 0.65" r="7"
+            :fill="valenceFill(atom)" stroke="#0d1117" stroke-width="1.5" />
+          <text class="valence-badge"
+            :x="atom.x + atom.r * 0.65" :y="atom.y - atom.r * 0.65"
+            text-anchor="middle" dominant-baseline="central"
+            :fill="valenceTextFill(atom)">{{ valenceLeft(atom) }}</text>
+        </g>
+      </g>
+    </svg>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item">
+      <svg class="legend-svg" viewBox="0 0 32 14">
+        <line x1="2" y1="7" x2="30" y2="7" stroke="#6e7681" stroke-width="2.5" stroke-linecap="round"/>
+      </svg>
+      {{ t('single') }}
+    </div>
+    <div class="legend-item">
+      <svg class="legend-svg" viewBox="0 0 32 14">
+        <line x1="2" y1="4" x2="30" y2="4" stroke="#6e7681" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="2" y1="10" x2="30" y2="10" stroke="#6e7681" stroke-width="2.5" stroke-linecap="round"/>
+      </svg>
+      {{ t('double') }}
+    </div>
+    <div class="legend-item">
+      <svg class="legend-svg" viewBox="0 0 32 14">
+        <line x1="2" y1="2" x2="30" y2="2" stroke="#6e7681" stroke-width="2" stroke-linecap="round"/>
+        <line x1="2" y1="7" x2="30" y2="7" stroke="#6e7681" stroke-width="2" stroke-linecap="round"/>
+        <line x1="2" y1="12" x2="30" y2="12" stroke="#6e7681" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      {{ t('triple') }}
+    </div>
+    <span style="color:#30363d">|</span>
+    <span style="font-size:0.72rem">{{ t('tapTip') }}</span>
+  </div>
+
+  <!-- Element valence reference -->
+  <div class="valence-ref">
+    <span class="vr-title">{{ t('valenceRef') }}:</span>
+    <span v-for="el in ['H','C','N','O','S','Cl','P']" :key="el" class="vr-el"
+      :style="{ background: ELEMENT_STYLE[el].fill, color: ELEMENT_STYLE[el].text }">
+      {{ el }}<span class="vr-count">×{{ VALENCE[el] }}</span>
+    </span>
+  </div>
+
+  <div class="controls">
+    <button class="btn" @click="resetLevel">{{ t('reset') }}</button>
+    <button class="btn" @click="showHintFn">{{ t('hint') }}</button>
+    <button class="btn primary" v-if="won && levelIdx < levels.length - 1" @click="nextLevel">{{ t('next') }} {{ t('arrow') }}</button>
+    <button class="btn primary" v-if="won && levelIdx === levels.length - 1" @click="restart">{{ t('restart') }}</button>
+    <button class="btn danger" @click="resetScores">{{ t('resetScores') }}</button>
+  </div>
+
+  <!-- Win overlay -->
+  <div class="overlay" v-if="won && showOverlay" @click="showOverlay = false">
+    <div class="overlay-card" @click.stop>
+      <h2>{{ t('complete') }}</h2>
+      <div class="mol-name">{{ currentLevel.name[lang] }}</div>
+      <div class="mol-fun">{{ currentLevel.fact[lang] }}</div>
+      <div class="points">+{{ levelPoints }} {{ t('pts') }}</div>
+      <button class="btn primary" v-if="levelIdx < levels.length - 1" @click="nextLevel">{{ t('next') }} {{ t('arrow') }}</button>
+      <button class="btn primary" v-else @click="restart">{{ t('restart') }}</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const { createApp, ref, computed, watch, onMounted } = Vue;
+
+const SVG_W = 520;
+const SVG_H = 400;
+
+// CPK-ish colors
+const ELEMENT_STYLE = {
+  H:  { fill: '#d1d5db', stroke: '#9ca3af', text: '#111827', r: 18 },
+  C:  { fill: '#374151', stroke: '#6b7280', text: '#f9fafb', r: 22 },
+  N:  { fill: '#3b82f6', stroke: '#93c5fd', text: '#fff',    r: 22 },
+  O:  { fill: '#ef4444', stroke: '#fca5a5', text: '#fff',    r: 22 },
+  S:  { fill: '#eab308', stroke: '#fde68a', text: '#111',    r: 22 },
+  P:  { fill: '#f97316', stroke: '#fdba74', text: '#fff',    r: 22 },
+  Cl: { fill: '#22c55e', stroke: '#86efac', text: '#fff',    r: 22 },
+};
+
+// Valence rules
+const VALENCE = { H: 1, C: 4, N: 3, O: 2, S: 2, P: 5, Cl: 1 };
+
+// Each level: atoms with pre-placed positions, allowed bonds (pairs), and solution bond orders
+const LEVELS = [
+  /* ── 1 ── */
+  {
+    formula: 'H₂',
+    name: { en: 'Hydrogen', he: 'מימן' },
+    fact: {
+      en: 'The lightest and most abundant element in the universe.',
+      he: 'היסוד הקל והנפוץ ביותר ביקום.'
+    },
+    atoms: [
+      { id: 0, element: 'H', x: 200, y: 200 },
+      { id: 1, element: 'H', x: 320, y: 200 },
+    ],
+    pairs: [[0,1]],
+    solution: { '0-1': 1 },
+  },
+  {
+    formula: 'H₂O',
+    name: { en: 'Water', he: 'מים' },
+    fact: {
+      en: 'The molecule of life — covers 71% of Earth\'s surface.',
+      he: 'מולקולת החיים — מכסה 71% משטח כדור הארץ.'
+    },
+    atoms: [
+      { id: 0, element: 'O', x: 260, y: 180 },
+      { id: 1, element: 'H', x: 160, y: 280 },
+      { id: 2, element: 'H', x: 360, y: 280 },
+    ],
+    pairs: [[0,1],[0,2]],
+    solution: { '0-1': 1, '0-2': 1 },
+  },
+  /* ── 3 ── */
+  {
+    formula: 'H₂O₂',
+    name: { en: 'Hydrogen Peroxide', he: 'מי חמצן' },
+    fact: {
+      en: 'The antiseptic you pour on wounds — two oxygen atoms bonded directly together.',
+      he: 'החומר האנטיספטי שמוזגים על פצעים — שני אטומי חמצן הקשורים ישירות זה לזה.'
+    },
+    atoms: [
+      { id: 0, element: 'H',  x: 130, y: 200 },
+      { id: 1, element: 'O',  x: 230, y: 200 },
+      { id: 2, element: 'O',  x: 330, y: 200 },
+      { id: 3, element: 'H',  x: 430, y: 200 },
+    ],
+    pairs: [[0,1],[1,2],[2,3]],
+    solution: { '0-1':1,'1-2':1,'2-3':1 },
+  },
+  /* ── 4 ── */
+  {
+    formula: 'O₂',
+    name: { en: 'Oxygen', he: 'חמצן' },
+    fact: {
+      en: 'A double bond holds the two oxygen atoms together in the air we breathe.',
+      he: 'קשר כפול מחזיק את שני אטומי החמצן יחד באוויר שאנו נושמים.'
+    },
+    atoms: [
+      { id: 0, element: 'O', x: 200, y: 200 },
+      { id: 1, element: 'O', x: 320, y: 200 },
+    ],
+    pairs: [[0,1]],
+    solution: { '0-1': 2 },
+  },
+  /* ── 5 ── */
+  {
+    formula: 'N₂',
+    name: { en: 'Nitrogen', he: 'חנקן' },
+    fact: {
+      en: 'A triple bond makes nitrogen gas extraordinarily stable — 78% of air is N₂.',
+      he: 'קשר משולש הופך את גז החנקן ליציב במיוחד — 78% מהאוויר הוא N₂.'
+    },
+    atoms: [
+      { id: 0, element: 'N', x: 200, y: 200 },
+      { id: 1, element: 'N', x: 320, y: 200 },
+    ],
+    pairs: [[0,1]],
+    solution: { '0-1': 3 },
+  },
+  /* ── 6 ── */
+  {
+    formula: 'HCN',
+    name: { en: 'Hydrogen Cyanide', he: 'מימן ציאניד' },
+    fact: {
+      en: 'Deadly poison — a triple bond between C and N makes it extremely reactive.',
+      he: 'רעל קטלני — קשר משולש בין C ל-N הופך אותו לתגובתי ביותר.'
+    },
+    atoms: [
+      { id: 0, element: 'H', x: 140, y: 200 },
+      { id: 1, element: 'C', x: 250, y: 200 },
+      { id: 2, element: 'N', x: 380, y: 200 },
+    ],
+    pairs: [[0,1],[1,2]],
+    solution: { '0-1':1,'1-2':3 },
+  },
+  /* ── 7 ── */
+  {
+    formula: 'CO₂',
+    name: { en: 'Carbon Dioxide', he: 'פחמן דו-חמצני' },
+    fact: {
+      en: 'The greenhouse gas responsible for global warming — plants breathe it in.',
+      he: 'גז החממה האחראי להתחממות כדור הארץ — צמחים נושמים אותו.'
+    },
+    atoms: [
+      { id: 0, element: 'O', x: 140, y: 200 },
+      { id: 1, element: 'C', x: 260, y: 200 },
+      { id: 2, element: 'O', x: 380, y: 200 },
+    ],
+    pairs: [[0,1],[1,2]],
+    solution: { '0-1': 2, '1-2': 2 },
+  },
+  /* ── 8 ── */
+  {
+    formula: 'CH₂O',
+    name: { en: 'Formaldehyde', he: 'פורמלדהיד' },
+    fact: {
+      en: 'Used to preserve biological specimens — and produced naturally in our cells.',
+      he: 'משמש לשימור דגימות ביולוגיות — ומיוצר באופן טבעי בתאים שלנו.'
+    },
+    atoms: [
+      { id: 0, element: 'H', x: 140, y: 130 },
+      { id: 1, element: 'H', x: 140, y: 270 },
+      { id: 2, element: 'C', x: 270, y: 200 },
+      { id: 3, element: 'O', x: 400, y: 200 },
+    ],
+    pairs: [[0,2],[1,2],[2,3]],
+    solution: { '0-2':1,'1-2':1,'2-3':2 },
+  },
+  /* ── 9 ── */
+  {
+    formula: 'NH₃',
+    name: { en: 'Ammonia', he: 'אמוניה' },
+    fact: {
+      en: 'Used in fertilizers that feed half the world\'s population.',
+      he: 'משמש בדשנים המזינים את מחצית אוכלוסיית העולם.'
+    },
+    atoms: [
+      { id: 0, element: 'N', x: 260, y: 175 },
+      { id: 1, element: 'H', x: 150, y: 295 },
+      { id: 2, element: 'H', x: 260, y: 315 },
+      { id: 3, element: 'H', x: 370, y: 295 },
+    ],
+    pairs: [[0,1],[0,2],[0,3]],
+    solution: { '0-1': 1, '0-2': 1, '0-3': 1 },
+  },
+  /* ── 10 ── */
+  {
+    formula: 'CH₄',
+    name: { en: 'Methane', he: 'מתאן' },
+    fact: {
+      en: 'Natural gas and a potent greenhouse gas — also made by cows!',
+      he: 'גז טבעי וגז חממה רב עוצמה — גם פרות מייצרות אותו!'
+    },
+    atoms: [
+      { id: 0, element: 'C', x: 260, y: 200 },
+      { id: 1, element: 'H', x: 150, y: 120 },
+      { id: 2, element: 'H', x: 370, y: 120 },
+      { id: 3, element: 'H', x: 150, y: 280 },
+      { id: 4, element: 'H', x: 370, y: 280 },
+    ],
+    pairs: [[0,1],[0,2],[0,3],[0,4]],
+    solution: { '0-1': 1, '0-2': 1, '0-3': 1, '0-4': 1 },
+  },
+  /* ── 11 ── */
+  {
+    formula: 'CH₃OH',
+    name: { en: 'Methanol', he: 'מתנול' },
+    fact: {
+      en: 'Wood alcohol — toxic to humans, but used as fuel and solvent in industry.',
+      he: 'אלכוהול עץ — רעיל לבני אדם, אך משמש כדלק וממיס בתעשייה.'
+    },
+    atoms: [
+      { id: 0, element: 'C',  x: 210, y: 200 },
+      { id: 1, element: 'O',  x: 340, y: 200 },
+      { id: 2, element: 'H',  x: 420, y: 280 },
+      { id: 3, element: 'H',  x: 130, y: 130 },
+      { id: 4, element: 'H',  x: 130, y: 200 },
+      { id: 5, element: 'H',  x: 130, y: 270 },
+    ],
+    pairs: [[0,1],[1,2],[0,3],[0,4],[0,5]],
+    solution: { '0-1':1,'1-2':1,'0-3':1,'0-4':1,'0-5':1 },
+  },
+  /* ── 12 ── */
+  {
+    formula: 'HCl',
+    name: { en: 'Hydrogen Chloride', he: 'מימן כלורי' },
+    fact: {
+      en: 'Dissolves in water to form hydrochloric acid — found in your stomach.',
+      he: 'מתמוסס במים ויוצר חומצה מלחית — נמצאת בקיבה שלך.'
+    },
+    atoms: [
+      { id: 0, element: 'H', x: 200, y: 200 },
+      { id: 1, element: 'Cl', x: 330, y: 200 },
+    ],
+    pairs: [[0,1]],
+    solution: { '0-1': 1 },
+  },
+  /* ── 13 ── */
+  {
+    formula: 'C₂H₆',
+    name: { en: 'Ethane', he: 'אתאן' },
+    fact: {
+      en: 'The second simplest alkane — found in natural gas alongside methane.',
+      he: 'האלקן הפשוט השני — נמצא בגז טבעי לצד מתאן.'
+    },
+    atoms: [
+      { id: 0, element: 'C', x: 190, y: 200 },
+      { id: 1, element: 'C', x: 330, y: 200 },
+      { id: 2, element: 'H', x: 110, y: 120 },
+      { id: 3, element: 'H', x: 110, y: 200 },
+      { id: 4, element: 'H', x: 110, y: 280 },
+      { id: 5, element: 'H', x: 410, y: 120 },
+      { id: 6, element: 'H', x: 410, y: 200 },
+      { id: 7, element: 'H', x: 410, y: 280 },
+    ],
+    pairs: [[0,1],[0,2],[0,3],[0,4],[1,5],[1,6],[1,7]],
+    solution: { '0-1': 1, '0-2': 1, '0-3': 1, '0-4': 1, '1-5': 1, '1-6': 1, '1-7': 1 },
+  },
+  /* ── 14 ── */
+  {
+    formula: 'C₃H₈',
+    name: { en: 'Propane', he: 'פרופאן' },
+    fact: {
+      en: 'The gas in your grill tank — a simple three-carbon chain.',
+      he: 'הגז במיכל הגריל שלך — שרשרת פחמן פשוטה בת שלושה אטומים.'
+    },
+    atoms: [
+      { id: 0,  element: 'C', x: 100, y: 200 },
+      { id: 1,  element: 'C', x: 260, y: 200 },
+      { id: 2,  element: 'C', x: 420, y: 200 },
+      { id: 3,  element: 'H', x:  30, y: 140 },
+      { id: 4,  element: 'H', x:  30, y: 200 },
+      { id: 5,  element: 'H', x:  30, y: 260 },
+      { id: 6,  element: 'H', x: 260, y: 110 },
+      { id: 7,  element: 'H', x: 260, y: 290 },
+      { id: 8,  element: 'H', x: 490, y: 140 },
+      { id: 9,  element: 'H', x: 490, y: 200 },
+      { id: 10, element: 'H', x: 490, y: 260 },
+    ],
+    pairs: [[0,1],[1,2],[0,3],[0,4],[0,5],[1,6],[1,7],[2,8],[2,9],[2,10]],
+    solution: { '0-1':1,'1-2':1,'0-3':1,'0-4':1,'0-5':1,'1-6':1,'1-7':1,'2-8':1,'2-9':1,'2-10':1 },
+  },
+  /* ── 15 ── */
+  {
+    formula: 'C₂H₄',
+    name: { en: 'Ethylene', he: 'אתילן' },
+    fact: {
+      en: 'A plant hormone that ripens fruit — and the most-produced organic chemical.',
+      he: 'הורמון צמחי שמבשיל פירות — והכימיקל האורגני המיוצר ביותר.'
+    },
+    atoms: [
+      { id: 0, element: 'C', x: 195, y: 200 },
+      { id: 1, element: 'C', x: 325, y: 200 },
+      { id: 2, element: 'H', x: 120, y: 130 },
+      { id: 3, element: 'H', x: 120, y: 270 },
+      { id: 4, element: 'H', x: 400, y: 130 },
+      { id: 5, element: 'H', x: 400, y: 270 },
+    ],
+    pairs: [[0,1],[0,2],[0,3],[1,4],[1,5]],
+    solution: { '0-1': 2, '0-2': 1, '0-3': 1, '1-4': 1, '1-5': 1 },
+  },
+  /* ── 16 ── */
+  {
+    formula: 'C₂H₂',
+    name: { en: 'Acetylene', he: 'אצטילן' },
+    fact: {
+      en: 'Used in welding torches — burns at over 3,500°C with oxygen.',
+      he: 'משמש בלפידי ריתוך — בוער בטמפרטורה של מעל 3,500°C עם חמצן.'
+    },
+    atoms: [
+      { id: 0, element: 'H', x: 140, y: 200 },
+      { id: 1, element: 'C', x: 220, y: 200 },
+      { id: 2, element: 'C', x: 300, y: 200 },
+      { id: 3, element: 'H', x: 380, y: 200 },
+    ],
+    pairs: [[0,1],[1,2],[2,3]],
+    solution: { '0-1': 1, '1-2': 3, '2-3': 1 },
+  },
+  /* ── 17 ── */
+  {
+    formula: 'CH₃COOH',
+    name: { en: 'Acetic Acid', he: 'חומצה אצטית' },
+    fact: {
+      en: 'The acid in vinegar — responsible for that sharp sour taste.',
+      he: 'החומצה בחומץ — האחראית לטעם החמוץ החד.'
+    },
+    atoms: [
+      { id: 0, element: 'C', x: 150, y: 200 },  // methyl C
+      { id: 1, element: 'C', x: 290, y: 200 },  // carboxyl C
+      { id: 2, element: 'O', x: 290, y:  80 },  // C=O
+      { id: 3, element: 'O', x: 420, y: 200 },  // C-OH
+      { id: 4, element: 'H', x: 490, y: 130 },  // O-H
+      { id: 5, element: 'H', x:  70, y: 130 },  // C-H
+      { id: 6, element: 'H', x:  70, y: 200 },  // C-H
+      { id: 7, element: 'H', x:  70, y: 270 },  // C-H
+    ],
+    pairs: [[0,1],[1,2],[1,3],[3,4],[0,5],[0,6],[0,7]],
+    solution: { '0-1':1,'1-2':2,'1-3':1,'3-4':1,'0-5':1,'0-6':1,'0-7':1 },
+  },
+  /* ── 18 ── */
+  {
+    formula: 'H₂SO₄',
+    name: { en: 'Sulfuric Acid', he: 'חומצה גופרתית' },
+    fact: {
+      en: 'The world\'s most-produced chemical — used in batteries and fertilizers.',
+      he: 'הכימיקל המיוצר הכי הרבה בעולם — משמש בסוללות ודשנים.'
+    },
+    atoms: [
+      { id: 0, element: 'S', x: 260, y: 200 },
+      { id: 1, element: 'O', x: 150, y: 140 },
+      { id: 2, element: 'O', x: 370, y: 140 },
+      { id: 3, element: 'O', x: 150, y: 280 },
+      { id: 4, element: 'O', x: 370, y: 280 },
+      { id: 5, element: 'H', x: 80,  y: 320 },
+      { id: 6, element: 'H', x: 440, y: 320 },
+    ],
+    pairs: [[0,1],[0,2],[0,3],[0,4],[3,5],[4,6]],
+    solution: { '0-1': 2, '0-2': 2, '0-3': 1, '0-4': 1, '3-5': 1, '4-6': 1 },
+  },
+  /* ── 19 ── */
+  {
+    formula: 'C₆H₁₂O₆',
+    name: { en: 'Glucose', he: 'גלוקוז' },
+    fact: {
+      en: 'The primary fuel for your brain and muscles — a simple sugar.',
+      he: 'הדלק העיקרי למוח ולשרירים שלך — סוכר פשוט.'
+    },
+    // Open-chain Fischer-like layout
+    atoms: [
+      // Backbone C1–C6 vertical
+      { id: 0,  element: 'C', x: 260, y:  60 },   // C1
+      { id: 1,  element: 'C', x: 260, y: 120 },   // C2
+      { id: 2,  element: 'C', x: 260, y: 180 },   // C3
+      { id: 3,  element: 'C', x: 260, y: 240 },   // C4
+      { id: 4,  element: 'C', x: 260, y: 300 },   // C5
+      { id: 5,  element: 'C', x: 260, y: 360 },   // C6
+      // Oxygens on backbone
+      { id: 6,  element: 'O', x: 360, y:  60 },   // C1=O (aldehyde)
+      { id: 7,  element: 'O', x: 160, y: 120 },   // C2-OH
+      { id: 8,  element: 'O', x: 360, y: 180 },   // C3-OH
+      { id: 9,  element: 'O', x: 160, y: 240 },   // C4-OH
+      { id: 10, element: 'O', x: 360, y: 300 },   // C5-OH
+      { id: 11, element: 'O', x: 360, y: 360 },   // C6-OH
+      // H on each C (one side)
+      { id: 12, element: 'H', x: 160, y:  60 },   // C1-H
+      { id: 13, element: 'H', x: 360, y: 120 },   // C2-H
+      { id: 14, element: 'H', x: 160, y: 180 },   // C3-H
+      { id: 15, element: 'H', x: 360, y: 240 },   // C4-H
+      { id: 16, element: 'H', x: 160, y: 300 },   // C5-H
+      { id: 17, element: 'H', x: 160, y: 360 },   // C6-H2 (a)
+      { id: 18, element: 'H', x: 260, y: 430 },   // C6-H2 (b) -- extra H for CH2OH
+      // OH hydrogens
+      { id: 19, element: 'H', x: 80,  y: 120 },   // O7-H
+      { id: 20, element: 'H', x: 440, y: 180 },   // O8-H
+      { id: 21, element: 'H', x: 80,  y: 240 },   // O9-H
+      { id: 22, element: 'H', x: 440, y: 300 },   // O10-H
+      { id: 23, element: 'H', x: 440, y: 360 },   // O11-H
+    ],
+    pairs: [
+      [0,1],[1,2],[2,3],[3,4],[4,5],        // C backbone
+      [0,6],[0,12],                          // C1: =O, H
+      [1,7],[1,13],                          // C2: O, H
+      [2,8],[2,14],                          // C3: O, H
+      [3,9],[3,15],                          // C4: O, H
+      [4,10],[4,16],                         // C5: O, H
+      [5,11],[5,17],[5,18],                  // C6: O, H, H
+      [7,19],[8,20],[9,21],[10,22],[11,23],  // OH groups
+    ],
+    solution: {
+      '0-1':1,'1-2':1,'2-3':1,'3-4':1,'4-5':1,
+      '0-6':2,'0-12':1,
+      '1-7':1,'1-13':1,
+      '2-8':1,'2-14':1,
+      '3-9':1,'3-15':1,
+      '4-10':1,'4-16':1,
+      '5-11':1,'5-17':1,'5-18':1,
+      '7-19':1,'8-20':1,'9-21':1,'10-22':1,'11-23':1,
+    },
+  },
+];
+
+// Scale all level atom positions to fit SVG
+function scaleAtoms(atoms) {
+  if (!atoms.length) return atoms;
+  const pad = 35;
+  const xs = atoms.map(a => a.x), ys = atoms.map(a => a.y);
+  const minX = Math.min(...xs), maxX = Math.max(...xs);
+  const minY = Math.min(...ys), maxY = Math.max(...ys);
+  const rangeX = maxX - minX || 1, rangeY = maxY - minY || 1;
+  const scaleX = (SVG_W - pad*2) / rangeX;
+  const scaleY = (SVG_H - pad*2) / rangeY;
+  const scale = Math.min(scaleX, scaleY, 1.4);
+  const cx = (SVG_W - rangeX * scale) / 2;
+  const cy = (SVG_H - rangeY * scale) / 2;
+  return atoms.map(a => ({
+    ...a,
+    x: (a.x - minX) * scale + cx,
+    y: (a.y - minY) * scale + cy,
+  }));
+}
+
+createApp({
+  setup() {
+    const lang = ref('en');
+    const isRTL = computed(() => lang.value === 'he');
+    const levelIdx = ref(0);
+    const score = ref(0);
+    const best = ref(0);
+    const won = ref(false);
+    const showOverlay = ref(false);
+    const showHint = ref(false);
+    const hintText = ref('');
+    const levelPoints = ref(0);
+    const selectedId = ref(null);
+    const touchTarget = ref(null); // for touch tap tracking
+
+    // bonds: map key -> order (0 = absent but exists as pair)
+    const bondOrders = ref({});
+
+    const levels = LEVELS;
+    const currentLevel = computed(() => levels[levelIdx.value]);
+
+    // Build atom objects for display
+    const atoms = computed(() => {
+      const scaled = scaleAtoms(currentLevel.value.atoms);
+      return scaled.map(a => {
+        const style = ELEMENT_STYLE[a.element] || ELEMENT_STYLE['C'];
+        return { ...a, ...style, color: style.fill, stroke: style.stroke, textColor: style.text };
+      });
+    });
+
+    // Build bond display objects
+    const bonds = computed(() => {
+      const atomMap = {};
+      atoms.value.forEach(a => { atomMap[a.id] = a; });
+      return currentLevel.value.pairs.map(([ia, ib]) => {
+        const a = atomMap[ia], b = atomMap[ib];
+        const key = `${Math.min(ia,ib)}-${Math.max(ia,ib)}`;
+        return {
+          key, ia, ib,
+          ax: a.x, ay: a.y, bx: b.x, by: b.y,
+          order: bondOrders.value[key] ?? 0,
+        };
+      });
+    });
+
+    function bondColor(bond) {
+      if (bond.order === 0) return '#30363d';
+      return '#6ee7b7';
+    }
+
+    function offsetTransform(bond, d) {
+      const dx = bond.bx - bond.ax, dy = bond.by - bond.ay;
+      const len = Math.sqrt(dx*dx + dy*dy) || 1;
+      const nx = -dy/len * d, ny = dx/len * d;
+      return `translate(${nx},${ny})`;
+    }
+
+    function bondKey(ia, ib) {
+      return `${Math.min(ia,ib)}-${Math.max(ia,ib)}`;
+    }
+
+    function valenceUsed(atom) {
+      let used = 0;
+      bonds.value.forEach(b => {
+        if (b.ia === atom.id || b.ib === atom.id) used += b.order;
+      });
+      return used;
+    }
+
+    function valenceLeft(atom) {
+      return VALENCE[atom.element] - valenceUsed(atom);
+    }
+
+    function valenceFill(atom) {
+      const left = valenceLeft(atom);
+      if (left === 0) return '#34d399';
+      if (left < 0)  return '#f87171';
+      return '#374151';
+    }
+
+    function valenceTextFill(atom) {
+      const left = valenceLeft(atom);
+      if (left === 0) return '#0d1117';
+      if (left < 0)  return '#fff';
+      return '#9ca3af';
+    }
+
+    function cycleBond(bond) {
+      if (won.value) return;
+      const sol = currentLevel.value.solution[bond.key];
+      const maxOrder = sol || 3;
+      const cur = bondOrders.value[bond.key] ?? 0;
+      const next = cur >= maxOrder ? 0 : cur + 1;
+      bondOrders.value = { ...bondOrders.value, [bond.key]: next };
+      showHint.value = false;
+      checkWin();
+    }
+
+    function selectAtom(atom) {
+      if (won.value) return;
+      showHint.value = false;
+      if (selectedId.value === null) {
+        selectedId.value = atom.id;
+        return;
+      }
+      if (selectedId.value === atom.id) {
+        selectedId.value = null;
+        return;
+      }
+      // Try to cycle bond between selectedId and atom.id
+      const ia = selectedId.value, ib = atom.id;
+      const key = bondKey(ia, ib);
+      const pairExists = currentLevel.value.pairs.some(
+        ([a,b]) => (a===ia && b===ib) || (a===ib && b===ia)
+      );
+      if (pairExists) {
+        const sol = currentLevel.value.solution[key];
+        const maxOrder = sol || 3;
+        const cur = bondOrders.value[key] ?? 0;
+        const next = cur >= maxOrder ? 0 : cur + 1;
+        bondOrders.value = { ...bondOrders.value, [key]: next };
+        checkWin();
+      }
+      selectedId.value = null;
+    }
+
+    function deselect() {
+      selectedId.value = null;
+    }
+
+    // Touch: track touchstart target element for tap detection
+    function onSvgTouchStart(e) {
+      touchTarget.value = e.target;
+    }
+    function onSvgTouchEnd(e) {
+      // only deselect if tap was on SVG background (not an atom/bond)
+      if (e.target === touchTarget.value && e.target.tagName === 'svg') {
+        deselect();
+      }
+    }
+
+    function checkWin() {
+      const sol = currentLevel.value.solution;
+      const allCorrect = Object.entries(sol).every(([k, v]) => (bondOrders.value[k] ?? 0) === v);
+      if (allCorrect) {
+        won.value = true;
+        selectedId.value = null;
+        levelPoints.value = 10 + levelIdx.value * 5;
+        score.value += levelPoints.value;
+        if (score.value > best.value) best.value = score.value;
+        saveState();
+        setTimeout(() => { showOverlay.value = true; }, 400);
+        launchFireworks();
+      }
+    }
+
+    function showHintFn() {
+      if (won.value) return;
+      const sol = currentLevel.value.solution;
+      const wrongs = Object.entries(sol).filter(([k,v]) => (bondOrders.value[k]??0) !== v);
+      if (!wrongs.length) return;
+      const [k] = wrongs[Math.floor(Math.random() * wrongs.length)];
+      const cur = bondOrders.value[k] ?? 0;
+      const need = sol[k];
+      const bondNames = { 1: t('single'), 2: t('double'), 3: t('triple') };
+      hintText.value = cur === 0
+        ? `${t('hintAdd')} ${bondNames[need]}`
+        : `${t('hintChange')} ${bondNames[need]}`;
+      showHint.value = true;
+    }
+
+    function resetLevel() {
+      bondOrders.value = {};
+      won.value = false;
+      showOverlay.value = false;
+      showHint.value = false;
+      selectedId.value = null;
+    }
+
+    function nextLevel() {
+      if (levelIdx.value < levels.length - 1) {
+        levelIdx.value++;
+        resetLevel();
+        saveState();
+      }
+    }
+
+    function restart() {
+      levelIdx.value = 0;
+      score.value = 0;
+      resetLevel();
+      saveState();
+    }
+
+    function resetScores() {
+      best.value = 0;
+      score.value = 0;
+      levelIdx.value = 0;
+      resetLevel();
+      saveState();
+    }
+
+    // Persistence
+    function saveState() {
+      localStorage.setItem('molecules-save', JSON.stringify({
+        score: score.value,
+        best: best.value,
+        levelIdx: levelIdx.value,
+      }));
+    }
+
+    onMounted(() => {
+      try {
+        const s = JSON.parse(localStorage.getItem('molecules-save') || '{}');
+        if (s.best)     best.value     = s.best;
+        if (s.score)    score.value    = s.score;
+        if (s.levelIdx) levelIdx.value = s.levelIdx;
+      } catch {}
+    });
+
+    // i18n
+    const STRINGS = {
+      en: {
+        back: 'Games', title: 'Molecules', score: 'Score', best: 'Best', level: 'Level',
+        prompt: 'Select an atom or click a bond to cycle its order',
+        win: 'Molecule complete!', complete: 'Complete!', pts: 'pts',
+        next: 'Next Molecule', restart: 'Play Again',
+        reset: 'Reset', resetScores: 'Reset Scores', hint: 'Hint',
+        single: 'single', double: 'double', triple: 'triple',
+        tapTip: 'Tap bond or select 2 atoms',
+        hintAdd: 'Add a', hintChange: 'Change bond to',
+        valenceRef: 'Bond count',
+        arrow: '→',
+      },
+      he: {
+        back: 'משחקים', title: 'מולקולות', score: 'ניקוד', best: 'שיא', level: 'שלב',
+        prompt: 'בחר אטום או לחץ על קשר לשינוי סדר',
+        win: 'המולקולה הושלמה!', complete: 'הושלם!', pts: 'נק׳',
+        next: 'מולקולה הבאה', restart: 'שחק שוב',
+        reset: 'אפס שלב', resetScores: 'אפס ניקודים', hint: 'רמז',
+        single: 'יחיד', double: 'כפול', triple: 'משולש',
+        tapTip: 'הקש קשר או בחר 2 אטומים',
+        hintAdd: 'הוסף קשר', hintChange: 'שנה קשר ל-',
+        valenceRef: 'מספר קשרים',
+        arrow: '←',
+      },
+    };
+    function t(k) { return STRINGS[lang.value][k] ?? k; }
+
+    // Fireworks
+    function launchFireworks() {
+      const canvas = document.createElement('canvas');
+      canvas.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:99';
+      canvas.width = innerWidth; canvas.height = innerHeight;
+      document.body.appendChild(canvas);
+      const ctx = canvas.getContext('2d');
+      const palette = ['#34d399','#6ee7b7','#a7f3d0','#fbbf24','#60a5fa','#f472b6'];
+      const particles = [];
+      for (let i = 0; i < 6; i++) {
+        const ox = innerWidth * (0.2 + 0.6 * Math.random());
+        const oy = innerHeight * (0.2 + 0.5 * Math.random());
+        for (let j = 0; j < 40; j++) {
+          const a = Math.random() * Math.PI * 2;
+          const spd = 2 + Math.random() * 5;
+          particles.push({ x: ox, y: oy, vx: Math.cos(a)*spd, vy: Math.sin(a)*spd - 2,
+            color: palette[Math.floor(Math.random()*palette.length)], life: 1 });
+        }
+      }
+      let frame = 0;
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => {
+          p.x += p.vx; p.y += p.vy; p.vy += 0.08; p.life -= 0.012;
+          ctx.globalAlpha = Math.max(0, p.life);
+          ctx.fillStyle = p.color;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, 3, 0, Math.PI*2);
+          ctx.fill();
+        });
+        ctx.globalAlpha = 1;
+        frame++;
+        if (frame < 120) requestAnimationFrame(draw);
+        else canvas.remove();
+      }
+      requestAnimationFrame(draw);
+    }
+
+    return {
+      lang, isRTL, t, levels, levelIdx, currentLevel,
+      score, best, won, showOverlay, showHint, hintText, levelPoints,
+      selectedId, atoms, bonds,
+      bondColor, offsetTransform, valenceLeft, valenceFill, valenceTextFill,
+      selectAtom, deselect, cycleBond, showHintFn, resetLevel, nextLevel, restart, resetScores,
+      onSvgTouchStart, onSvgTouchEnd,
+      SVG_W, SVG_H,
+      ELEMENT_STYLE, VALENCE,
+    };
+  }
+}).mount('#app');
+</script>
+</body>
+</html>
