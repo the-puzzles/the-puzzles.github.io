@@ -414,6 +414,7 @@ svg.board {
 
       <!-- Bond lines -->
       <g v-for="bond in bonds" :key="bond.key" class="bond"
+         @pointerdown.stop
          @pointerup.stop="onBondPointerUp(bond)">
         <!-- selected glow -->
         <line v-if="activeBondKey === bond.key"
