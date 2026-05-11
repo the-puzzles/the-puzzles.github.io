@@ -1,42 +1,56 @@
-const CACHE = 'puzzles-v10';
-const ASSETS = [
-  '/',
-  '/index.html',
-  '/how-to-play.html',
-  '/chromino.html',
-  '/tessera.html',
-  '/colorku.html',
-  '/outlines.html',
-  '/wordsearch.html',
-  '/morse.html',
-  '/wordladder.html',
-  '/braille.html',
-  '/manifest.json',
-  '/icon.svg',
-  'https://unpkg.com/vue@3/dist/vue.global.js',
-  'https://unpkg.com/d3@7/dist/d3.min.js',
-  'https://unpkg.com/topojson-client@3/dist/topojson-client.min.js',
-  'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json',
-];
+const CACHE_CDN   = 'puzzles-cdn-v1';   // external libs — cache-first (versioned URLs)
+const CACHE_PAGES = 'puzzles-pages-v1'; // our files    — network-first
 
-self.addEventListener('install', e => {
-  e.waitUntil(
-    caches.open(CACHE).then(c => c.addAll(ASSETS))
-  );
-  self.skipWaiting();
-});
+const CDN_HOSTS = ['unpkg.com', 'cdn.jsdelivr.net'];
+
+self.addEventListener('install', () => self.skipWaiting());
 
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
+      Promise.all(
+        keys
+          .filter(k => k !== CACHE_CDN && k !== CACHE_PAGES)
+          .map(k => caches.delete(k))
+      )
     )
   );
   self.clients.claim();
 });
 
 self.addEventListener('fetch', e => {
-  e.respondWith(
-    caches.match(e.request).then(cached => cached || fetch(e.request))
-  );
+  if (e.request.method !== 'GET') return;
+
+  const url = new URL(e.request.url);
+
+  // CDN libraries: cache-first (URLs are pinned to a version and never mutate)
+  if (CDN_HOSTS.some(h => url.hostname.includes(h))) {
+    e.respondWith(
+      caches.open(CACHE_CDN).then(cache =>
+        cache.match(e.request).then(hit => {
+          if (hit) return hit;
+          return fetch(e.request).then(res => {
+            cache.put(e.request, res.clone());
+            return res;
+          });
+        })
+      )
+    );
+    return;
+  }
+
+  // Our own pages/assets: network-first so updates are always delivered.
+  // Cache is only used as an offline fallback.
+  if (url.origin === self.location.origin) {
+    e.respondWith(
+      caches.open(CACHE_PAGES).then(cache =>
+        fetch(e.request)
+          .then(res => {
+            cache.put(e.request, res.clone());
+            return res;
+          })
+          .catch(() => cache.match(e.request))
+      )
+    );
+  }
 });
