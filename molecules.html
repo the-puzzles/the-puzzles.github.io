@@ -8,6 +8,7 @@
 <meta name="theme-color" content="#0d1117">
 <link rel="apple-touch-icon" href="icon.svg">
 <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+<script src="https://unpkg.com/d3@7/dist/d3.min.js"></script>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -160,6 +161,7 @@ svg.board {
   width: 100%;
   height: auto;
   aspect-ratio: 520 / 400;
+  touch-action: none;
 }
 
 /* ── Bond lines ─────────────────────────────────────────────── */
@@ -167,7 +169,8 @@ svg.board {
 .bond line { stroke-linecap: round; }
 
 /* ── Atom circles ───────────────────────────────────────────── */
-.atom-group { cursor: pointer; }
+.atom-group { cursor: grab; }
+.atom-group:active { cursor: grabbing; }
 
 /* ── Valence badge ──────────────────────────────────────────── */
 .valence-badge {
@@ -425,14 +428,14 @@ svg.board {
   </div>
 
   <div class="canvas-wrap">
-    <svg class="board" :viewBox="`0 0 ${SVG_W} ${SVG_H}`"
-         @click.self="deselect"
-         @touchstart.prevent="onSvgTouchStart"
-         @touchend.prevent="onSvgTouchEnd">
+    <svg ref="svgEl" class="board" :viewBox="`0 0 ${SVG_W} ${SVG_H}`"
+         @pointermove="onSvgPointerMove"
+         @pointerup="onSvgPointerUp"
+         @pointercancel="onPointerCancel">
 
       <!-- Bond lines -->
       <g v-for="bond in bonds" :key="bond.key" class="bond"
-         @click="selectBond(bond)" @touchend.prevent.stop="selectBond(bond)">
+         @pointerup.stop="onBondPointerUp(bond)">
         <!-- selected glow -->
         <line v-if="activeBondKey === bond.key"
           :x1="bond.ax" :y1="bond.ay" :x2="bond.bx" :y2="bond.by"
@@ -476,8 +479,7 @@ svg.board {
 
       <!-- Atoms -->
       <g v-for="atom in atoms" :key="atom.id" class="atom-group"
-         @click.stop="selectAtom(atom)"
-         @touchend.prevent.stop="selectAtom(atom)">
+         @pointerdown.stop="onAtomPointerDown(atom, $event)">
         <!-- enlarged touch target -->
         <circle :cx="atom.x" :cy="atom.y" r="30" fill="transparent" />
         <!-- selected ring -->
@@ -1012,24 +1014,25 @@ const LEVELS = [
   },
 ];
 
-// Scale all level atom positions to fit SVG
-function scaleAtoms(atoms) {
-  if (!atoms.length) return atoms;
-  const pad = 50;
-  const xs = atoms.map(a => a.x), ys = atoms.map(a => a.y);
-  const minX = Math.min(...xs), maxX = Math.max(...xs);
-  const minY = Math.min(...ys), maxY = Math.max(...ys);
-  const rangeX = maxX - minX || 1, rangeY = maxY - minY || 1;
-  const scaleX = (SVG_W - pad*2) / rangeX;
-  const scaleY = (SVG_H - pad*2) / rangeY;
-  const scale = Math.min(scaleX, scaleY, 1.4);
-  const cx = (SVG_W - rangeX * scale) / 2;
-  const cy = (SVG_H - rangeY * scale) / 2;
-  return atoms.map(a => ({
-    ...a,
-    x: (a.x - minX) * scale + cx,
-    y: (a.y - minY) * scale + cy,
-  }));
+// Lay out atoms using d3-force simulation, run synchronously to convergence
+function runForceLayout(level, atomPositions) {
+  const nodes = level.atoms.map(a => ({ id: a.id }));
+  const links = level.pairs.map(([a, b]) => ({ source: a, target: b }));
+  const sim = d3.forceSimulation(nodes)
+    .force('link', d3.forceLink(links).id(d => d.id).distance(90).strength(1))
+    .force('charge', d3.forceManyBody().strength(-350))
+    .force('center', d3.forceCenter(SVG_W / 2, SVG_H / 2))
+    .force('collision', d3.forceCollide(45))
+    .stop();
+  for (let i = 0; i < 500; i++) sim.tick();
+  const pos = {};
+  nodes.forEach(n => {
+    pos[n.id] = {
+      x: Math.max(40, Math.min(SVG_W - 40, n.x)),
+      y: Math.max(40, Math.min(SVG_H - 40, n.y)),
+    };
+  });
+  atomPositions.value = pos;
 }
 
 createApp({
@@ -1046,7 +1049,9 @@ createApp({
     const levelPoints = ref(0);
     const selectedId = ref(null);
     const activeBondKey = ref(null);
-    const touchTarget = ref(null);
+    const atomPositions = ref({});
+    const svgEl = ref(null);
+    let dragState = null; // { id, atom, startX, startY, moved }
 
     // bonds: map key -> order (0 = absent but exists as pair)
     const bondOrders = ref({});
@@ -1054,12 +1059,13 @@ createApp({
     const levels = LEVELS;
     const currentLevel = computed(() => levels[levelIdx.value]);
 
-    // Build atom objects for display
+    // Build atom objects for display; positions come from d3-force layout or drag
     const atoms = computed(() => {
-      const scaled = scaleAtoms(currentLevel.value.atoms);
-      return scaled.map(a => {
+      const pos = atomPositions.value;
+      return currentLevel.value.atoms.map(a => {
         const style = ELEMENT_STYLE[a.element] || ELEMENT_STYLE['C'];
-        return { ...a, ...style, color: style.fill, stroke: style.stroke, textColor: style.text };
+        const { x, y } = pos[a.id] ?? { x: SVG_W / 2, y: SVG_H / 2 };
+        return { ...a, x, y, r: style.r, color: style.fill, stroke: style.stroke, textColor: style.text };
       });
     });
 
@@ -1178,16 +1184,51 @@ createApp({
       activeBondKey.value = null;
     }
 
-    // Touch: track touchstart target element for tap detection
-    function onSvgTouchStart(e) {
-      touchTarget.value = e.target;
+    // Drag / tap handling via pointer events
+    function getSvgPoint(e) {
+      const rect = svgEl.value.getBoundingClientRect();
+      return {
+        x: (e.clientX - rect.left) * (SVG_W / rect.width),
+        y: (e.clientY - rect.top)  * (SVG_H / rect.height),
+      };
     }
-    function onSvgTouchEnd(e) {
-      // only deselect if tap was on SVG background (not an atom/bond)
-      if (e.target === touchTarget.value && e.target.tagName === 'svg') {
-        deselect();
+
+    function onAtomPointerDown(atom, e) {
+      dragState = { id: atom.id, atom, startX: e.clientX, startY: e.clientY, moved: false };
+    }
+
+    function onSvgPointerMove(e) {
+      if (!dragState) return;
+      const dx = e.clientX - dragState.startX, dy = e.clientY - dragState.startY;
+      if (!dragState.moved && Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
+      dragState.moved = true;
+      const { x, y } = getSvgPoint(e);
+      atomPositions.value = {
+        ...atomPositions.value,
+        [dragState.id]: {
+          x: Math.max(30, Math.min(SVG_W - 30, x)),
+          y: Math.max(30, Math.min(SVG_H - 30, y)),
+        },
+      };
+    }
+
+    function onSvgPointerUp() {
+      if (dragState && !dragState.moved) selectAtom(dragState.atom);
+      else if (!dragState) deselect();
+      dragState = null;
+    }
+
+    function onBondPointerUp(bond) {
+      // If this fires while an atom drag was in progress, treat as atom tap
+      if (dragState) {
+        if (!dragState.moved) selectAtom(dragState.atom);
+        dragState = null;
+        return;
       }
+      selectBond(bond);
     }
+
+    function onPointerCancel() { dragState = null; }
 
     function checkWin() {
       const sol = currentLevel.value.solution;
@@ -1232,6 +1273,7 @@ createApp({
       if (levelIdx.value < levels.length - 1) {
         levelIdx.value++;
         resetLevel();
+        runForceLayout(currentLevel.value, atomPositions);
         saveState();
       }
     }
@@ -1240,6 +1282,7 @@ createApp({
       levelIdx.value = 0;
       score.value = 0;
       resetLevel();
+      runForceLayout(currentLevel.value, atomPositions);
       saveState();
     }
 
@@ -1248,6 +1291,7 @@ createApp({
       score.value = 0;
       levelIdx.value = 0;
       resetLevel();
+      runForceLayout(currentLevel.value, atomPositions);
       saveState();
     }
 
@@ -1267,6 +1311,7 @@ createApp({
         if (s.score)    score.value    = s.score;
         if (s.levelIdx) levelIdx.value = s.levelIdx;
       } catch {}
+      runForceLayout(currentLevel.value, atomPositions);
     });
 
     // i18n
@@ -1344,7 +1389,7 @@ createApp({
       selectedId, activeBondKey, activeBond, atomMap, reachableIds, atoms, bonds,
       offsetTransform, valenceLeft, valenceFill, valenceTextFill,
       selectAtom, selectBond, setBondOrder, deselect, showHintFn, resetLevel, nextLevel, restart, resetScores,
-      onSvgTouchStart, onSvgTouchEnd,
+      svgEl, onAtomPointerDown, onBondPointerUp, onSvgPointerMove, onSvgPointerUp, onPointerCancel,
       SVG_W, SVG_H,
       ELEMENT_STYLE, VALENCE,
     };
