@@ -197,43 +197,7 @@ svg.board {
   justify-content: center;
 }
 
-/* Bond-order picker — floats on the canvas above the tapped bond */
-.bond-picker-popup {
-  position: fixed;
-  z-index: 30;
-  display: flex;
-  gap: 8px;
-  background: #1c2128;
-  border: 1px solid #30363d;
-  border-radius: 14px;
-  padding: 8px 10px;
-  box-shadow: 0 6px 28px #000a;
-  pointer-events: auto;
-}
-.bp-btn {
-  background: #161b22;
-  border: 2px solid #30363d;
-  border-radius: 10px;
-  width: 58px; height: 48px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #6e7681;
-  font-size: 1rem;
-  font-weight: 700;
-  font-family: inherit;
-  transition: all 0.15s;
-  touch-action: manipulation;
-}
-.bp-btn:hover { border-color: #6e7681; color: #c9d1d9; }
-.bp-btn.active {
-  background: var(--accent-dim);
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
-/* Atom-selected hint — now shown in status bar; this class kept for status inline chip */
+/* Atom-selected hint */
 .atom-hint {
   display: flex;
   align-items: center;
@@ -242,10 +206,10 @@ svg.board {
   font-size: 0.88rem;
 }
 
-/* Idle legend */
+/* Legend — idle info, becomes bond picker when a bond is active */
 .legend {
   display: flex;
-  gap: 14px;
+  gap: 10px;
   font-size: 0.75rem;
   color: #6e7681;
   align-items: center;
@@ -254,6 +218,22 @@ svg.board {
 }
 .legend-item { display: flex; align-items: center; gap: 5px; }
 .legend-svg { width: 32px; height: 14px; }
+
+/* Active picking state */
+.legend-btn {
+  cursor: pointer;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  padding: 4px 8px;
+  transition: border-color 0.12s, color 0.12s, background 0.12s;
+  touch-action: manipulation;
+}
+.legend-btn:hover { border-color: #6e7681; color: #c9d1d9; }
+.legend-btn-on {
+  background: var(--accent-dim);
+  border-color: var(--accent) !important;
+  color: var(--accent) !important;
+}
 
 /* ── Bottom controls ────────────────────────────────────────── */
 .controls {
@@ -326,7 +306,6 @@ svg.board {
   .score-pill .value { font-size: 1.1rem; }
   .score-pill .label { font-size: 0.6rem; }
   .level-dot { width: 6px; height: 6px; }
-  .bp-btn { height: 52px; }
   .controls { gap: 8px; }
   .btn { padding: 9px 14px; font-size: 0.82rem; }
   .overlay-card { padding: 24px 20px; }
@@ -492,48 +471,48 @@ svg.board {
     </svg>
   </div>
 
-  <!-- Bond-order picker: floats on the canvas near the tapped bond -->
-  <Teleport to="body">
-    <div v-if="activeBond && bondPickerStyle" class="bond-picker-popup" :style="bondPickerStyle">
-      <button v-for="n in [0,1,2,3]" :key="n" class="bp-btn"
-        :class="{ active: activeBond.order === n }"
-        @click.stop="setBondOrder(n)">
-        <svg v-if="n > 0" width="30" height="16" viewBox="0 0 36 18">
-          <line v-if="n===1" x1="3" y1="9"  x2="33" y2="9"  stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
-          <line v-if="n>=2" x1="3" y1="5"  x2="33" y2="5"  stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          <line v-if="n>=2" x1="3" y1="13" x2="33" y2="13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          <line v-if="n===3" x1="3" y1="9"  x2="33" y2="9"  stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-        </svg>
-        <span v-else style="font-size:1rem">✕</span>
-      </button>
-    </div>
-  </Teleport>
-
-  <!-- Legend — always visible, never shifts layout -->
+  <!-- Legend / bond picker — same row, legend items become clickable when a bond is active -->
   <div class="action-area">
     <div style="display:flex;flex-direction:column;align-items:center;gap:10px;width:100%">
-      <div class="legend">
-        <div class="legend-item">
-          <svg class="legend-svg" viewBox="0 0 32 14"><line x1="2" y1="7" x2="30" y2="7" stroke="#6e7681" stroke-width="2.5" stroke-linecap="round"/></svg>
+      <div class="legend" :class="{ 'legend-picking': activeBond }">
+        <!-- ✕ clear — only visible when picking -->
+        <div v-if="activeBond" class="legend-item legend-btn"
+             :class="{ 'legend-btn-on': activeBond.order === 0 }"
+             @click="setBondOrder(0)">
+          <span style="font-size:1rem;line-height:1">✕</span>
+          {{ t('none') }}
+        </div>
+        <!-- single -->
+        <div class="legend-item" :class="activeBond ? ['legend-btn', activeBond.order===1 && 'legend-btn-on'] : []"
+             @click="activeBond && setBondOrder(1)">
+          <svg class="legend-svg" viewBox="0 0 32 14"><line x1="2" y1="7" x2="30" y2="7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
           {{ t('single') }}
         </div>
-        <div class="legend-item">
+        <!-- double -->
+        <div class="legend-item" :class="activeBond ? ['legend-btn', activeBond.order===2 && 'legend-btn-on'] : []"
+             @click="activeBond && setBondOrder(2)">
           <svg class="legend-svg" viewBox="0 0 32 14">
-            <line x1="2" y1="4" x2="30" y2="4" stroke="#6e7681" stroke-width="2.5" stroke-linecap="round"/>
-            <line x1="2" y1="10" x2="30" y2="10" stroke="#6e7681" stroke-width="2.5" stroke-linecap="round"/>
+            <line x1="2" y1="4" x2="30" y2="4" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+            <line x1="2" y1="10" x2="30" y2="10" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
           </svg>
           {{ t('double') }}
         </div>
-        <div class="legend-item">
+        <!-- triple -->
+        <div class="legend-item" :class="activeBond ? ['legend-btn', activeBond.order===3 && 'legend-btn-on'] : []"
+             @click="activeBond && setBondOrder(3)">
           <svg class="legend-svg" viewBox="0 0 32 14">
-            <line x1="2" y1="2"  x2="30" y2="2"  stroke="#6e7681" stroke-width="2" stroke-linecap="round"/>
-            <line x1="2" y1="7"  x2="30" y2="7"  stroke="#6e7681" stroke-width="2" stroke-linecap="round"/>
-            <line x1="2" y1="12" x2="30" y2="12" stroke="#6e7681" stroke-width="2" stroke-linecap="round"/>
+            <line x1="2" y1="2"  x2="30" y2="2"  stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <line x1="2" y1="7"  x2="30" y2="7"  stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <line x1="2" y1="12" x2="30" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
           </svg>
           {{ t('triple') }}
         </div>
         <span style="color:#30363d">|</span>
-        <span style="font-size:0.72rem">{{ t('tapTip') }}</span>
+        <!-- tip text idle / bond label when picking -->
+        <span v-if="!activeBond" style="font-size:0.72rem">{{ t('tapTip') }}</span>
+        <span v-else style="font-size:0.8rem;font-weight:700;color:#c9d1d9">
+          {{ atomMap[activeBond.ia].element }}–{{ atomMap[activeBond.ib].element }}
+        </span>
       </div>
       <div class="valence-ref">
         <span class="vr-title">{{ t('valenceRef') }}:</span>
@@ -1006,7 +985,6 @@ createApp({
     const activeBondKey = ref(null);
     const atomPositions = ref({});
     const svgEl = ref(null);
-    const bondPickerStyle = ref(null);
     let dragState = null; // { id, atom, startX, startY, moved }
 
     // bonds: map key -> order (0 = absent but exists as pair)
@@ -1140,26 +1118,6 @@ createApp({
       activeBondKey.value = null;
     }
 
-    // Position the bond picker popup near the tapped bond's midpoint
-    watch(activeBondKey, key => {
-      if (!key || !svgEl.value) { bondPickerStyle.value = null; return; }
-      const bond = bonds.value.find(b => b.key === key);
-      if (!bond) { bondPickerStyle.value = null; return; }
-      const r = svgEl.value.getBoundingClientRect();
-      const sx = r.width / SVG_W, sy = r.height / SVG_H;
-      const cx = (bond.ax + bond.bx) / 2 * sx + r.left;
-      const cy = (bond.ay + bond.by) / 2 * sy + r.top;
-      const vw = window.innerWidth;
-      // Clamp horizontal so the ~270px popup stays on screen
-      const safeX = Math.max(135, Math.min(vw - 135, cx));
-      // Show above bond unless too close to top of viewport
-      const above = cy > r.top + r.height * 0.3;
-      bondPickerStyle.value = {
-        left: safeX + 'px',
-        top: cy + 'px',
-        transform: above ? 'translate(-50%, calc(-100% - 10px))' : 'translate(-50%, 10px)',
-      };
-    });
 
     // Drag / tap handling via pointer events
     function getSvgPoint(e) {
@@ -1303,6 +1261,7 @@ createApp({
     const STRINGS = {
       en: {
         back: 'Games', title: 'Molecules', score: 'Score', best: 'Best', level: 'Level',
+        none: 'none',
         prompt: 'Tap a bond or an atom to start bonding',
         win: 'Molecule complete!', complete: 'Complete!', pts: 'pts',
         next: 'Next Molecule', restart: 'Play Again',
@@ -1316,6 +1275,7 @@ createApp({
       },
       he: {
         back: 'משחקים', title: 'מולקולות', score: 'ניקוד', best: 'שיא', level: 'שלב',
+        none: 'ללא',
         prompt: 'הקש קשר או אטום להתחלת קישור',
         win: 'המולקולה הושלמה!', complete: 'הושלם!', pts: 'נק׳',
         next: 'מולקולה הבאה', restart: 'שחק שוב',
@@ -1374,7 +1334,7 @@ createApp({
       selectedId, activeBondKey, activeBond, atomMap, reachableIds, atoms, bonds,
       offsetTransform, valenceLeft, valenceFill, valenceTextFill,
       selectAtom, selectBond, setBondOrder, deselect, showHintFn, resetLevel, nextLevel, restart, resetScores,
-      svgEl, bondPickerStyle, onAtomPointerDown, onBondPointerUp, onSvgPointerMove, onSvgPointerUp, onPointerCancel,
+      svgEl, onAtomPointerDown, onBondPointerUp, onSvgPointerMove, onSvgPointerUp, onPointerCancel,
       SVG_W, SVG_H,
       ELEMENT_STYLE, VALENCE,
     };
