@@ -154,12 +154,16 @@ h1 .accent { color: var(--accent); }
   overflow: hidden;
   touch-action: none;
   position: relative;
+  /* padding-bottom drives the height so the SVG always fits, regardless of
+     browser aspect-ratio support. 400/520 × 100% = 76.923% */
+  padding-bottom: 76.923%;
 }
 svg.board {
-  display: block;
+  position: absolute;
+  top: 0; left: 0;
   width: 100%;
-  height: auto;
-  aspect-ratio: 520 / 400;
+  height: 100%;
+  display: block;
   touch-action: none;
 }
 
