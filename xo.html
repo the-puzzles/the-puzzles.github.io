@@ -8,6 +8,7 @@
 <meta name="theme-color" content="#0d1117">
 <link rel="apple-touch-icon" href="icon.svg">
 <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+<script src="netplay.js"></script>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -270,6 +271,55 @@ h1 .o { color: #60a5fa; }
   transition: color 0.15s, border-color 0.15s;
 }
 .reset-scores-btn:hover { color: #c9d1d9; border-color: #6e7681; }
+
+/* ── Net panel ───────────────────────────────────────────────────── */
+.net-panel {
+  width: calc(var(--cell) * 3);
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.net-label { font-size: 0.8rem; color: #8b949e; }
+.net-code {
+  width: 100%;
+  background: #0d1117;
+  border: 1px solid #30363d;
+  color: #c9d1d9;
+  border-radius: 8px;
+  padding: 8px;
+  font-size: 0.7rem;
+  font-family: monospace;
+  resize: none;
+  height: 76px;
+  word-break: break-all;
+}
+.net-row { display: flex; gap: 8px; }
+.net-btn {
+  flex: 1;
+  background: #1a0d0f;
+  border: 1px solid #f43f5e;
+  color: #f472b6;
+  border-radius: 8px;
+  padding: 9px 16px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.net-btn:hover:not(:disabled) { opacity: 0.85; }
+.net-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.net-btn.secondary {
+  background: #161b22;
+  border-color: #30363d;
+  color: #8b949e;
+}
+.net-btn.secondary:hover { color: #c9d1d9; border-color: #6e7681; }
 </style>
 </head>
 <body>
@@ -302,6 +352,35 @@ h1 .o { color: #60a5fa; }
       <div class="score-label">O</div>
       <div class="score-val">{{ scores.O }}</div>
     </div>
+  </div>
+
+  <!-- Net setup panel -->
+  <div v-if="mode === 'net' && netStatus !== 'connected'" class="net-panel">
+    <template v-if="netStatus === 'idle'">
+      <div class="net-row">
+        <button class="net-btn" @click="startHost">Host Game</button>
+        <button class="net-btn secondary" @click="startJoin">Join Game</button>
+      </div>
+    </template>
+    <template v-else-if="netStatus === 'offer-ready'">
+      <p class="net-label">Share this code with your opponent:</p>
+      <textarea class="net-code" readonly :value="offerText"></textarea>
+      <button class="net-btn" @click="copyCode">{{ copied ? 'Copied!' : 'Copy' }}</button>
+      <p class="net-label">Then paste their answer here:</p>
+      <textarea class="net-code" v-model="netInput" placeholder="Paste answer…"></textarea>
+      <button class="net-btn" @click="connectAnswer" :disabled="!netInput.trim()">Connect</button>
+    </template>
+    <template v-else-if="netStatus === 'joining'">
+      <p class="net-label">Paste the host's code:</p>
+      <textarea class="net-code" v-model="netInput" placeholder="Paste code…"></textarea>
+      <button class="net-btn" @click="connectOffer" :disabled="!netInput.trim()">Generate Answer</button>
+    </template>
+    <template v-else-if="netStatus === 'answer-ready'">
+      <p class="net-label">Send this to your host:</p>
+      <textarea class="net-code" readonly :value="offerText"></textarea>
+      <button class="net-btn" @click="copyCode">{{ copied ? 'Copied!' : 'Copy' }}</button>
+      <p class="net-label">Waiting for host to connect…</p>
+    </template>
   </div>
 
   <!-- Status -->
@@ -353,6 +432,7 @@ h1 .o { color: #60a5fa; }
     <button class="mode-btn" :class="{active: mode==='easy'}"   @click="setMode('easy')">{{ UI.modeEasy }}</button>
     <button class="mode-btn" :class="{active: mode==='medium'}" @click="setMode('medium')">{{ UI.modeMedium }}</button>
     <button class="mode-btn" :class="{active: mode==='hard'}"   @click="setMode('hard')">{{ UI.modeHard }}</button>
+    <button class="mode-btn" :class="{active: mode==='net'}"    @click="setMode('net')">{{ UI.modeNet }}</button>
   </div>
 
   <!-- Actions -->
@@ -372,6 +452,7 @@ const STRINGS = {
   modeEasy:    { en: '🤖 Easy',       he: '🤖 קל',            es: '🤖 Fácil',              ar: '🤖 سهل' },
   modeMedium:  { en: '🤖 Medium',     he: '🤖 בינוני',        es: '🤖 Medio',              ar: '🤖 متوسط' },
   modeHard:    { en: '🤖 Hard',       he: '🤖 קשה',           es: '🤖 Difícil',            ar: '🤖 صعب' },
+  modeNet:     { en: '🌐 Network',    he: '🌐 רשת',           es: '🌐 Red',                ar: '🌐 شبكة' },
   wonVerb:     { en: 'wins!',          he: 'ניצח',              es: 'gana!',                 ar: 'فاز' },
   turnWord:    { en: "'s turn",        he: 'תור',              es: 'turno',                 ar: 'دور' },
   draw:        { en: "It's a draw!",  he: 'תיקו!',           es: '¡Empate!',              ar: 'تعادل!' },
@@ -506,6 +587,14 @@ createApp({
     const scores  = ref({ X: 0, O: 0, draw: 0 });
     const aiThink = ref(false);
 
+    // Net play state
+    const netStatus = ref('idle'); // 'idle'|'offer-ready'|'joining'|'answer-ready'|'connected'
+    const netRole   = ref(null);   // 'host'|'guest'
+    const offerText = ref('');
+    const netInput  = ref('');
+    const copied    = ref(false);
+    let   net       = null;
+
     const isRTL = computed(() => lang.value === 'he' || lang.value === 'ar');
 
     const UI = computed(() => {
@@ -518,6 +607,7 @@ createApp({
     );
 
     const statusText = computed(() => {
+      if (mode.value === 'net' && netStatus.value !== 'connected') return '';
       if (aiThink.value)          return UI.value.thinking;
       if (phase.value === 'won')  return UI.value.wonVerb;
       if (phase.value === 'draw') return UI.value.draw;
@@ -534,14 +624,32 @@ createApp({
       if (board.value[i] !== null) return false;
       if (phase.value !== 'playing') return false;
       if (aiThink.value) return false;
+      if (mode.value === 'net') {
+        if (netStatus.value !== 'connected') return false;
+        if (netRole.value === 'host'  && current.value !== 'X') return false;
+        if (netRole.value === 'guest' && current.value !== 'O') return false;
+        return true;
+      }
       if (mode.value !== '2p' && current.value === 'O') return false;
       return true;
     }
 
-    function makeMove(i) {
+    function resetBoard() {
+      board.value   = Array(9).fill(null);
+      current.value = 'X';
+      phase.value   = 'playing';
+      winLine.value  = null;
+      aiThink.value  = false;
+    }
+
+    function makeMove(i, remote = false) {
       const b = [...board.value];
       b[i] = current.value;
       board.value = b;
+
+      if (!remote && mode.value === 'net' && net) {
+        net.send({ type: 'move', i });
+      }
 
       const result = checkWinner(b);
       if (result) {
@@ -561,7 +669,7 @@ createApp({
 
       current.value = current.value === 'X' ? 'O' : 'X';
 
-      if (mode.value !== '2p' && current.value === 'O') {
+      if (mode.value !== '2p' && mode.value !== 'net' && current.value === 'O') {
         aiThink.value = true;
         setTimeout(() => {
           aiThink.value = false;
@@ -579,16 +687,16 @@ createApp({
     }
 
     function newGame() {
-      board.value   = Array(9).fill(null);
-      current.value = 'X';
-      phase.value   = 'playing';
-      winLine.value  = null;
-      aiThink.value  = false;
+      resetBoard();
+      if (mode.value === 'net' && net) net.send({ type: 'newgame' });
     }
 
     function setMode(m) {
+      if (net) { net.close(); net = null; }
+      netStatus.value = 'idle';
+      netRole.value   = null;
       mode.value = m;
-      newGame();
+      resetBoard();
       save();
     }
 
@@ -599,14 +707,76 @@ createApp({
 
     function resetScores() {
       scores.value = { X: 0, O: 0, draw: 0 };
-      newGame();
+      resetBoard();
       save();
+    }
+
+    // ── Net play ──────────────────────────────────────────────────
+    function initNet() {
+      net = new NetPlay({
+        onMove(data) {
+          if (data.type === 'move' && phase.value === 'playing') makeMove(data.i, true);
+          else if (data.type === 'newgame') resetBoard();
+        },
+        onConnected(role) {
+          netStatus.value = 'connected';
+          netRole.value   = role;
+          resetBoard();
+        },
+        onDisconnected() {
+          netStatus.value = 'idle';
+          netRole.value   = null;
+        },
+      });
+    }
+
+    async function startHost() {
+      initNet();
+      offerText.value  = await net.createOffer();
+      netInput.value   = '';
+      netStatus.value  = 'offer-ready';
+    }
+
+    function startJoin() {
+      initNet();
+      netInput.value  = '';
+      netStatus.value = 'joining';
+    }
+
+    async function connectOffer() {
+      try {
+        offerText.value = await net.acceptOffer(netInput.value.trim());
+        netInput.value  = '';
+        netStatus.value = 'answer-ready';
+      } catch {
+        alert('Invalid code — please try again.');
+        netInput.value = '';
+      }
+    }
+
+    async function connectAnswer() {
+      try {
+        await net.acceptAnswer(netInput.value.trim());
+        netInput.value = '';
+      } catch {
+        alert('Invalid answer — please try again.');
+        netInput.value = '';
+      }
+    }
+
+    function copyCode() {
+      navigator.clipboard.writeText(offerText.value).then(() => {
+        copied.value = true;
+        setTimeout(() => { copied.value = false; }, 1500);
+      });
     }
 
     function save() {
       try {
         localStorage.setItem(SAVE_KEY, JSON.stringify({
-          lang: lang.value, mode: mode.value, scores: scores.value
+          lang: lang.value,
+          mode: mode.value === 'net' ? '2p' : mode.value,
+          scores: scores.value,
         }));
       } catch {}
     }
@@ -625,8 +795,10 @@ createApp({
 
     return {
       lang, mode, board, current, phase, winLine, scores, aiThink,
-      isRTL, UI, showPlayerMark, statusText, statusClass, canClick,
-      clickCell, newGame, setMode, setLang, resetScores,
+      isRTL, UI, showPlayerMark, statusText, statusClass,
+      netStatus, netRole, offerText, netInput, copied,
+      canClick, clickCell, newGame, setMode, setLang, resetScores,
+      startHost, startJoin, connectOffer, connectAnswer, copyCode,
     };
   }
 }).mount('#app');
