@@ -159,6 +159,7 @@ svg.board {
   display: block;
   width: 100%;
   height: auto;
+  aspect-ratio: 520 / 400;
 }
 
 /* ── Bond lines ─────────────────────────────────────────────── */
@@ -425,7 +426,6 @@ svg.board {
 
   <div class="canvas-wrap">
     <svg class="board" :viewBox="`0 0 ${SVG_W} ${SVG_H}`"
-         :width="SVG_W" :height="SVG_H"
          @click.self="deselect"
          @touchstart.prevent="onSvgTouchStart"
          @touchend.prevent="onSvgTouchEnd">
@@ -1015,7 +1015,7 @@ const LEVELS = [
 // Scale all level atom positions to fit SVG
 function scaleAtoms(atoms) {
   if (!atoms.length) return atoms;
-  const pad = 35;
+  const pad = 50;
   const xs = atoms.map(a => a.x), ys = atoms.map(a => a.y);
   const minX = Math.min(...xs), maxX = Math.max(...xs);
   const minY = Math.min(...ys), maxY = Math.max(...ys);
