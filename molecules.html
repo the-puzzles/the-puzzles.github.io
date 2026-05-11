@@ -161,17 +161,11 @@ h1 .accent { color: var(--accent); }
   border-radius: 16px;
   overflow: hidden;
   touch-action: none;
-  position: relative;
-  /* padding-bottom drives the height so the SVG always fits, regardless of
-     browser aspect-ratio support. 400/520 × 100% = 76.923% */
-  padding-bottom: 76.923%;
 }
 svg.board {
-  position: absolute;
-  top: 0; left: 0;
-  width: 100%;
-  height: 100%;
   display: block;
+  width: 100%;
+  height: auto;
   touch-action: none;
 }
 
@@ -1146,9 +1140,10 @@ createApp({
     // Drag / tap handling via pointer events
     function getSvgPoint(e) {
       const rect = svgEl.value.getBoundingClientRect();
+      const scale = SVG_W / rect.width;
       return {
-        x: (e.clientX - rect.left) * (SVG_W / rect.width) + panX.value,
-        y: (e.clientY - rect.top)  * (SVG_H / rect.height) + panY.value,
+        x: (e.clientX - rect.left) * scale + panX.value,
+        y: (e.clientY - rect.top)  * scale + panY.value,
       };
     }
 
@@ -1190,8 +1185,7 @@ createApp({
         return;
       }
       if (panState) {
-        const rect = svgEl.value.getBoundingClientRect();
-        const scale = SVG_W / rect.width;
+        const scale = SVG_W / svgEl.value.getBoundingClientRect().width;
         const dx = e.clientX - panState.startClientX;
         const dy = e.clientY - panState.startClientY;
         if (!panState.moved && Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
