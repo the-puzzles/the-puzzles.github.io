@@ -1039,10 +1039,18 @@ footer {
 <footer>
   Drag shapes · Tap to select · Swipe to rotate
   &nbsp;·&nbsp; <a href="how-to-play.html" style="color:#6e7681;text-decoration:none;transition:color 0.15s" onmouseover="this.style.color='#c9d1d9'" onmouseout="this.style.color='#6e7681'">How to Play</a>
+  &nbsp;·&nbsp; <span id="ver" style="font-family:monospace"></span>
 </footer>
 
 <script>
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
+(function(){
+  const d = new Date(document.lastModified);
+  const pad = n => String(n).padStart(2,'0');
+  document.getElementById('ver').textContent =
+    d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+
+    ' '+pad(d.getHours())+':'+pad(d.getMinutes());
+})();
 </script>
 </body>
 </html>
