@@ -1171,7 +1171,15 @@ createApp({
     }
 
     function onAtomPointerDown(atom, e) {
-      dragState = { id: atom.id, atom, startX: e.clientX, startY: e.clientY, moved: false };
+      // Record where inside the atom the grab happened so drag doesn't snap the center to cursor
+      const { x: px, y: py } = getSvgPoint(e);
+      dragState = {
+        id: atom.id, atom,
+        startX: e.clientX, startY: e.clientY,
+        grabOffsetX: px - atom.x,
+        grabOffsetY: py - atom.y,
+        moved: false,
+      };
     }
 
     function onSvgPointerMove(e) {
@@ -1183,8 +1191,8 @@ createApp({
       atomPositions.value = {
         ...atomPositions.value,
         [dragState.id]: {
-          x: Math.max(30, Math.min(SVG_W - 30, x)),
-          y: Math.max(30, Math.min(SVG_H - 30, y)),
+          x: Math.max(30, Math.min(SVG_W - 30, x - dragState.grabOffsetX)),
+          y: Math.max(30, Math.min(SVG_H - 30, y - dragState.grabOffsetY)),
         },
       };
     }
