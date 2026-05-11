@@ -187,53 +187,34 @@ svg.board {
 }
 .neighbor-ring { animation: neighbor-pulse 1.2s ease-in-out infinite; }
 
-/* ── Action area (bond picker + legend) ─────────────────────── */
+/* ── Action area — always-on legend, never shifts layout ────── */
 .action-area {
   width: 100%;
   max-width: 560px;
-  min-height: 72px;
   margin-top: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-/* Bond picker — shown when a bond is active */
-.bond-picker {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-}
-.bp-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.bp-atom {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px; height: 36px;
-  border-radius: 50%;
-  font-size: 0.9rem;
-  font-weight: 800;
-  flex-shrink: 0;
-}
-.bp-connector {
-  width: 60px; height: 20px;
-  flex-shrink: 0;
-}
-.bp-buttons {
+/* Bond-order picker — floats on the canvas above the tapped bond */
+.bond-picker-popup {
+  position: fixed;
+  z-index: 30;
   display: flex;
   gap: 8px;
+  background: #1c2128;
+  border: 1px solid #30363d;
+  border-radius: 14px;
+  padding: 8px 10px;
+  box-shadow: 0 6px 28px #000a;
+  pointer-events: auto;
 }
 .bp-btn {
   background: #161b22;
   border: 2px solid #30363d;
   border-radius: 10px;
-  width: 62px; height: 44px;
+  width: 58px; height: 48px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -243,17 +224,16 @@ svg.board {
   font-weight: 700;
   font-family: inherit;
   transition: all 0.15s;
-  flex-shrink: 0;
+  touch-action: manipulation;
 }
 .bp-btn:hover { border-color: #6e7681; color: #c9d1d9; }
-.bp-btn { touch-action: manipulation; }
 .bp-btn.active {
   background: var(--accent-dim);
   border-color: var(--accent);
   color: var(--accent);
 }
 
-/* Atom-selected hint */
+/* Atom-selected hint — now shown in status bar; this class kept for status inline chip */
 .atom-hint {
   display: flex;
   align-items: center;
@@ -346,9 +326,7 @@ svg.board {
   .score-pill .value { font-size: 1.1rem; }
   .score-pill .label { font-size: 0.6rem; }
   .level-dot { width: 6px; height: 6px; }
-  .action-area { min-height: 90px; }
-  .bp-buttons { width: 100%; }
-  .bp-btn { flex: 1; width: auto; min-width: 0; height: 52px; }
+  .bp-btn { height: 52px; }
   .controls { gap: 8px; }
   .btn { padding: 9px 14px; font-size: 0.82rem; }
   .overlay-card { padding: 24px 20px; }
@@ -424,6 +402,10 @@ svg.board {
   <div class="status" :class="{ win: won, hint: showHint && !won }">
     <template v-if="won">{{ t('win') }}</template>
     <template v-else-if="showHint">{{ hintText }}</template>
+    <template v-else-if="selectedId !== null && atomMap[selectedId]">
+      <span style="font-weight:900;color:var(--accent)">{{ atomMap[selectedId].element }}</span>
+      {{ t('selectNeighbor') }}
+    </template>
     <template v-else>{{ t('prompt') }}</template>
   </div>
 
@@ -510,53 +492,26 @@ svg.board {
     </svg>
   </div>
 
-  <!-- Action area: bond picker / atom hint / idle legend -->
-  <div class="action-area">
-
-    <!-- Bond selected: show picker -->
-    <div v-if="activeBond" class="bond-picker">
-      <div class="bp-row">
-        <span class="bp-atom" :style="{ background: atomMap[activeBond.ia].color, color: atomMap[activeBond.ia].textColor }">
-          {{ atomMap[activeBond.ia].element }}
-        </span>
-        <svg class="bp-connector" viewBox="0 0 60 20">
-          <line v-if="activeBond.order === 0" x1="4" y1="10" x2="56" y2="10" stroke="#3d444d" stroke-width="2" stroke-dasharray="5 4" stroke-linecap="round"/>
-          <line v-if="activeBond.order === 1" x1="4" y1="10" x2="56" y2="10" stroke="#fbbf24" stroke-width="3" stroke-linecap="round"/>
-          <line v-if="activeBond.order === 2" x1="4" y1="6"  x2="56" y2="6"  stroke="#fbbf24" stroke-width="2.5" stroke-linecap="round"/>
-          <line v-if="activeBond.order === 2" x1="4" y1="14" x2="56" y2="14" stroke="#fbbf24" stroke-width="2.5" stroke-linecap="round"/>
-          <line v-if="activeBond.order === 3" x1="4" y1="4"  x2="56" y2="4"  stroke="#fbbf24" stroke-width="2" stroke-linecap="round"/>
-          <line v-if="activeBond.order === 3" x1="4" y1="10" x2="56" y2="10" stroke="#fbbf24" stroke-width="2" stroke-linecap="round"/>
-          <line v-if="activeBond.order === 3" x1="4" y1="16" x2="56" y2="16" stroke="#fbbf24" stroke-width="2" stroke-linecap="round"/>
+  <!-- Bond-order picker: floats on the canvas near the tapped bond -->
+  <Teleport to="body">
+    <div v-if="activeBond && bondPickerStyle" class="bond-picker-popup" :style="bondPickerStyle">
+      <button v-for="n in [0,1,2,3]" :key="n" class="bp-btn"
+        :class="{ active: activeBond.order === n }"
+        @click.stop="setBondOrder(n)">
+        <svg v-if="n > 0" width="30" height="16" viewBox="0 0 36 18">
+          <line v-if="n===1" x1="3" y1="9"  x2="33" y2="9"  stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+          <line v-if="n>=2" x1="3" y1="5"  x2="33" y2="5"  stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <line v-if="n>=2" x1="3" y1="13" x2="33" y2="13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <line v-if="n===3" x1="3" y1="9"  x2="33" y2="9"  stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
         </svg>
-        <span class="bp-atom" :style="{ background: atomMap[activeBond.ib].color, color: atomMap[activeBond.ib].textColor }">
-          {{ atomMap[activeBond.ib].element }}
-        </span>
-      </div>
-      <div class="bp-buttons">
-        <button v-for="n in [0,1,2,3]" :key="n" class="bp-btn"
-          :class="{ active: activeBond.order === n }"
-          @click="setBondOrder(n)">
-          <svg v-if="n > 0" width="36" height="18" viewBox="0 0 36 18">
-            <line v-if="n===1" x1="3" y1="9"  x2="33" y2="9"  stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
-            <line v-if="n>=2" x1="3" y1="5"  x2="33" y2="5"  stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            <line v-if="n>=2" x1="3" y1="13" x2="33" y2="13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            <line v-if="n===3" x1="3" y1="9"  x2="33" y2="9"  stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-          <span v-else style="font-size:1.1rem">✕</span>
-        </button>
-      </div>
+        <span v-else style="font-size:1rem">✕</span>
+      </button>
     </div>
+  </Teleport>
 
-    <!-- Atom selected: prompt to pick neighbor -->
-    <div v-else-if="selectedId !== null" class="atom-hint">
-      <span class="bp-atom" :style="{ background: atomMap[selectedId].color, color: atomMap[selectedId].textColor }">
-        {{ atomMap[selectedId].element }}
-      </span>
-      <span>{{ t('selectNeighbor') }}</span>
-    </div>
-
-    <!-- Idle: legend + valence reference -->
-    <div v-else style="display:flex;flex-direction:column;align-items:center;gap:10px;width:100%">
+  <!-- Legend — always visible, never shifts layout -->
+  <div class="action-area">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:10px;width:100%">
       <div class="legend">
         <div class="legend-item">
           <svg class="legend-svg" viewBox="0 0 32 14"><line x1="2" y1="7" x2="30" y2="7" stroke="#6e7681" stroke-width="2.5" stroke-linecap="round"/></svg>
@@ -1051,6 +1006,7 @@ createApp({
     const activeBondKey = ref(null);
     const atomPositions = ref({});
     const svgEl = ref(null);
+    const bondPickerStyle = ref(null);
     let dragState = null; // { id, atom, startX, startY, moved }
 
     // bonds: map key -> order (0 = absent but exists as pair)
@@ -1183,6 +1139,27 @@ createApp({
       selectedId.value = null;
       activeBondKey.value = null;
     }
+
+    // Position the bond picker popup near the tapped bond's midpoint
+    watch(activeBondKey, key => {
+      if (!key || !svgEl.value) { bondPickerStyle.value = null; return; }
+      const bond = bonds.value.find(b => b.key === key);
+      if (!bond) { bondPickerStyle.value = null; return; }
+      const r = svgEl.value.getBoundingClientRect();
+      const sx = r.width / SVG_W, sy = r.height / SVG_H;
+      const cx = (bond.ax + bond.bx) / 2 * sx + r.left;
+      const cy = (bond.ay + bond.by) / 2 * sy + r.top;
+      const vw = window.innerWidth;
+      // Clamp horizontal so the ~270px popup stays on screen
+      const safeX = Math.max(135, Math.min(vw - 135, cx));
+      // Show above bond unless too close to top of viewport
+      const above = cy > r.top + r.height * 0.3;
+      bondPickerStyle.value = {
+        left: safeX + 'px',
+        top: cy + 'px',
+        transform: above ? 'translate(-50%, calc(-100% - 10px))' : 'translate(-50%, 10px)',
+      };
+    });
 
     // Drag / tap handling via pointer events
     function getSvgPoint(e) {
@@ -1389,7 +1366,7 @@ createApp({
       selectedId, activeBondKey, activeBond, atomMap, reachableIds, atoms, bonds,
       offsetTransform, valenceLeft, valenceFill, valenceTextFill,
       selectAtom, selectBond, setBondOrder, deselect, showHintFn, resetLevel, nextLevel, restart, resetScores,
-      svgEl, onAtomPointerDown, onBondPointerUp, onSvgPointerMove, onSvgPointerUp, onPointerCancel,
+      svgEl, bondPickerStyle, onAtomPointerDown, onBondPointerUp, onSvgPointerMove, onSvgPointerUp, onPointerCancel,
       SVG_W, SVG_H,
       ELEMENT_STYLE, VALENCE,
     };
