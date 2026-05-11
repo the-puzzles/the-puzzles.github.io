@@ -882,39 +882,35 @@ footer {
       <div class="card-title">FOUR IN A ROW</div>
     </div>
 
-    <div style="display:flex;align-items:center;justify-content:center;background:#0d1117;border:2px solid #21262d;border-radius:10px;padding:10px 8px;">
-      <svg width="168" height="90" viewBox="0 0 168 90">
-        <!-- Board background -->
-        <rect width="168" height="90" rx="8" fill="#1d3461"/>
-        <!-- Holes / pieces: 4 cols × 3 rows preview -->
-        <g>
-          <!-- row 3 (bottom) -->
-          <circle cx="24" cy="72" r="14" fill="#ef4444"/>
-          <circle cx="48" cy="72" r="14" fill="#eab308"/>
-          <circle cx="72" cy="72" r="14" fill="#ef4444"/>
-          <circle cx="96" cy="72" r="14" fill="#eab308"/>
-          <circle cx="120" cy="72" r="14" fill="#0d1117"/>
-          <circle cx="144" cy="72" r="14" fill="#0d1117"/>
-          <!-- row 2 -->
-          <circle cx="24" cy="48" r="14" fill="#eab308"/>
-          <circle cx="48" cy="48" r="14" fill="#ef4444"/>
-          <circle cx="72" cy="48" r="14" fill="#0d1117"/>
-          <circle cx="96" cy="48" r="14" fill="#0d1117"/>
-          <circle cx="120" cy="48" r="14" fill="#0d1117"/>
-          <circle cx="144" cy="48" r="14" fill="#0d1117"/>
-          <!-- row 1 (top) -->
-          <circle cx="24" cy="24" r="14" fill="#0d1117"/>
-          <circle cx="48" cy="24" r="14" fill="#0d1117"/>
-          <circle cx="72" cy="24" r="14" fill="#0d1117"/>
-          <circle cx="96" cy="24" r="14" fill="#0d1117"/>
-          <circle cx="120" cy="24" r="14" fill="#0d1117"/>
-          <circle cx="144" cy="24" r="14" fill="#0d1117"/>
-        </g>
-        <!-- Winning 4 in a row highlight -->
-        <circle cx="24" cy="72" r="14" fill="none" stroke="#fff" stroke-width="2.5" opacity="0.7"/>
-        <circle cx="48" cy="72" r="14" fill="none" stroke="#fff" stroke-width="2.5" opacity="0.7"/>
-        <circle cx="72" cy="72" r="14" fill="none" stroke="#fff" stroke-width="2.5" opacity="0.7"/>
-        <circle cx="96" cy="72" r="14" fill="none" stroke="#fff" stroke-width="2.5" opacity="0.7"/>
+    <div class="preview" style="grid-template-columns:1fr;padding:8px;">
+      <svg viewBox="0 0 124 124" style="width:124px;height:124px;display:block;">
+        <rect width="124" height="124" rx="10" fill="#1d3461"/>
+        <!-- 4×4 grid: cx = 17,45,73,101  cy = 17,45,73,101  r=13 -->
+        <!-- row 0 -->
+        <circle cx="17"  cy="17"  r="13" fill="#0d1117"/>
+        <circle cx="45"  cy="17"  r="13" fill="#0d1117"/>
+        <circle cx="73"  cy="17"  r="13" fill="#0d1117"/>
+        <circle cx="101" cy="17"  r="13" fill="#eab308"/>
+        <!-- row 1 -->
+        <circle cx="17"  cy="45"  r="13" fill="#0d1117"/>
+        <circle cx="45"  cy="45"  r="13" fill="#0d1117"/>
+        <circle cx="73"  cy="45"  r="13" fill="#ef4444"/>
+        <circle cx="101" cy="45"  r="13" fill="#eab308"/>
+        <!-- row 2 -->
+        <circle cx="17"  cy="73"  r="13" fill="#0d1117"/>
+        <circle cx="45"  cy="73"  r="13" fill="#ef4444"/>
+        <circle cx="73"  cy="73"  r="13" fill="#eab308"/>
+        <circle cx="101" cy="73"  r="13" fill="#eab308"/>
+        <!-- row 3 -->
+        <circle cx="17"  cy="101" r="13" fill="#ef4444"/>
+        <circle cx="45"  cy="101" r="13" fill="#eab308"/>
+        <circle cx="73"  cy="101" r="13" fill="#ef4444"/>
+        <circle cx="101" cy="101" r="13" fill="#ef4444"/>
+        <!-- diagonal win highlight ↗ -->
+        <circle cx="17"  cy="101" r="13" fill="none" stroke="#fff" stroke-width="2.5" opacity="0.8"/>
+        <circle cx="45"  cy="73"  r="13" fill="none" stroke="#fff" stroke-width="2.5" opacity="0.8"/>
+        <circle cx="73"  cy="45"  r="13" fill="none" stroke="#fff" stroke-width="2.5" opacity="0.8"/>
+        <circle cx="101" cy="17"  r="13" fill="none" stroke="#fff" stroke-width="2.5" opacity="0.8"/>
       </svg>
     </div>
 
