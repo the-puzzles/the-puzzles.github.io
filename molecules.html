@@ -8,7 +8,6 @@
 <meta name="theme-color" content="#0d1117">
 <link rel="apple-touch-icon" href="icon.svg">
 <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-<script src="https://unpkg.com/d3@7/dist/d3.min.js"></script>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -209,23 +208,29 @@ svg.board {
 /* Legend — idle info, becomes bond picker when a bond is active */
 .legend {
   display: flex;
-  gap: 10px;
+  gap: 6px;
   font-size: 0.75rem;
   color: #6e7681;
   align-items: center;
   flex-wrap: wrap;
   justify-content: center;
 }
-.legend-item { display: flex; align-items: center; gap: 5px; }
+/* Items always carry the same padding/border so the row height never shifts */
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 7px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  transition: border-color 0.12s, color 0.12s, background 0.12s;
+}
 .legend-svg { width: 32px; height: 14px; }
 
-/* Active picking state */
+/* Active picking state — only changes color, not dimensions */
 .legend-btn {
   cursor: pointer;
-  border: 1px solid #30363d;
-  border-radius: 8px;
-  padding: 4px 8px;
-  transition: border-color 0.12s, color 0.12s, background 0.12s;
+  border-color: #30363d;
   touch-action: manipulation;
 }
 .legend-btn:hover { border-color: #6e7681; color: #c9d1d9; }
@@ -475,9 +480,9 @@ svg.board {
   <div class="action-area">
     <div style="display:flex;flex-direction:column;align-items:center;gap:10px;width:100%">
       <div class="legend" :class="{ 'legend-picking': activeBond }">
-        <!-- ✕ clear — only visible when picking -->
-        <div v-if="activeBond" class="legend-item legend-btn"
-             :class="{ 'legend-btn-on': activeBond.order === 0 }"
+        <!-- ✕ clear — always in layout (v-show not v-if) so row height never shifts -->
+        <div v-show="activeBond" class="legend-item legend-btn"
+             :class="{ 'legend-btn-on': activeBond && activeBond.order === 0 }"
              @click="setBondOrder(0)">
           <span style="font-size:1rem;line-height:1">✕</span>
           {{ t('none') }}
@@ -948,22 +953,22 @@ const LEVELS = [
   },
 ];
 
-// Lay out atoms using d3-force simulation, run synchronously to convergence
+// Scale the hand-coded chemical positions to fit the SVG, preserving geometry
 function runForceLayout(level, atomPositions) {
-  const nodes = level.atoms.map(a => ({ id: a.id }));
-  const links = level.pairs.map(([a, b]) => ({ source: a, target: b }));
-  const sim = d3.forceSimulation(nodes)
-    .force('link', d3.forceLink(links).id(d => d.id).distance(90).strength(1))
-    .force('charge', d3.forceManyBody().strength(-350))
-    .force('center', d3.forceCenter(SVG_W / 2, SVG_H / 2))
-    .force('collision', d3.forceCollide(45))
-    .stop();
-  for (let i = 0; i < 500; i++) sim.tick();
+  const src = level.atoms;
+  const pad = 50;
+  const xs = src.map(a => a.x), ys = src.map(a => a.y);
+  const minX = Math.min(...xs), maxX = Math.max(...xs);
+  const minY = Math.min(...ys), maxY = Math.max(...ys);
+  const rangeX = maxX - minX || 1, rangeY = maxY - minY || 1;
+  const scale = Math.min((SVG_W - pad * 2) / rangeX, (SVG_H - pad * 2) / rangeY, 1.6);
+  const cx = (SVG_W - rangeX * scale) / 2;
+  const cy = (SVG_H - rangeY * scale) / 2;
   const pos = {};
-  nodes.forEach(n => {
-    pos[n.id] = {
-      x: Math.max(40, Math.min(SVG_W - 40, n.x)),
-      y: Math.max(40, Math.min(SVG_H - 40, n.y)),
+  src.forEach(a => {
+    pos[a.id] = {
+      x: (a.x - minX) * scale + cx,
+      y: (a.y - minY) * scale + cy,
     };
   });
   atomPositions.value = pos;
@@ -993,7 +998,7 @@ createApp({
     const levels = LEVELS;
     const currentLevel = computed(() => levels[levelIdx.value]);
 
-    // Build atom objects for display; positions come from d3-force layout or drag
+    // Build atom objects for display; positions come from scaled level layout or drag
     const atoms = computed(() => {
       const pos = atomPositions.value;
       return currentLevel.value.atoms.map(a => {
