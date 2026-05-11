@@ -162,11 +162,9 @@ h1 {
 .cell.win-cell .piece.p1 { background: #fbbf24; box-shadow: 0 0 14px 4px rgba(245,158,11,0.8); }
 .cell.win-cell .piece.p2 { background: #a5b4fc; box-shadow: 0 0 14px 4px rgba(129,140,248,0.8); }
 
-/* lose highlight */
+/* lose highlight — keep each player's own color, add red ring so it reads as "loss" not as the other player */
 .cell.lose-cell .piece.p1,
-.cell.lose-cell .piece.p2 { box-shadow: 0 0 14px 4px rgba(248,113,113,0.8); }
-.cell.lose-cell .piece.p1 { background: #fca5a5; }
-.cell.lose-cell .piece.p2 { background: #fca5a5; }
+.cell.lose-cell .piece.p2 { box-shadow: 0 0 0 3px #ef4444, 0 0 14px 6px rgba(239,68,68,0.7); opacity: 0.85; }
 
 /* hover preview */
 .cell.clickable.preview-p1:not(:has(.piece)):hover::after,
