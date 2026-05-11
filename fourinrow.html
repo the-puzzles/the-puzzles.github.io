@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Four in a Row</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0d1117">
+<link rel="apple-touch-icon" href="icon.svg">
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --cell: clamp(44px, calc((100vw - 32px) / 7.5), 68px);
+  --gap: 6px;
+  --accent1: #ef4444;
+  --accent1-dim: #450a0a;
+  --accent2: #eab308;
+  --accent2-dim: #422006;
+}
+
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: #0d1117;
+  color: #c9d1d9;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 16px 48px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* ── Top bar ─────────────────────────────────────────────────── */
+.top-bar {
+  width: 100%;
+  max-width: 580px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.back-link {
+  color: #6e7681; text-decoration: none; font-size: 0.85rem;
+  transition: color 0.15s; display: inline-flex; align-items: center; gap: 4px;
+}
+.back-link:hover { color: #c9d1d9; }
+[dir="ltr"] .back-link::before { content: '←'; }
+[dir="rtl"] .back-link::after  { content: '→'; }
+.lang-toggle { display: flex; gap: 4px; }
+.lang-btn {
+  background: none; border: 1px solid #30363d; color: #6e7681;
+  border-radius: 6px; padding: 4px 8px; font-size: 0.78rem; font-weight: 700;
+  font-family: inherit; cursor: pointer; transition: all 0.15s;
+}
+.lang-btn.active { background: var(--accent1-dim); border-color: var(--accent1); color: var(--accent1); }
+.lang-btn:hover:not(.active) { color: #c9d1d9; border-color: #6e7681; }
+
+/* ── Title ───────────────────────────────────────────────────── */
+h1 {
+  font-size: clamp(1.4rem, 5vw, 2rem);
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  margin-bottom: 14px;
+  text-align: center;
+}
+h1 .r { color: var(--accent1); }
+h1 .y { color: var(--accent2); }
+
+/* ── Score bar ───────────────────────────────────────────────── */
+.score-bar {
+  display: flex;
+  border: 1px solid #21262d;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+.score-cell {
+  padding: 7px 18px;
+  text-align: center;
+  flex: 1;
+  transition: background 0.15s;
+}
+.score-cell + .score-cell { border-left: 1px solid #21262d; }
+.score-cell .lbl { font-size: 0.62rem; color: #6e7681; letter-spacing: 0.08em; text-transform: uppercase; }
+.score-cell .val { font-size: 1.25rem; font-weight: 700; }
+.score-cell.p1 .val { color: var(--accent1); }
+.score-cell.p2 .val { color: var(--accent2); }
+.score-cell.dr .val { color: #6e7681; }
+.score-cell.active { background: #161b22; }
+
+/* ── Status ──────────────────────────────────────────────────── */
+.status {
+  height: 2.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #6e7681;
+  margin-bottom: 8px;
+}
+.status.s1 { color: var(--accent1); }
+.status.s2 { color: var(--accent2); }
+
+.dot {
+  width: 11px; height: 11px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+.dot.p1 { background: var(--accent1); }
+.dot.p2 { background: var(--accent2); }
+
+/* ── Game area ───────────────────────────────────────────────── */
+.board-scroll { overflow-x: auto; max-width: 100%; }
+
+.game-area {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 4px;
+  touch-action: manipulation;
+}
+
+/* Column hover targets above the board */
+.col-tops {
+  display: grid;
+  grid-template-columns: repeat(7, var(--cell));
+  gap: var(--gap);
+  padding: 0 var(--gap);
+  height: 40px;
+}
+.col-top {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.col-top.live:hover { background: #21262d; }
+.col-preview {
+  width: calc(var(--cell) * 0.66);
+  height: calc(var(--cell) * 0.66);
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 0.1s;
+  pointer-events: none;
+}
+.col-top.live:hover .col-preview { opacity: 0.45; }
+.col-preview.p1 { background: var(--accent1); }
+.col-preview.p2 { background: var(--accent2); }
+
+/* Board */
+.board {
+  display: grid;
+  grid-template-columns: repeat(7, var(--cell));
+  grid-template-rows: repeat(6, var(--cell));
+  gap: var(--gap);
+  background: #1d3461;
+  border-radius: 14px;
+  padding: var(--gap);
+  box-shadow: 0 6px 32px rgba(0,0,0,0.5);
+}
+
+.cell {
+  background: #0d1117;
+  border-radius: 50%;
+  position: relative;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.piece {
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+}
+.piece.p1 {
+  background: radial-gradient(circle at 38% 32%, #fca5a5, #ef4444 60%);
+  box-shadow: 0 2px 8px rgba(239,68,68,0.5), inset 0 -2px 4px rgba(0,0,0,0.2);
+}
+.piece.p2 {
+  background: radial-gradient(circle at 38% 32%, #fef08a, #eab308 60%);
+  box-shadow: 0 2px 8px rgba(234,179,8,0.5), inset 0 -2px 4px rgba(0,0,0,0.2);
+}
+
+/* Drop animation — --drop-from is set as an inline style on the piece */
+@keyframes piece-drop {
+  from { transform: translateY(var(--drop-from, -200px)); }
+  to   { transform: translateY(0); }
+}
+.piece.dropping {
+  animation: piece-drop 0.38s cubic-bezier(0.28, 0.84, 0.42, 1.15);
+}
+
+/* Win highlight */
+.cell.win .piece {
+  box-shadow: 0 0 0 3px #fff, 0 0 18px 6px rgba(255,255,255,0.55);
+  animation: win-pulse 0.9s ease-in-out infinite;
+}
+@keyframes win-pulse {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.1); }
+}
+
+/* ── Mode bar ────────────────────────────────────────────────── */
+.mode-bar {
+  display: flex;
+  gap: 6px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.mode-btn {
+  background: #161b22; border: 1px solid #30363d; color: #8b949e;
+  border-radius: 20px; padding: 6px 14px; font-size: 0.82rem;
+  font-weight: 600; font-family: inherit; cursor: pointer; transition: all 0.15s;
+  touch-action: manipulation;
+}
+.mode-btn:hover:not(.active) { border-color: #6e7681; color: #c9d1d9; }
+.mode-btn.active { background: var(--accent1-dim); border-color: var(--accent1); color: var(--accent1); }
+
+/* ── Controls ────────────────────────────────────────────────── */
+.controls {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.btn {
+  background: #161b22; border: 1px solid #30363d; color: #c9d1d9;
+  border-radius: 8px; padding: 9px 20px; font-size: 0.88rem;
+  font-weight: 600; font-family: inherit; cursor: pointer;
+  transition: all 0.15s; touch-action: manipulation;
+}
+.btn:hover { border-color: #6e7681; color: #fff; }
+.btn.danger { border-color: #f87171; color: #f87171; }
+.btn.danger:hover { background: #1a0000; }
+</style>
+</head>
+<body>
+<div id="app" :dir="isRTL ? 'rtl' : 'ltr'">
+
+  <div class="top-bar">
+    <a class="back-link" href="index.html">{{ t('back') }}</a>
+    <div class="lang-toggle">
+      <button class="lang-btn" :class="{active: lang==='en'}" @click="lang='en'">EN</button>
+      <button class="lang-btn" :class="{active: lang==='he'}" @click="lang='he'">עב</button>
+    </div>
+  </div>
+
+  <h1><span class="r">FOUR</span> <span class="y">IN A ROW</span></h1>
+
+  <div class="score-bar">
+    <div class="score-cell p1" :class="{active: phase==='playing' && turn===1 && !aiThink}">
+      <div class="lbl">{{ t('p1') }}</div>
+      <div class="val">{{ scores[0] }}</div>
+    </div>
+    <div class="score-cell dr">
+      <div class="lbl">{{ t('draws') }}</div>
+      <div class="val">{{ scores[2] }}</div>
+    </div>
+    <div class="score-cell p2" :class="{active: phase==='playing' && turn===2 && !aiThink}">
+      <div class="lbl">{{ t('p2') }}</div>
+      <div class="val">{{ scores[1] }}</div>
+    </div>
+  </div>
+
+  <div class="status" :class="statusClass">
+    <template v-if="phase === 'playing'">
+      <span class="dot" :class="'p' + turn"></span>
+      <span>{{ aiThink ? t('thinking') : (turn===1 ? t('p1') : t('p2')) }}</span>
+      <span v-if="!aiThink">{{ t('turn') }}</span>
+    </template>
+    <template v-else-if="phase === 'won'">
+      <span>{{ winner===1 ? t('p1') : t('p2') }} {{ t('wins') }} 🎉</span>
+    </template>
+    <template v-else>{{ t('draw') }}</template>
+  </div>
+
+  <div class="board-scroll">
+    <div class="game-area" @mouseleave="hover = -1">
+
+      <!-- Column tap / hover targets above the board -->
+      <div class="col-tops">
+        <div v-for="c in 7" :key="c"
+             class="col-top"
+             :class="{ live: phase==='playing' && !aiThink && canDrop(c-1) }"
+             @click="drop(c-1)"
+             @mouseenter="hover = c-1">
+          <div v-if="phase==='playing' && !aiThink && canDrop(c-1)"
+               class="col-preview" :class="'p' + turn"></div>
+        </div>
+      </div>
+
+      <!-- Board grid -->
+      <div class="board">
+        <template v-for="r in 6" :key="r">
+          <div v-for="c in 7" :key="c"
+               class="cell"
+               :class="{ win: winLine && winLine.includes((r-1)*7+(c-1)) }"
+               @click="drop(c-1)"
+               @mouseenter="hover = c-1">
+            <div v-if="board[(r-1)*7+(c-1)]"
+                 class="piece"
+                 :class="[
+                   'p' + board[(r-1)*7+(c-1)],
+                   dropAnim && dropAnim.r===r-1 && dropAnim.c===c-1 ? 'dropping' : ''
+                 ]"
+                 :style="dropAnim && dropAnim.r===r-1 && dropAnim.c===c-1
+                   ? { '--drop-from': dropAnim.from }
+                   : {}">
+            </div>
+          </div>
+        </template>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="mode-bar">
+    <button class="mode-btn" :class="{active: mode==='2p'}"   @click="setMode('2p')">{{ t('m2p') }}</button>
+    <button class="mode-btn" :class="{active: mode==='easy'}" @click="setMode('easy')">{{ t('easy') }}</button>
+    <button class="mode-btn" :class="{active: mode==='hard'}" @click="setMode('hard')">{{ t('hard') }}</button>
+  </div>
+
+  <div class="controls">
+    <button class="btn"        @click="newGame">{{ t('newGame') }}</button>
+    <button class="btn danger" @click="resetScores">{{ t('reset') }}</button>
+  </div>
+
+</div>
+<script>
+const { createApp, ref, computed, onMounted } = Vue;
+
+const R = 6, C = 7;
+
+// ── Game logic ──────────────────────────────────────────────────────────
+
+function dropRow(board, col) {
+  for (let r = R - 1; r >= 0; r--) if (board[r*C+col] === 0) return r;
+  return -1;
+}
+
+function validCols(board) {
+  const out = [];
+  for (let c = 0; c < C; c++) if (board[c] === 0) out.push(c);
+  return out;
+}
+
+function checkWin(board, p) {
+  const idx = (r, c) => r*C+c;
+  // horizontal
+  for (let r = 0; r < R; r++)
+    for (let c = 0; c <= C-4; c++)
+      if ([0,1,2,3].every(i => board[idx(r,c+i)] === p))
+        return [idx(r,c), idx(r,c+1), idx(r,c+2), idx(r,c+3)];
+  // vertical
+  for (let c = 0; c < C; c++)
+    for (let r = 0; r <= R-4; r++)
+      if ([0,1,2,3].every(i => board[idx(r+i,c)] === p))
+        return [idx(r,c), idx(r+1,c), idx(r+2,c), idx(r+3,c)];
+  // diagonal ↘
+  for (let r = 0; r <= R-4; r++)
+    for (let c = 0; c <= C-4; c++)
+      if ([0,1,2,3].every(i => board[idx(r+i,c+i)] === p))
+        return [idx(r,c), idx(r+1,c+1), idx(r+2,c+2), idx(r+3,c+3)];
+  // diagonal ↙
+  for (let r = 0; r <= R-4; r++)
+    for (let c = 3; c < C; c++)
+      if ([0,1,2,3].every(i => board[idx(r+i,c-i)] === p))
+        return [idx(r,c), idx(r+1,c-1), idx(r+2,c-2), idx(r+3,c-3)];
+  return null;
+}
+
+// ── AI ──────────────────────────────────────────────────────────────────
+
+function scoreWindow(w, p) {
+  const opp = 3 - p;
+  const pc = w.filter(v => v === p).length;
+  const oc = w.filter(v => v === opp).length;
+  const ec = w.filter(v => v === 0).length;
+  if (pc === 4) return 100;
+  if (pc === 3 && ec === 1) return 5;
+  if (pc === 2 && ec === 2) return 2;
+  if (oc === 3 && ec === 1) return -4;
+  return 0;
+}
+
+function evaluate(board, p) {
+  let s = 0;
+  const g = (r, c) => board[r*C+c];
+  for (let r = 0; r < R; r++) if (g(r,3) === p) s += 3;
+  for (let r = 0; r < R; r++)
+    for (let c = 0; c <= C-4; c++)
+      s += scoreWindow([g(r,c),g(r,c+1),g(r,c+2),g(r,c+3)], p);
+  for (let c = 0; c < C; c++)
+    for (let r = 0; r <= R-4; r++)
+      s += scoreWindow([g(r,c),g(r+1,c),g(r+2,c),g(r+3,c)], p);
+  for (let r = 0; r <= R-4; r++) {
+    for (let c = 0; c <= C-4; c++)
+      s += scoreWindow([g(r,c),g(r+1,c+1),g(r+2,c+2),g(r+3,c+3)], p);
+    for (let c = 3; c < C; c++)
+      s += scoreWindow([g(r,c),g(r+1,c-1),g(r+2,c-2),g(r+3,c-3)], p);
+  }
+  return s;
+}
+
+function minimax(board, depth, alpha, beta, maxing, ai) {
+  const hu = 3 - ai;
+  if (checkWin(board, ai)) return  1000 + depth;
+  if (checkWin(board, hu)) return -(1000 + depth);
+  const moves = validCols(board);
+  if (!moves.length || depth === 0) return evaluate(board, ai);
+  if (maxing) {
+    let best = -Infinity;
+    for (const col of moves) {
+      const row = dropRow(board, col);
+      const b = [...board]; b[row*C+col] = ai;
+      best = Math.max(best, minimax(b, depth-1, alpha, beta, false, ai));
+      alpha = Math.max(alpha, best);
+      if (alpha >= beta) break;
+    }
+    return best;
+  } else {
+    let best = Infinity;
+    for (const col of moves) {
+      const row = dropRow(board, col);
+      const b = [...board]; b[row*C+col] = hu;
+      best = Math.min(best, minimax(b, depth-1, alpha, beta, true, ai));
+      beta = Math.min(beta, best);
+      if (alpha >= beta) break;
+    }
+    return best;
+  }
+}
+
+function bestMove(board, ai) {
+  // Center-biased column order improves alpha-beta pruning
+  const order = [3,2,4,1,5,0,6].filter(c => dropRow(board,c) >= 0);
+  let best = -Infinity, col = order[0];
+  for (const c of order) {
+    const row = dropRow(board, c);
+    const b = [...board]; b[row*C+c] = ai;
+    const s = minimax(b, 6, -Infinity, Infinity, false, ai);
+    if (s > best) { best = s; col = c; }
+  }
+  return col;
+}
+
+// ── Vue app ─────────────────────────────────────────────────────────────
+
+createApp({
+  setup() {
+    const lang    = ref('en');
+    const mode    = ref('2p');
+    const board   = ref(Array(R*C).fill(0));
+    const turn    = ref(1);
+    const phase   = ref('playing');
+    const winner  = ref(null);
+    const winLine = ref(null);
+    const scores  = ref([0, 0, 0]);
+    const aiThink = ref(false);
+    const hover   = ref(-1);
+    const dropAnim = ref(null); // { r, c, from }
+
+    const isRTL = computed(() => lang.value === 'he');
+
+    const statusClass = computed(() => {
+      if (phase.value === 'won') return winner.value === 1 ? 's1' : 's2';
+      return turn.value === 1 ? 's1' : 's2';
+    });
+
+    function canDrop(col) { return board.value[col] === 0; }
+
+    function getCellSize() {
+      // Read the actual rendered cell size for the drop animation offset
+      const el = document.querySelector('.cell');
+      return el ? el.getBoundingClientRect().height : 60;
+    }
+
+    function drop(col) {
+      if (phase.value !== 'playing' || aiThink.value) return;
+      if (mode.value !== '2p' && turn.value === 2) return;
+      if (!canDrop(col)) return;
+      makeMove(col);
+    }
+
+    function makeMove(col) {
+      const row = dropRow(board.value, col);
+      if (row < 0) return;
+
+      const b = [...board.value];
+      b[row*C+col] = turn.value;
+      board.value = b;
+
+      // Trigger drop animation: piece falls from above the board
+      const cellH = getCellSize();
+      const gapPx = 6;
+      // Distance from top of board to final row (plus a bit extra for above-board feel)
+      const fromPx = -((row + 1) * (cellH + gapPx) + 8);
+      dropAnim.value = { r: row, c: col, from: `${fromPx}px` };
+      setTimeout(() => { dropAnim.value = null; }, 420);
+
+      const win = checkWin(b, turn.value);
+      if (win) {
+        winLine.value = win;
+        winner.value = turn.value;
+        phase.value = 'won';
+        const s = [...scores.value]; s[turn.value - 1]++; scores.value = s;
+        save();
+        launchFireworks(turn.value);
+        return;
+      }
+      if (b.every(v => v !== 0)) {
+        phase.value = 'draw';
+        const s = [...scores.value]; s[2]++; scores.value = s;
+        save();
+        return;
+      }
+      turn.value = turn.value === 1 ? 2 : 1;
+      if (mode.value !== '2p' && turn.value === 2) {
+        aiThink.value = true;
+        setTimeout(() => {
+          aiThink.value = false;
+          const mv = mode.value === 'hard' ? bestMove([...board.value], 2)
+                   : (() => { const v = validCols(board.value); return v[Math.floor(Math.random()*v.length)] ?? -1; })();
+          if (mv >= 0) makeMove(mv);
+        }, 420);
+      }
+    }
+
+    function newGame() {
+      board.value = Array(R*C).fill(0);
+      turn.value = 1;
+      phase.value = 'playing';
+      winner.value = null;
+      winLine.value = null;
+      aiThink.value = false;
+      dropAnim.value = null;
+    }
+
+    function setMode(m) { mode.value = m; newGame(); save(); }
+
+    function resetScores() { scores.value = [0,0,0]; newGame(); save(); }
+
+    function save() {
+      localStorage.setItem('fourinrow-save', JSON.stringify({ scores: scores.value, mode: mode.value }));
+    }
+
+    onMounted(() => {
+      try {
+        const s = JSON.parse(localStorage.getItem('fourinrow-save') || '{}');
+        if (s.scores) scores.value = s.scores;
+        if (s.mode)   mode.value   = s.mode;
+      } catch {}
+    });
+
+    // ── i18n ──
+    const S = {
+      back:     { en: 'Games',       he: 'משחקים' },
+      p1:       { en: 'Red',         he: 'אדום' },
+      p2:       { en: 'Yellow',      he: 'צהוב' },
+      draws:    { en: 'Draws',       he: 'תיקו' },
+      turn:     { en: "to play",     he: 'מהלך' },
+      thinking: { en: 'Thinking…',   he: 'חושב…' },
+      wins:     { en: 'wins!',       he: 'ניצח!' },
+      draw:     { en: 'Draw!',       he: 'תיקו!' },
+      m2p:      { en: '2 Players',   he: '2 שחקנים' },
+      easy:     { en: 'Easy',        he: 'קל' },
+      hard:     { en: 'Hard',        he: 'קשה' },
+      newGame:  { en: 'New Game',    he: 'משחק חדש' },
+      reset:    { en: 'Reset Scores',he: 'אפס ניקוד' },
+    };
+    function t(k) { return S[k]?.[lang.value] ?? S[k]?.en ?? k; }
+
+    // ── Fireworks ──
+    const PAL = {
+      1: ['#ef4444','#fca5a5','#fecaca','#f87171'],
+      2: ['#eab308','#fde68a','#fef08a','#facc15'],
+    };
+    function launchFireworks(p) {
+      const cv = document.createElement('canvas');
+      cv.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:200';
+      cv.width = innerWidth; cv.height = innerHeight;
+      document.body.appendChild(cv);
+      const ctx = cv.getContext('2d');
+      const cols = PAL[p], parts = [];
+      function burst(x, y) {
+        for (let i = 0; i < 60; i++) {
+          const a = Math.random()*Math.PI*2, spd = 2+Math.random()*6;
+          parts.push({ x, y, vx: Math.cos(a)*spd, vy: Math.sin(a)*spd-2,
+            alpha: 1, color: cols[Math.floor(Math.random()*cols.length)], r: 2+Math.random()*3 });
+        }
+      }
+      const end = Date.now()+3000; let lb = 0;
+      function frame(now) {
+        ctx.clearRect(0,0,cv.width,cv.height);
+        if (now-lb > 420 && Date.now() < end-500) {
+          burst(cv.width*(0.2+Math.random()*0.6), cv.height*(0.1+Math.random()*0.4)); lb = now;
+        }
+        for (const p of parts) {
+          p.x+=p.vx; p.y+=p.vy; p.vy+=0.12; p.alpha-=0.016;
+          if (p.alpha<=0) continue;
+          ctx.globalAlpha=p.alpha; ctx.fillStyle=p.color;
+          ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill();
+        }
+        ctx.globalAlpha=1;
+        parts.splice(0,parts.length,...parts.filter(p=>p.alpha>0));
+        if (Date.now()<end||parts.length>0) requestAnimationFrame(frame);
+        else cv.remove();
+      }
+      burst(innerWidth*0.5, innerHeight*0.35);
+      requestAnimationFrame(frame);
+    }
+
+    return {
+      lang, isRTL, t, mode, board, turn, phase, winner, winLine,
+      scores, aiThink, hover, dropAnim, statusClass, canDrop, drop, newGame, setMode, resetScores,
+    };
+  }
+}).mount('#app');
+</script>
+<script>
+(function(){
+  const d=new Date(document.lastModified),p=n=>String(n).padStart(2,"0");
+  const v=document.createElement("div");
+  v.style.cssText="position:fixed;bottom:4px;right:6px;font-size:0.6rem;color:#444c56;pointer-events:none;font-family:monospace;z-index:999";
+  v.textContent=d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())+" "+p(d.getHours())+":"+p(d.getMinutes());
+  document.body.appendChild(v);
+})();
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
+</script>
+</body>
+</html>

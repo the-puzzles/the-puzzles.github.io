@@ -95,6 +95,7 @@ header {
 .card.sprouts:hover     { border-color: #10b981; box-shadow: 0 12px 40px rgba(16,185,129,0.15); }
 .card.morris:hover      { border-color: #8b5cf6; box-shadow: 0 12px 40px rgba(139,92,246,0.15); }
 .card.squava:hover      { border-color: #f59e0b; box-shadow: 0 12px 40px rgba(245,158,11,0.15); }
+.card.fourinrow:hover   { border-color: #ef4444; box-shadow: 0 12px 40px rgba(239,68,68,0.15); }
 .card.dotsboxes:hover   { border-color: #38bdf8; box-shadow: 0 12px 40px rgba(56,189,248,0.15); }
 .card.morse:hover       { border-color: #fbbf24; box-shadow: 0 12px 40px rgba(251,191,36,0.15); }
 .card.wordladder:hover  { border-color: #22d3ee; box-shadow: 0 12px 40px rgba(34,211,238,0.15); }
@@ -123,6 +124,7 @@ header {
 .sprouts    .card-icon { background: #091c14; }
 .morris     .card-icon { background: #120d1f; }
 .squava     .card-icon { background: #1a1400; }
+.fourinrow  .card-icon { background: #450a0a; }
 .dotsboxes  .card-icon { background: #0c1e2e; }
 .woodoku    .card-icon { background: #0d1f05; }
 
@@ -193,6 +195,12 @@ header {
 }
 .morris .card-title {
   background: linear-gradient(135deg, #f97316, #8b5cf6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.fourinrow .card-title {
+  background: linear-gradient(135deg, #ef4444, #eab308);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -279,6 +287,7 @@ header {
 .sprouts     .rule-dot { background: #10b981; }
 .morris      .rule-dot { background: #8b5cf6; }
 .squava      .rule-dot { background: #f59e0b; }
+.fourinrow   .rule-dot { background: #ef4444; }
 .dotsboxes   .rule-dot { background: #38bdf8; }
 .woodoku     .rule-dot { background: #a3e635; }
 
@@ -314,6 +323,7 @@ header {
 .sprouts     .play-btn { background: #091c14; color: #34d399; border: 1px solid #10b981; }
 .morris      .play-btn { background: #120d1f; color: #a78bfa; border: 1px solid #8b5cf6; }
 .squava      .play-btn { background: #1a1400; color: #fbbf24; border: 1px solid #f59e0b; }
+.fourinrow   .play-btn { background: #450a0a; color: #fca5a5; border: 1px solid #ef4444; }
 .dotsboxes   .play-btn { background: #0c1e2e; color: #7dd3fc; border: 1px solid #38bdf8; }
 .woodoku     .play-btn { background: #0d1f05; color: #a3e635; border: 1px solid #a3e635; }
 
@@ -863,6 +873,60 @@ footer {
     </div>
 
     <div class="play-btn">Play Dots &amp; Boxes <span class="play-arrow">→</span></div>
+  </a>
+
+  <!-- ── Four in a Row ────────────────────────────────────────────── -->
+  <a class="card fourinrow" href="fourinrow.html">
+    <div class="card-header">
+      <div class="card-icon">🔴</div>
+      <div class="card-title">FOUR IN A ROW</div>
+    </div>
+
+    <div style="display:flex;align-items:center;justify-content:center;background:#0d1117;border:2px solid #21262d;border-radius:10px;padding:10px 8px;">
+      <svg width="168" height="90" viewBox="0 0 168 90">
+        <!-- Board background -->
+        <rect width="168" height="90" rx="8" fill="#1d3461"/>
+        <!-- Holes / pieces: 4 cols × 3 rows preview -->
+        <g>
+          <!-- row 3 (bottom) -->
+          <circle cx="24" cy="72" r="14" fill="#ef4444"/>
+          <circle cx="48" cy="72" r="14" fill="#eab308"/>
+          <circle cx="72" cy="72" r="14" fill="#ef4444"/>
+          <circle cx="96" cy="72" r="14" fill="#eab308"/>
+          <circle cx="120" cy="72" r="14" fill="#0d1117"/>
+          <circle cx="144" cy="72" r="14" fill="#0d1117"/>
+          <!-- row 2 -->
+          <circle cx="24" cy="48" r="14" fill="#eab308"/>
+          <circle cx="48" cy="48" r="14" fill="#ef4444"/>
+          <circle cx="72" cy="48" r="14" fill="#0d1117"/>
+          <circle cx="96" cy="48" r="14" fill="#0d1117"/>
+          <circle cx="120" cy="48" r="14" fill="#0d1117"/>
+          <circle cx="144" cy="48" r="14" fill="#0d1117"/>
+          <!-- row 1 (top) -->
+          <circle cx="24" cy="24" r="14" fill="#0d1117"/>
+          <circle cx="48" cy="24" r="14" fill="#0d1117"/>
+          <circle cx="72" cy="24" r="14" fill="#0d1117"/>
+          <circle cx="96" cy="24" r="14" fill="#0d1117"/>
+          <circle cx="120" cy="24" r="14" fill="#0d1117"/>
+          <circle cx="144" cy="24" r="14" fill="#0d1117"/>
+        </g>
+        <!-- Winning 4 in a row highlight -->
+        <circle cx="24" cy="72" r="14" fill="none" stroke="#fff" stroke-width="2.5" opacity="0.7"/>
+        <circle cx="48" cy="72" r="14" fill="none" stroke="#fff" stroke-width="2.5" opacity="0.7"/>
+        <circle cx="72" cy="72" r="14" fill="none" stroke="#fff" stroke-width="2.5" opacity="0.7"/>
+        <circle cx="96" cy="72" r="14" fill="none" stroke="#fff" stroke-width="2.5" opacity="0.7"/>
+      </svg>
+    </div>
+
+    <p class="card-tagline">Drop pieces into the grid. First to connect four in a row — horizontal, vertical, or diagonal — wins.</p>
+
+    <div class="card-rules">
+      <div class="rule"><div class="rule-dot"></div><span>7 columns × 6 rows — pieces fall by gravity</span></div>
+      <div class="rule"><div class="rule-dot"></div><span>Red vs Yellow — 2 player or vs AI</span></div>
+      <div class="rule"><div class="rule-dot"></div><span>Hard AI uses minimax with alpha-beta pruning</span></div>
+    </div>
+
+    <div class="play-btn">Play Four in a Row <span class="play-arrow">→</span></div>
   </a>
 
   <!-- ── Squava ────────────────────────────────────────────────────── -->
