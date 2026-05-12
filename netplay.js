@@ -78,7 +78,14 @@ class NetPlay {
   }
 
   _pollForAnswer(signalUrl, code) {
+    const deadline = Date.now() + 2 * 60 * 1000; // 2 minutes
     this._pollTimer = setInterval(async () => {
+      if (Date.now() > deadline) {
+        clearInterval(this._pollTimer);
+        this._pollTimer = null;
+        this._onDisconnected();
+        return;
+      }
       try {
         const res = await fetch(`${signalUrl}/room/${code}/answer`);
         const { answer } = await res.json();
@@ -88,7 +95,7 @@ class NetPlay {
           await this._acceptAnswer(answer);
         }
       } catch {}
-    }, 2000);
+    }, 3000);
   }
 
   // GUEST ── fetches offer by code, posts answer to signaling server.
