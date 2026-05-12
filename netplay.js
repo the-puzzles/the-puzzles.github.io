@@ -45,7 +45,7 @@ class NetPlay {
         }
       };
       pc.addEventListener('icegatheringstatechange', onchange);
-      setTimeout(done, 5000);
+      setTimeout(done, 2000);
     });
   }
 
@@ -82,7 +82,7 @@ class NetPlay {
           await this._acceptAnswer(answer);
         }
       } catch {}
-    }, 2000);
+    }, 500);
   }
 
   // GUEST ── fetches offer by code, posts answer to signaling server.
