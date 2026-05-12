@@ -421,7 +421,7 @@ h1 .o { color: #60a5fa; }
     </template>
     <template v-else-if="netStatus === 'joining'">
       <p class="net-label">Enter the host's room code:</p>
-      <input class="net-code-input" v-model="netInput" placeholder="a3f8-9c21-b1d2-e3f4" spellcheck="false" />
+      <input class="net-code-input" v-model="netInput" placeholder="ocean-maple-river" spellcheck="false" />
       <button class="net-btn" @click="connectRoom" :disabled="!netInput.trim()">Connect</button>
     </template>
     <template v-else-if="netStatus === 'connecting'">
@@ -813,7 +813,7 @@ createApp({
     }
 
     function formatCode(code) {
-      return code.match(/.{4}/g)?.join('-') ?? code;
+      return code;
     }
 
     async function startHostAdv() {

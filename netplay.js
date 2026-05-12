@@ -100,7 +100,7 @@ class NetPlay {
 
   // GUEST ── fetches offer by code, posts answer to signaling server.
   async join(code, signalUrl = NETPLAY_SIGNAL_URL) {
-    const cleanCode = code.replace(/-/g, '').trim();
+    const cleanCode = code.trim();
     const res = await fetch(`${signalUrl}/room/${cleanCode}`);
     if (!res.ok) throw new Error('Room not found');
     const { offer } = await res.json();
