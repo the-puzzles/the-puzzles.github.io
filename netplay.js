@@ -106,6 +106,11 @@ class NetPlay {
     if (!postRes.ok) throw new Error('Failed to submit answer');
   }
 
+  // Public SDP methods for manual copy-paste exchange (advanced mode)
+  createOffer()     { return this._createOffer(); }
+  acceptAnswer(str) { return this._acceptAnswer(str); }
+  acceptOffer(str)  { return this._acceptOffer(str); }
+
   async _createOffer() {
     this.role = 'host';
     const pc = this._createPc();

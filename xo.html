@@ -309,6 +309,21 @@ h1 .o { color: #60a5fa; }
   box-sizing: border-box;
 }
 .net-code-input:focus { border-color: #6e7681; }
+.net-code {
+  width: 100%;
+  background: #0d1117;
+  border: 1px solid #30363d;
+  color: #c9d1d9;
+  border-radius: 8px;
+  padding: 8px;
+  font-size: 0.7rem;
+  font-family: monospace;
+  resize: none;
+  height: 76px;
+  word-break: break-all;
+  box-sizing: border-box;
+}
+.net-divider { border: none; border-top: 1px solid #21262d; margin: 2px 0; }
 .net-row { display: flex; gap: 8px; }
 .net-btn {
   flex: 1;
@@ -372,6 +387,31 @@ h1 .o { color: #60a5fa; }
         <button class="net-btn" @click="startHost">Host Game</button>
         <button class="net-btn secondary" @click="startJoin">Join Game</button>
       </div>
+      <hr class="net-divider">
+      <p class="net-label">Advanced — manual SDP:</p>
+      <div class="net-row">
+        <button class="net-btn secondary" @click="startHostAdv">Host (SDP)</button>
+        <button class="net-btn secondary" @click="startJoinAdv">Join (SDP)</button>
+      </div>
+    </template>
+    <template v-else-if="netStatus === 'adv-offer-ready'">
+      <p class="net-label">Share this offer with your opponent:</p>
+      <textarea class="net-code" readonly :value="offerText"></textarea>
+      <button class="net-btn" @click="copyAdv">{{ copied ? 'Copied!' : 'Copy' }}</button>
+      <p class="net-label">Paste their answer:</p>
+      <textarea class="net-code" v-model="netInput" placeholder="Paste answer…"></textarea>
+      <button class="net-btn" @click="connectAnswerAdv" :disabled="!netInput.trim()">Connect</button>
+    </template>
+    <template v-else-if="netStatus === 'adv-joining'">
+      <p class="net-label">Paste the host's offer:</p>
+      <textarea class="net-code" v-model="netInput" placeholder="Paste offer…"></textarea>
+      <button class="net-btn" @click="connectOfferAdv" :disabled="!netInput.trim()">Generate Answer</button>
+    </template>
+    <template v-else-if="netStatus === 'adv-answer-ready'">
+      <p class="net-label">Send this answer to your host:</p>
+      <textarea class="net-code" readonly :value="offerText"></textarea>
+      <button class="net-btn" @click="copyAdv">{{ copied ? 'Copied!' : 'Copy' }}</button>
+      <p class="net-label">Waiting for host to connect…</p>
     </template>
     <template v-else-if="netStatus === 'hosting'">
       <p class="net-label">Share this code with your opponent:</p>
@@ -594,9 +634,10 @@ createApp({
     const aiThink = ref(false);
 
     // Net play state
-    const netStatus = ref('idle'); // 'idle'|'hosting'|'joining'|'connecting'|'connected'
+    const netStatus = ref('idle'); // 'idle'|'hosting'|'joining'|'connecting'|'adv-offer-ready'|'adv-joining'|'adv-answer-ready'|'connected'
     const netRole   = ref(null);   // 'host'|'guest'
     const roomCode  = ref('');
+    const offerText = ref('');
     const netInput  = ref('');
     const copied    = ref(false);
     let   net       = null;
@@ -775,6 +816,53 @@ createApp({
       return code.match(/.{4}/g)?.join('-') ?? code;
     }
 
+    async function startHostAdv() {
+      initNet();
+      try {
+        offerText.value = await net.createOffer();
+        netInput.value  = '';
+        netStatus.value = 'adv-offer-ready';
+      } catch {
+        alert('Failed to create offer — try again.');
+        net.close(); net = null;
+        netStatus.value = 'idle';
+      }
+    }
+
+    function startJoinAdv() {
+      initNet();
+      netInput.value  = '';
+      netStatus.value = 'adv-joining';
+    }
+
+    async function connectOfferAdv() {
+      try {
+        offerText.value = await net.acceptOffer(netInput.value.trim());
+        netInput.value  = '';
+        netStatus.value = 'adv-answer-ready';
+      } catch {
+        alert('Invalid offer — please try again.');
+        netInput.value = '';
+      }
+    }
+
+    async function connectAnswerAdv() {
+      try {
+        await net.acceptAnswer(netInput.value.trim());
+        netInput.value = '';
+      } catch {
+        alert('Invalid answer — please try again.');
+        netInput.value = '';
+      }
+    }
+
+    function copyAdv() {
+      navigator.clipboard.writeText(offerText.value).then(() => {
+        copied.value = true;
+        setTimeout(() => { copied.value = false; }, 1500);
+      });
+    }
+
     function save() {
       try {
         localStorage.setItem(SAVE_KEY, JSON.stringify({
@@ -800,9 +888,10 @@ createApp({
     return {
       lang, mode, board, current, phase, winLine, scores, aiThink,
       isRTL, UI, showPlayerMark, statusText, statusClass,
-      netStatus, netRole, roomCode, netInput, copied,
+      netStatus, netRole, roomCode, offerText, netInput, copied,
       canClick, clickCell, newGame, setMode, setLang, resetScores,
       startHost, startJoin, connectRoom, copyCode, formatCode,
+      startHostAdv, startJoinAdv, connectOfferAdv, connectAnswerAdv, copyAdv,
     };
   }
 }).mount('#app');
