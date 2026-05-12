@@ -251,12 +251,17 @@ h1 .y { color: var(--accent2); }
   display: flex; flex-direction: column; gap: 10px;
 }
 .net-label { font-size: 0.8rem; color: #8b949e; }
-.net-code {
-  width: 100%; background: #0d1117; border: 1px solid #30363d;
-  color: #c9d1d9; border-radius: 8px; padding: 8px;
-  font-size: 0.7rem; font-family: monospace; resize: none; height: 76px;
-  word-break: break-all;
+.net-code-display {
+  background: #0d1117; border: 1px solid #30363d; color: #c9d1d9;
+  border-radius: 8px; padding: 12px; font-size: 1rem; font-family: monospace;
+  letter-spacing: 0.08em; text-align: center;
 }
+.net-code-input {
+  width: 100%; background: #0d1117; border: 1px solid #30363d; color: #c9d1d9;
+  border-radius: 8px; padding: 8px 12px; font-size: 0.9rem; font-family: monospace;
+  outline: none; box-sizing: border-box;
+}
+.net-code-input:focus { border-color: #6e7681; }
 .net-row { display: flex; gap: 8px; }
 .net-btn {
   flex: 1; background: #1a0d0f; border: 1px solid #ef4444; color: #fca5a5;
@@ -305,24 +310,19 @@ h1 .y { color: var(--accent2); }
         <button class="net-btn secondary" @click="startJoin">Join Game</button>
       </div>
     </template>
-    <template v-else-if="netStatus === 'offer-ready'">
+    <template v-else-if="netStatus === 'hosting'">
       <p class="net-label">Share this code with your opponent:</p>
-      <textarea class="net-code" readonly :value="offerText"></textarea>
-      <button class="net-btn" @click="copyCode">{{ copied ? 'Copied!' : 'Copy' }}</button>
-      <p class="net-label">Then paste their answer here:</p>
-      <textarea class="net-code" v-model="netInput" placeholder="Paste answer…"></textarea>
-      <button class="net-btn" @click="connectAnswer" :disabled="!netInput.trim()">Connect</button>
+      <div class="net-code-display">{{ formatCode(roomCode) }}</div>
+      <button class="net-btn" @click="copyCode">{{ copied ? 'Copied!' : 'Copy Code' }}</button>
+      <p class="net-label">Waiting for opponent to join…</p>
     </template>
     <template v-else-if="netStatus === 'joining'">
-      <p class="net-label">Paste the host's code:</p>
-      <textarea class="net-code" v-model="netInput" placeholder="Paste code…"></textarea>
-      <button class="net-btn" @click="connectOffer" :disabled="!netInput.trim()">Generate Answer</button>
+      <p class="net-label">Enter the host's room code:</p>
+      <input class="net-code-input" v-model="netInput" placeholder="a3f8-9c21-b1d2-e3f4" spellcheck="false" />
+      <button class="net-btn" @click="connectRoom" :disabled="!netInput.trim()">Connect</button>
     </template>
-    <template v-else-if="netStatus === 'answer-ready'">
-      <p class="net-label">Send this to your host:</p>
-      <textarea class="net-code" readonly :value="offerText"></textarea>
-      <button class="net-btn" @click="copyCode">{{ copied ? 'Copied!' : 'Copy' }}</button>
-      <p class="net-label">Waiting for host to connect…</p>
+    <template v-else-if="netStatus === 'connecting'">
+      <p class="net-label">Connecting…</p>
     </template>
   </div>
 
@@ -540,9 +540,9 @@ createApp({
     const dropAnim = ref(null);
 
     // Net play state
-    const netStatus = ref('idle'); // 'idle'|'offer-ready'|'joining'|'answer-ready'|'connected'
+    const netStatus = ref('idle'); // 'idle'|'hosting'|'joining'|'connecting'|'connected'
     const netRole   = ref(null);   // 'host'|'guest'
-    const offerText = ref('');
+    const roomCode  = ref('');
     const netInput  = ref('');
     const copied    = ref(false);
     let   net       = null;
@@ -684,9 +684,14 @@ createApp({
 
     async function startHost() {
       initNet();
-      offerText.value = await net.createOffer();
-      netInput.value  = '';
-      netStatus.value = 'offer-ready';
+      netStatus.value = 'hosting';
+      try {
+        roomCode.value = await net.host();
+      } catch {
+        alert('Could not create room — try again.');
+        net.close(); net = null;
+        netStatus.value = 'idle';
+      }
     }
 
     function startJoin() {
@@ -695,32 +700,25 @@ createApp({
       netStatus.value = 'joining';
     }
 
-    async function connectOffer() {
+    async function connectRoom() {
+      netStatus.value = 'connecting';
       try {
-        offerText.value = await net.acceptOffer(netInput.value.trim());
-        netInput.value  = '';
-        netStatus.value = 'answer-ready';
+        await net.join(netInput.value.trim());
       } catch {
-        alert('Invalid code — please try again.');
-        netInput.value = '';
-      }
-    }
-
-    async function connectAnswer() {
-      try {
-        await net.acceptAnswer(netInput.value.trim());
-        netInput.value = '';
-      } catch {
-        alert('Invalid answer — please try again.');
-        netInput.value = '';
+        alert('Room not found — check the code and try again.');
+        netStatus.value = 'joining';
       }
     }
 
     function copyCode() {
-      navigator.clipboard.writeText(offerText.value).then(() => {
+      navigator.clipboard.writeText(formatCode(roomCode.value)).then(() => {
         copied.value = true;
         setTimeout(() => { copied.value = false; }, 1500);
       });
+    }
+
+    function formatCode(code) {
+      return code.match(/.{4}/g)?.join('-') ?? code;
     }
 
     // ── i18n ──
@@ -785,9 +783,9 @@ createApp({
     return {
       lang, isRTL, t, mode, board, turn, phase, winner, winLine,
       scores, aiThink, hover, dropAnim, statusClass, isMyTurn,
-      netStatus, netRole, offerText, netInput, copied,
+      netStatus, netRole, roomCode, netInput, copied,
       canDrop, drop, newGame, setMode, resetScores,
-      startHost, startJoin, connectOffer, connectAnswer, copyCode,
+      startHost, startJoin, connectRoom, copyCode, formatCode,
     };
   }
 }).mount('#app');

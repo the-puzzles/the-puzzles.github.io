@@ -1,11 +1,14 @@
+const NETPLAY_SIGNAL_URL = 'https://puzzles-signal.the-puzzles.workers.dev'
+
 class NetPlay {
   constructor({ onMove, onConnected, onDisconnected } = {}) {
     this._onMove         = onMove         || (() => {});
     this._onConnected    = onConnected    || (() => {});
     this._onDisconnected = onDisconnected || (() => {});
-    this._pc   = null;
-    this._ch   = null;
-    this.role  = null; // 'host' | 'guest'
+    this._pc        = null;
+    this._ch        = null;
+    this._pollTimer = null;
+    this.role       = null; // 'host' | 'guest'
   }
 
   _createPc() {
@@ -54,8 +57,50 @@ class NetPlay {
     return JSON.parse(atob(str.trim()));
   }
 
-  // HOST ── call first. Returns offer string to share with guest.
-  async createOffer() {
+  // HOST ── posts offer to signaling server, polls for answer. Returns room code.
+  async host(signalUrl = NETPLAY_SIGNAL_URL) {
+    const offerStr = await this._createOffer();
+    const res = await fetch(`${signalUrl}/room`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ offer: offerStr }),
+    });
+    if (!res.ok) throw new Error('Failed to create room');
+    const { code } = await res.json();
+    this._pollForAnswer(signalUrl, code);
+    return code;
+  }
+
+  _pollForAnswer(signalUrl, code) {
+    this._pollTimer = setInterval(async () => {
+      try {
+        const res = await fetch(`${signalUrl}/room/${code}/answer`);
+        const { answer } = await res.json();
+        if (answer) {
+          clearInterval(this._pollTimer);
+          this._pollTimer = null;
+          await this._acceptAnswer(answer);
+        }
+      } catch {}
+    }, 2000);
+  }
+
+  // GUEST ── fetches offer by code, posts answer to signaling server.
+  async join(code, signalUrl = NETPLAY_SIGNAL_URL) {
+    const cleanCode = code.replace(/-/g, '').trim();
+    const res = await fetch(`${signalUrl}/room/${cleanCode}`);
+    if (!res.ok) throw new Error('Room not found');
+    const { offer } = await res.json();
+    const answerStr = await this._acceptOffer(offer);
+    const postRes = await fetch(`${signalUrl}/room/${cleanCode}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ answer: answerStr }),
+    });
+    if (!postRes.ok) throw new Error('Failed to submit answer');
+  }
+
+  async _createOffer() {
     this.role = 'host';
     const pc = this._createPc();
     this._attachChannel(pc.createDataChannel('game'));
@@ -64,13 +109,11 @@ class NetPlay {
     return this._encode(pc.localDescription);
   }
 
-  // HOST ── call after receiving guest's answer string.
-  async acceptAnswer(str) {
+  async _acceptAnswer(str) {
     await this._pc.setRemoteDescription(this._decode(str));
   }
 
-  // GUEST ── call with host's offer string. Returns answer string to share with host.
-  async acceptOffer(str) {
+  async _acceptOffer(str) {
     this.role = 'guest';
     const pc = this._createPc();
     pc.ondatachannel = e => this._attachChannel(e.channel);
@@ -87,6 +130,8 @@ class NetPlay {
   }
 
   close() {
+    clearInterval(this._pollTimer);
+    this._pollTimer = null;
     this._ch?.close();
     this._pc?.close();
     this._ch = null;

@@ -31,16 +31,70 @@ No server is involved after the handshake.
 | Data in transit | Encrypted with DTLS (mandatory in all browsers, cannot be disabled) |
 | Opponent's access | Only receives what you explicitly `send()` — no access to files, device, or browser |
 | STUN server | Google sees your public IP during handshake; does not see game data |
-| Offer/answer strings | Contain your public IP — same exposure as hosting any website or sending email |
+| Offer/answer strings | Contain ICE candidates — see IP exposure below |
 | Injection risk | Game only acts on known message types; unknown messages are ignored |
 
 **Safe for playing with friends and family.** Only share the offer code with someone you trust.
+
+### IP exposure in offer/answer strings
+
+The base64 offer and answer are just plaintext. Decoding them reveals ICE candidates:
+
+```
+a=candidate:1 1 udp 2122260223 192.168.1.42 54321 typ host
+a=candidate:2 1 udp 1686052607 203.0.113.55 54321 typ srflx raddr 192.168.1.42
+```
+
+- `typ host` — your private LAN IP (harmless outside your network; NAT blocks inbound)
+- `typ srflx` — your public IP as seen by the STUN server
+
+**What this means in practice:**
+
+| Who sees what | Current behaviour |
+|---|---|
+| Your peer | Sees your public + private IP before connecting |
+| Signaling channel (WhatsApp, email, etc.) | Also sees your peer's public IP — a third party learns both sides' IPs |
+| Individual devices behind your router | Not reachable; NAT blocks all unsolicited inbound traffic |
+
+The **combined exposure** is the real concern: by sending the offer through a chat app or email, you hand that provider both players' public IPs in one message — something neither player explicitly chose to share with that service.
+
+For casual play among friends this is acceptable (both IPs are already visible to every website each person visits). For public or anonymous matchmaking it is not.
 
 ### What can fail
 
 - **Symmetric NAT** (corporate/school networks) — STUN doesn't work; would require a TURN relay server
 - **Firewall blocking UDP** — same issue
 - Both are rare on home networks
+
+### Roadmap: hiding IPs with TURN-only mode
+
+The fix is to force WebRTC to use only relay (TURN) candidates. With `iceTransportPolicy: 'relay'`, the generated offer contains only TURN server addresses — neither player's real IP appears in the blob, and the signaling channel learns nothing about either peer.
+
+**Steps to implement:**
+
+1. **Add a TURN server** — options:
+   - [Open Relay](https://www.metered.ca/tools/openrelay/) (free, no account needed for low traffic)
+   - [Cloudflare Calls TURN](https://developers.cloudflare.com/calls/turn/) (free tier, needs CF account)
+   - Self-hosted `coturn`
+
+2. **Update `netplay.js`** — add TURN credentials to the `RTCPeerConnection` config and set `iceTransportPolicy: 'relay'`:
+   ```js
+   const pc = new RTCPeerConnection({
+     iceTransportPolicy: 'relay',          // only emit relay candidates
+     iceServers: [
+       { urls: 'stun:stun.l.google.com:19302' },
+       {
+         urls:       'turn:<host>:3478',
+         username:   '<user>',
+         credential: '<pass>',
+       },
+     ],
+   });
+   ```
+
+3. **Verify** — decode a generated offer; it should contain only `typ relay` candidates, no real IPs.
+
+**Trade-off:** all game traffic routes through the TURN server (adds ~10–30 ms latency, costs bandwidth). Acceptable for turn-based games; negligible in practice.
 
 ---
 
