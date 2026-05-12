@@ -1,7 +1,7 @@
 const ALLOWED_ORIGIN = 'https://the-puzzles.github.io'
 const ROOM_TTL   = 300  // 5 minutes
 const RATE_TTL   = 60   // 1 minute window
-const RATE_LIMIT = 30   // max requests per IP per minute
+const RATE_LIMIT = 300  // max requests per IP per minute
 
 function randomCode() {
   const buf = new Uint8Array(8)
