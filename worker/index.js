@@ -37,10 +37,11 @@ export default {
 
     if (origin !== ALLOWED_ORIGIN) return new Response('Forbidden', { status: 403 })
 
-    // Rate limiting (approximate — KV is eventually consistent, fine for low traffic)
-    const ip       = request.headers.get('CF-Connecting-IP') ?? 'unknown'
-    const rateKey  = `rl:${ip}`
-    const rateRaw  = await env.ROOMS.get(rateKey)
+    // Rate limiting — fixed per-minute bucket so counter resets cleanly each minute
+    const ip      = request.headers.get('CF-Connecting-IP') ?? 'unknown'
+    const bucket  = Math.floor(Date.now() / 60000)
+    const rateKey = `rl:${ip}:${bucket}`
+    const rateRaw = await env.ROOMS.get(rateKey)
     const rateCount = rateRaw ? parseInt(rateRaw, 10) : 0
     if (rateCount >= RATE_LIMIT) return json({ error: 'Too many requests' }, 429, origin)
     await env.ROOMS.put(rateKey, String(rateCount + 1), { expirationTtl: RATE_TTL })
