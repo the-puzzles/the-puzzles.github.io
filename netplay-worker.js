@@ -1,14 +1,12 @@
-const SIGNAL_URL   = 'https://puzzles-signal.the-puzzles.workers.dev'
-const POLL_INTERVAL = 3000
-const POLL_DEADLINE = 2 * 60 * 1000
+// Pure state relay — RTCPeerConnection is [Exposed=Window] and cannot live in a worker.
+// The page that initiates the connection is the "owner"; all other tabs on the same
+// device communicate through this worker.
 
-// ── Connection state ──────────────────────────────────────────────
-let pc = null, channel = null, role = null, pollTimer = null
-let netStatus = 'idle', roomCode = '', offerText = '', swapped = false
-
-// ── Port registry ─────────────────────────────────────────────────
 const allPorts = new Set()
-const subs = new Map() // gameId → Set<port>
+const subs     = new Map()  // gameId → Set<port>
+let ownerPort  = null
+
+let netStatus = 'idle', role = null, roomCode = '', offerText = '', swapped = false
 
 function broadcast(msg) { for (const p of allPorts) p.postMessage(msg) }
 
@@ -16,189 +14,77 @@ function syncStatus() {
   broadcast({ type: 'status', netStatus, role, roomCode, offerText, swapped })
 }
 
-// ── Teardown ──────────────────────────────────────────────────────
-function reset() {
-  if (pollTimer) { clearInterval(pollTimer); pollTimer = null }
-  try { channel?.close() } catch {}
-  try { pc?.close()      } catch {}
-  pc = null; channel = null; role = null
-  netStatus = 'idle'; roomCode = ''; offerText = ''; swapped = false
+function doReset() {
+  netStatus = 'idle'; role = null; roomCode = ''; offerText = ''; swapped = false
+  ownerPort = null
   syncStatus()
   broadcast({ type: 'disconnected' })
 }
 
-// ── WebRTC helpers ────────────────────────────────────────────────
-async function getIceServers() {
-  try {
-    const r = await fetch(`${SIGNAL_URL}/ice-config`)
-    if (r.ok) return (await r.json()).iceServers
-  } catch {}
-  return [{ urls: 'stun:stun.l.google.com:19302' }]
-}
-
-async function newPc() {
-  pc = new RTCPeerConnection({ iceServers: await getIceServers() })
-  pc.onconnectionstatechange = () => {
-    if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') reset()
-  }
-  return pc
-}
-
-function wireChannel(ch) {
-  channel = ch
-  ch.onopen = () => {
-    netStatus = 'connected'
-    syncStatus()
-    broadcast({ type: 'connected', role })
-  }
-  ch.onclose = () => reset()
-  ch.onmessage = ({ data }) => {
-    try {
-      const msg = JSON.parse(data)
-      if (msg.type === 'swapRoles') {
-        swapped = !swapped
-        syncStatus()
-        for (const [gid, ports] of subs) for (const p of ports) p.postMessage({ type: 'move', gameId: gid, data: { type: 'newgame' } })
-        return
-      }
-      const { gameId, ...payload } = msg
-      if (!gameId) return
-      const set = subs.get(gameId)
-      if (set) for (const p of set) p.postMessage({ type: 'move', gameId, data: payload })
-    } catch {}
-  }
-}
-
-function encode(d) { return btoa(JSON.stringify({ type: d.type, sdp: d.sdp })) }
-function decode(s) { return JSON.parse(atob(s.trim())) }
-
-function waitIce(p) {
-  if (p.iceGatheringState === 'complete') return Promise.resolve()
-  return new Promise(resolve => {
-    const h = () => { if (p.iceGatheringState === 'complete') { p.removeEventListener('icegatheringstatechange', h); resolve() } }
-    p.addEventListener('icegatheringstatechange', h)
-    setTimeout(resolve, 4000)
-  })
-}
-
-// ── Signaling actions ─────────────────────────────────────────────
-function timedFetch(url, opts, ms = 8000) {
-  const ac = new AbortController()
-  setTimeout(() => ac.abort(), ms)
-  return fetch(url, { ...opts, signal: ac.signal })
-}
-
-async function startHost() {
-  if (netStatus !== 'idle') return
-  role = 'host'; netStatus = 'hosting'; syncStatus()
-  try {
-    const p = await newPc()
-    wireChannel(p.createDataChannel('game'))
-    await p.setLocalDescription(await p.createOffer())
-    await waitIce(p)
-    offerText = encode(p.localDescription)
-    const r = await timedFetch(`${SIGNAL_URL}/room`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ offer: offerText }),
-    })
-    if (!r.ok) throw new Error()
-    roomCode = (await r.json()).code
-    syncStatus()
-    const deadline = Date.now() + POLL_DEADLINE
-    pollTimer = setInterval(async () => {
-      if (Date.now() > deadline) { reset(); return }
-      try {
-        const ar = await timedFetch(`${SIGNAL_URL}/room/${roomCode}/answer`)
-        const { answer } = await ar.json()
-        if (answer) { clearInterval(pollTimer); pollTimer = null; await p.setRemoteDescription(decode(answer)) }
-      } catch {}
-    }, POLL_INTERVAL)
-  } catch {
-    reset()
-    broadcast({ type: 'error', message: 'Could not create room — try again.' })
-  }
-}
-
-async function joinRoom(code) {
-  if (netStatus !== 'joining') return
-  netStatus = 'connecting'; syncStatus(); role = 'guest'
-  try {
-    const p = await newPc()
-    p.ondatachannel = e => wireChannel(e.channel)
-    const r = await timedFetch(`${SIGNAL_URL}/room/${code.trim()}`)
-    if (!r.ok) throw new Error('notfound')
-    const { offer } = await r.json()
-    await p.setRemoteDescription(decode(offer))
-    await p.setLocalDescription(await p.createAnswer())
-    await waitIce(p)
-    const pr = await timedFetch(`${SIGNAL_URL}/room/${code.trim()}`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ answer: encode(p.localDescription) }),
-    })
-    if (!pr.ok) throw new Error()
-  } catch (e) {
-    reset()
-    broadcast({ type: 'error', message: e.message === 'notfound' ? 'Room not found — check the code.' : 'Connection failed — try again.' })
-  }
-}
-
-// ── Advanced (manual SDP) ─────────────────────────────────────────
-async function startHostAdv() {
-  if (netStatus !== 'idle') return
-  role = 'host'
-  const p = await newPc()
-  wireChannel(p.createDataChannel('game'))
-  await p.setLocalDescription(await p.createOffer())
-  await waitIce(p)
-  offerText = encode(p.localDescription)
-  netStatus = 'adv-offer-ready'; syncStatus()
-}
-
-async function connectOfferAdv(offerInput) {
-  role = 'guest'
-  const p = await newPc()
-  p.ondatachannel = e => wireChannel(e.channel)
-  await p.setRemoteDescription(decode(offerInput))
-  await p.setLocalDescription(await p.createAnswer())
-  await waitIce(p)
-  offerText = encode(p.localDescription)
-  netStatus = 'adv-answer-ready'; syncStatus()
-}
-
-async function connectAnswerAdv(answerInput) {
-  try { await pc.setRemoteDescription(decode(answerInput)) } catch {}
-}
-
-// ── Port handling ─────────────────────────────────────────────────
 self.onconnect = ({ ports: [port] }) => {
   allPorts.add(port)
   port.postMessage({ type: 'status', netStatus, role, roomCode, offerText, swapped })
 
-  port.onmessage = async ({ data }) => {
+  port.onmessage = ({ data }) => {
     switch (data.type) {
       case 'getStatus':
-        port.postMessage({ type: 'status', netStatus, role, roomCode, offerText, swapped }); break
+        port.postMessage({ type: 'status', netStatus, role, roomCode, offerText, swapped })
+        break
+
       case 'subscribe':
         if (!subs.has(data.gameId)) subs.set(data.gameId, new Set())
-        subs.get(data.gameId).add(port); break
+        subs.get(data.gameId).add(port)
+        break
+
       case 'unsubscribe':
-        subs.get(data.gameId)?.delete(port); break
-      case 'startHost':        await startHost(); break
-      case 'startJoin':        netStatus = 'joining'; syncStatus(); break
-      case 'connectRoom':      await joinRoom(data.code); break
+        subs.get(data.gameId)?.delete(port)
+        break
+
+      // Owner page reports its current state after any change
+      case 'reportStatus':
+        ownerPort = port
+        if (data.netStatus !== undefined) netStatus  = data.netStatus
+        if (data.role      !== undefined) role       = data.role
+        if (data.roomCode  !== undefined) roomCode   = data.roomCode
+        if (data.offerText !== undefined) offerText  = data.offerText
+        if (data.swapped   !== undefined) swapped    = data.swapped
+        syncStatus()
+        if (data.event === 'connected')    broadcast({ type: 'connected', role })
+        if (data.event === 'disconnected') doReset()
+        break
+
+      // Owner relays a move it received via RTC → route to subscribed game tabs
+      case 'incoming': {
+        const set = subs.get(data.gameId)
+        if (set) for (const p of set) {
+          if (p !== ownerPort) p.postMessage({ type: 'move', gameId: data.gameId, data: data.data })
+        }
+        break
+      }
+
+      // Broadcast a newgame to every subscribed game tab (triggered by swapRoles)
+      case 'broadcastNewgame':
+        for (const [gid, ports] of subs) for (const p of ports)
+          p.postMessage({ type: 'move', gameId: gid, data: { type: 'newgame' } })
+        break
+
+      // Non-owner game tab wants to send a move → relay to the owner
       case 'send':
-        if (channel?.readyState === 'open')
-          channel.send(JSON.stringify({ gameId: data.gameId, ...data.data })); break
+        if (ownerPort && ownerPort !== port)
+          ownerPort.postMessage({ type: 'sendToOpponent', gameId: data.gameId, data: data.data })
+        break
+
+      // Any tab requests a swap → tell owner to send it to the opponent
       case 'swapRoles':
         swapped = !swapped; syncStatus()
-        if (channel?.readyState === 'open') channel.send(JSON.stringify({ type: 'swapRoles' }))
-        for (const [gid, ports] of subs) for (const p of ports) p.postMessage({ type: 'move', gameId: gid, data: { type: 'newgame' } })
+        if (ownerPort) ownerPort.postMessage({ type: 'doSwapRoles' })
         break
-      case 'close':            reset(); break
-      case 'startHostAdv':     await startHostAdv(); break
-      case 'startJoinAdv':     netStatus = 'adv-joining'; syncStatus(); break
-      case 'connectOfferAdv':  await connectOfferAdv(data.offerInput); break
-      case 'connectAnswerAdv': await connectAnswerAdv(data.answerInput); break
+
+      // Any tab requests disconnect
+      case 'close':
+        if (ownerPort && ownerPort !== port) ownerPort.postMessage({ type: 'doClose' })
+        doReset()
+        break
     }
   }
 }

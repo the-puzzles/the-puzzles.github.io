@@ -57,9 +57,15 @@ class NetPlay {
     this.role       = null; // 'host' | 'guest'
   }
 
+  _timedFetch(url, opts, ms = 8000) {
+    const ac = new AbortController()
+    setTimeout(() => ac.abort(), ms)
+    return fetch(url, { ...opts, signal: ac.signal })
+  }
+
   async _fetchIceConfig() {
     try {
-      const res = await fetch(`${NETPLAY_SIGNAL_URL}/ice-config`)
+      const res = await this._timedFetch(`${NETPLAY_SIGNAL_URL}/ice-config`)
       if (res.ok) return (await res.json()).iceServers
     } catch {}
     return [{ urls: 'stun:stun.l.google.com:19302' }]
@@ -111,7 +117,7 @@ class NetPlay {
 
   async host(signalUrl = NETPLAY_SIGNAL_URL) {
     const offerStr = await this._createOffer();
-    const res = await fetch(`${signalUrl}/room`, {
+    const res = await this._timedFetch(`${signalUrl}/room`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ offer: offerStr }),
@@ -132,7 +138,7 @@ class NetPlay {
         return;
       }
       try {
-        const res = await fetch(`${signalUrl}/room/${code}/answer`);
+        const res = await this._timedFetch(`${signalUrl}/room/${code}/answer`);
         const { answer } = await res.json();
         if (answer) {
           clearInterval(this._pollTimer);
@@ -145,11 +151,11 @@ class NetPlay {
 
   async join(code, signalUrl = NETPLAY_SIGNAL_URL) {
     const cleanCode = code.trim();
-    const res = await fetch(`${signalUrl}/room/${cleanCode}`);
+    const res = await this._timedFetch(`${signalUrl}/room/${cleanCode}`);
     if (!res.ok) throw new Error('Room not found');
     const { offer } = await res.json();
     const answerStr = await this._acceptOffer(offer);
-    const postRes = await fetch(`${signalUrl}/room/${cleanCode}`, {
+    const postRes = await this._timedFetch(`${signalUrl}/room/${cleanCode}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ answer: answerStr }),
@@ -202,12 +208,13 @@ class NetPlay {
 }
 
 // ── createNetplay composable ──────────────────────────────────────
-// gameId  — this game's identifier for routing moves
-// onMove  — called when opponent sends a move
-// onReset — called when a fresh connection is established
-// onSync  — called once after initial status sync with the worker
+// RTCPeerConnection lives here (window context). SharedWorker is used only to
+// relay state and moves to other tabs on the same device.
+// The tab that initiates the connection is the "owner"; other tabs are observers.
 function createNetplay({ gameId, onMove, onReset, onSync } = {}) {
   const { reactive } = Vue
+
+  let netPlay = null  // NetPlay instance — only set in the owner tab
 
   const ctrl = reactive({
     netStatus: 'idle',
@@ -220,7 +227,7 @@ function createNetplay({ gameId, onMove, onReset, onSync } = {}) {
   })
 
   const worker = new SharedWorker('netplay-worker.js')
-  const port = worker.port
+  const port   = worker.port
   port.start()
 
   let synced = false
@@ -228,35 +235,149 @@ function createNetplay({ gameId, onMove, onReset, onSync } = {}) {
   port.onmessage = ({ data }) => {
     switch (data.type) {
       case 'status':
-        ctrl.netStatus = data.netStatus
-        ctrl.netRole   = data.role   ?? null
-        ctrl.roomCode  = data.roomCode  ?? ''
-        ctrl.offerText = data.offerText ?? ''
-        ctrl.swapped   = data.swapped   ?? false
+        if (!netPlay) {  // observer tabs follow worker state
+          ctrl.netStatus = data.netStatus
+          ctrl.netRole   = data.role      ?? null
+          ctrl.roomCode  = data.roomCode  ?? ''
+          ctrl.offerText = data.offerText ?? ''
+          ctrl.swapped   = data.swapped   ?? false
+        }
         if (!synced) { synced = true; onSync?.() }
         break
       case 'move':
         onMove?.(data.data)
         break
       case 'connected':
-        ctrl.netStatus = 'connected'
-        ctrl.netRole   = data.role
-        ctrl.swapped   = false
-        onReset?.()
+        if (!netPlay) {
+          ctrl.netStatus = 'connected'; ctrl.netRole = data.role; ctrl.swapped = false
+          onReset?.()
+        }
         break
       case 'disconnected':
-        ctrl.netStatus = 'idle'
-        ctrl.netRole   = null
-        ctrl.swapped   = false
+        if (!netPlay) {
+          ctrl.netStatus = 'idle'; ctrl.netRole = null; ctrl.roomCode = ''; ctrl.swapped = false
+        }
         break
-      case 'error':
-        alert(data.message)
+      // Worker asks owner tab to forward a move from another tab via RTC
+      case 'sendToOpponent':
+        netPlay?.send({ gameId: data.gameId, ...data.data })
+        break
+      // Worker asks owner to swap and notify opponent
+      case 'doSwapRoles':
+        if (netPlay) {
+          ctrl.swapped = !ctrl.swapped
+          netPlay.send({ type: 'swapRoles' })
+          report()
+          port.postMessage({ type: 'broadcastNewgame' })
+        }
+        break
+      // Worker asks owner to tear down
+      case 'doClose':
+        _teardown()
         break
     }
   }
 
   if (gameId) port.postMessage({ type: 'subscribe', gameId })
   port.postMessage({ type: 'getStatus' })
+
+  function report(event) {
+    port.postMessage({
+      type: 'reportStatus', event,
+      netStatus: ctrl.netStatus, role: ctrl.netRole,
+      roomCode:  ctrl.roomCode,  offerText: ctrl.offerText, swapped: ctrl.swapped,
+    })
+  }
+
+  function _teardown() {
+    netPlay?.close(); netPlay = null
+    ctrl.netStatus = 'idle'; ctrl.netRole = null; ctrl.roomCode = ''
+    ctrl.offerText = ''; ctrl.swapped = false
+  }
+
+  function _makeNetPlay() {
+    return new NetPlay({
+      onMove(msg) {
+        if (msg.type === 'swapRoles') {
+          ctrl.swapped = !ctrl.swapped; report()
+          port.postMessage({ type: 'broadcastNewgame' }); return
+        }
+        const { gameId: gid, ...payload } = msg
+        if (!gid) return
+        if (gid === gameId) onMove?.(payload)  // local game tab
+        port.postMessage({ type: 'incoming', gameId: gid, data: payload })  // other tabs
+      },
+      onConnected(role) {
+        ctrl.netStatus = 'connected'; ctrl.netRole = role; ctrl.swapped = false
+        report('connected'); onReset?.()
+      },
+      onDisconnected() { _teardown(); report('disconnected') },
+    })
+  }
+
+  ctrl.startHost = async function () {
+    if (ctrl.netStatus !== 'idle') return
+    ctrl.netStatus = 'hosting'; ctrl.netRole = 'host'; report()
+    netPlay = _makeNetPlay()
+    try {
+      ctrl.roomCode = await netPlay.host(); report()
+    } catch {
+      _teardown(); report(); alert('Could not create room — try again.')
+    }
+  }
+
+  ctrl.startJoin = function () { ctrl.netInput = ''; ctrl.netStatus = 'joining' }
+
+  ctrl.connectRoom = async function () {
+    const code = ctrl.netInput.trim()
+    ctrl.netStatus = 'connecting'; ctrl.netRole = 'guest'; report()
+    netPlay = _makeNetPlay()
+    try {
+      await netPlay.join(code)
+    } catch (e) {
+      _teardown(); report()
+      alert(e.message === 'Room not found' ? 'Room not found — check the code.' : 'Connection failed — try again.')
+    }
+  }
+
+  ctrl.startHostAdv = async function () {
+    if (ctrl.netStatus !== 'idle') return
+    ctrl.netRole = 'host'; netPlay = _makeNetPlay()
+    try {
+      ctrl.offerText = await netPlay.createOffer()
+      ctrl.netStatus = 'adv-offer-ready'; report()
+    } catch { _teardown(); report(); alert('Failed to create offer.') }
+  }
+
+  ctrl.startJoinAdv = function () { ctrl.netInput = ''; ctrl.netStatus = 'adv-joining' }
+
+  ctrl.connectOfferAdv = async function () {
+    ctrl.netRole = 'guest'; netPlay = _makeNetPlay()
+    try {
+      ctrl.offerText = await netPlay.acceptOffer(ctrl.netInput.trim())
+      ctrl.netStatus = 'adv-answer-ready'; ctrl.netInput = ''; report()
+    } catch { _teardown(); report(); alert('Invalid offer — check and try again.') }
+  }
+
+  ctrl.connectAnswerAdv = async function () {
+    try { await netPlay.acceptAnswer(ctrl.netInput.trim()); ctrl.netInput = '' }
+    catch { alert('Invalid answer — check and try again.') }
+  }
+
+  ctrl.send = function (data) {
+    if (netPlay) {
+      netPlay.send({ gameId, ...data })     // owner: send directly via RTC
+    } else if (ctrl.netStatus === 'connected') {
+      port.postMessage({ type: 'send', gameId, data })  // observer: relay via worker
+    }
+  }
+
+  ctrl.swapRoles = function () { port.postMessage({ type: 'swapRoles' }) }
+
+  ctrl.close = function () {
+    if (netPlay) { _teardown(); report('disconnected') }
+    else { port.postMessage({ type: 'close' }) }
+  }
 
   ctrl.isMyTurn = function (turn) {
     if (ctrl.netStatus !== 'connected') return false
@@ -265,27 +386,11 @@ function createNetplay({ gameId, onMove, onReset, onSync } = {}) {
     return false
   }
 
-  ctrl.send = function (data) {
-    if (gameId) port.postMessage({ type: 'send', gameId, data })
-  }
-
-  // Disconnect completely (kills WebRTC for all tabs)
-  ctrl.close = function () { port.postMessage({ type: 'close' }) }
-
-  ctrl.startHost     = function ()  { port.postMessage({ type: 'startHost' }) }
-  ctrl.startJoin     = function ()  { ctrl.netInput = ''; port.postMessage({ type: 'startJoin' }) }
-  ctrl.connectRoom   = function ()  { port.postMessage({ type: 'connectRoom', code: ctrl.netInput.trim() }) }
-  ctrl.swapRoles     = function ()  { port.postMessage({ type: 'swapRoles' }) }
-  ctrl.startHostAdv  = function ()  { port.postMessage({ type: 'startHostAdv' }) }
-  ctrl.startJoinAdv  = function ()  { ctrl.netInput = ''; port.postMessage({ type: 'startJoinAdv' }) }
-  ctrl.connectOfferAdv  = function () { port.postMessage({ type: 'connectOfferAdv',  offerInput:  ctrl.netInput.trim() }); ctrl.netInput = '' }
-  ctrl.connectAnswerAdv = function () { port.postMessage({ type: 'connectAnswerAdv', answerInput: ctrl.netInput.trim() }); ctrl.netInput = '' }
-
   ctrl.copyCode = function () {
-    navigator.clipboard.writeText(ctrl.roomCode).then(() => { ctrl.copied = true; setTimeout(() => { ctrl.copied = false }, 1500) })
+    navigator.clipboard.writeText(ctrl.roomCode).then(() => { ctrl.copied = true; setTimeout(() => ctrl.copied = false, 1500) })
   }
   ctrl.copyAdv = function () {
-    navigator.clipboard.writeText(ctrl.offerText).then(() => { ctrl.copied = true; setTimeout(() => { ctrl.copied = false }, 1500) })
+    navigator.clipboard.writeText(ctrl.offerText).then(() => { ctrl.copied = true; setTimeout(() => ctrl.copied = false, 1500) })
   }
 
   return ctrl
