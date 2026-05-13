@@ -82,6 +82,12 @@ function waitIce(p) {
 }
 
 // ── Signaling actions ─────────────────────────────────────────────
+function timedFetch(url, opts, ms = 8000) {
+  const ac = new AbortController()
+  setTimeout(() => ac.abort(), ms)
+  return fetch(url, { ...opts, signal: ac.signal })
+}
+
 async function startHost() {
   if (netStatus !== 'idle') return
   role = 'host'; netStatus = 'hosting'; syncStatus()
@@ -91,7 +97,7 @@ async function startHost() {
     await p.setLocalDescription(await p.createOffer())
     await waitIce(p)
     offerText = encode(p.localDescription)
-    const r = await fetch(`${SIGNAL_URL}/room`, {
+    const r = await timedFetch(`${SIGNAL_URL}/room`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ offer: offerText }),
     })
@@ -102,7 +108,7 @@ async function startHost() {
     pollTimer = setInterval(async () => {
       if (Date.now() > deadline) { reset(); return }
       try {
-        const ar = await fetch(`${SIGNAL_URL}/room/${roomCode}/answer`)
+        const ar = await timedFetch(`${SIGNAL_URL}/room/${roomCode}/answer`)
         const { answer } = await ar.json()
         if (answer) { clearInterval(pollTimer); pollTimer = null; await p.setRemoteDescription(decode(answer)) }
       } catch {}
@@ -119,13 +125,13 @@ async function joinRoom(code) {
   try {
     const p = await newPc()
     p.ondatachannel = e => wireChannel(e.channel)
-    const r = await fetch(`${SIGNAL_URL}/room/${code.trim()}`)
+    const r = await timedFetch(`${SIGNAL_URL}/room/${code.trim()}`)
     if (!r.ok) throw new Error('notfound')
     const { offer } = await r.json()
     await p.setRemoteDescription(decode(offer))
     await p.setLocalDescription(await p.createAnswer())
     await waitIce(p)
-    const pr = await fetch(`${SIGNAL_URL}/room/${code.trim()}`, {
+    const pr = await timedFetch(`${SIGNAL_URL}/room/${code.trim()}`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ answer: encode(p.localDescription) }),
     })

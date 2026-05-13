@@ -324,35 +324,52 @@ window.NetPanel = {
         <button class="net-btn" @click="c.copyAdv()">{{ c.copied ? 'Copied!' : 'Copy' }}</button>
         <p class="net-label">Paste their answer:</p>
         <textarea class="net-code" :value="c.netInput" @input="c.netInput=$event.target.value" placeholder="Paste answer…"></textarea>
-        <button class="net-btn" @click="c.connectAnswerAdv()" :disabled="!c.netInput.trim()">Connect</button>
+        <div class="net-row">
+          <button class="net-btn" @click="c.connectAnswerAdv()" :disabled="!c.netInput.trim()">Connect</button>
+          <button class="net-btn secondary" @click="c.close()">Cancel</button>
+        </div>
       </template>
       <template v-else-if="c.netStatus === 'adv-joining'">
         <p class="net-label">Paste the host's offer:</p>
         <textarea class="net-code" :value="c.netInput" @input="c.netInput=$event.target.value" placeholder="Paste offer…"></textarea>
-        <button class="net-btn" @click="c.connectOfferAdv()" :disabled="!c.netInput.trim()">Generate Answer</button>
+        <div class="net-row">
+          <button class="net-btn" @click="c.connectOfferAdv()" :disabled="!c.netInput.trim()">Generate Answer</button>
+          <button class="net-btn secondary" @click="c.close()">Cancel</button>
+        </div>
       </template>
       <template v-else-if="c.netStatus === 'adv-answer-ready'">
         <p class="net-label">Send this answer to your host:</p>
         <textarea class="net-code" readonly :value="c.offerText"></textarea>
         <button class="net-btn" @click="c.copyAdv()">{{ c.copied ? 'Copied!' : 'Copy' }}</button>
         <p class="net-label">Waiting for host to connect…</p>
+        <button class="net-btn secondary" @click="c.close()">Cancel</button>
       </template>
       <template v-else-if="c.netStatus === 'hosting'">
         <template v-if="c.roomCode">
           <p class="net-label">Share this code with your opponent:</p>
           <div class="net-code-display">{{ c.roomCode }}</div>
-          <button class="net-btn" @click="c.copyCode()">{{ c.copied ? 'Copied!' : 'Copy Code' }}</button>
+          <div class="net-row">
+            <button class="net-btn" @click="c.copyCode()">{{ c.copied ? 'Copied!' : 'Copy Code' }}</button>
+            <button class="net-btn secondary" @click="c.close()">Cancel</button>
+          </div>
           <p class="net-label">Waiting for opponent to join…</p>
         </template>
-        <p v-else class="net-label">Creating room…</p>
+        <div v-else class="net-row">
+          <p class="net-label" style="flex:1">Creating room…</p>
+          <button class="net-btn secondary" style="flex:0;white-space:nowrap" @click="c.close()">Cancel</button>
+        </div>
       </template>
       <template v-else-if="c.netStatus === 'joining'">
         <p class="net-label">Enter the host's room code:</p>
         <input class="net-code-input" :value="c.netInput" @input="c.netInput=$event.target.value" placeholder="ocean-maple-river" spellcheck="false" />
-        <button class="net-btn" @click="c.connectRoom()" :disabled="!c.netInput.trim()">Connect</button>
+        <div class="net-row">
+          <button class="net-btn" @click="c.connectRoom()" :disabled="!c.netInput.trim()">Connect</button>
+          <button class="net-btn secondary" @click="c.close()">Cancel</button>
+        </div>
       </template>
       <template v-else-if="c.netStatus === 'connecting'">
         <p class="net-label">Connecting…</p>
+        <button class="net-btn secondary" @click="c.close()">Cancel</button>
       </template>
     </div>
   `
