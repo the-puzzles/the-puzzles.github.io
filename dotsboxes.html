@@ -8,10 +8,15 @@
 <meta name="theme-color" content="#0d1117">
 <link rel="apple-touch-icon" href="icon.svg">
 <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+<script src="netplay.js"></script>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
-:root { --board: min(320px, calc(100vw - 32px)); }
+:root {
+  --board: min(320px, calc(100vw - 32px));
+  --net-panel-width: var(--board);
+  --net-btn-bg: #0c1e2e; --net-btn-border: #38bdf8; --net-btn-color: #7dd3fc;
+}
 
 body {
   font-family: 'Segoe UI', system-ui, sans-serif;
@@ -176,8 +181,11 @@ h1 {
     </div>
   </div>
 
+  <net-panel v-if="mode === 'net' && netCtrl.netStatus !== 'connected'" />
+
   <div class="status" :class="statusClass">
-    <template v-if="isRTL">
+    <template v-if="mode === 'net' && netCtrl.netStatus !== 'connected'"></template>
+    <template v-else-if="isRTL">
       <template v-if="phase==='over' && winner">
         <span>{{ UI.wonVerb }}</span>
         <span :style="{color: winner===1?'#f472b6':'#38bdf8'}">{{ winner===1?UI.p1:UI.p2 }}</span>
@@ -190,7 +198,7 @@ h1 {
         <span :style="{color: turn===1?'#f472b6':'#38bdf8'}">{{ turn===1?UI.p1:UI.p2 }}</span>
       </template>
     </template>
-    <template v-else>
+    <template v-else-if="!isRTL">
       <template v-if="phase==='over' && winner">
         <span :style="{color: winner===1?'#f472b6':'#38bdf8'}">{{ winner===1?UI.p1:UI.p2 }}</span>
         <span>{{ UI.wonVerb }}</span><span>🎉</span>
@@ -203,6 +211,7 @@ h1 {
       </template>
     </template>
   </div>
+
 
   <!-- in-game box score -->
   <div class="box-score" v-if="phase==='playing' || phase==='over'">
@@ -276,6 +285,7 @@ h1 {
     <button class="mode-btn" :class="{active:mode==='2p'}"   @click="setMode('2p')">{{ UI.mode2p }}</button>
     <button class="mode-btn" :class="{active:mode==='easy'}" @click="setMode('easy')">{{ UI.modeEasy }}</button>
     <button class="mode-btn" :class="{active:mode==='hard'}" @click="setMode('hard')">{{ UI.modeHard }}</button>
+    <button class="mode-btn" :class="{active:mode==='net'}"  @click="setMode('net')">{{ UI.modeNet }}</button>
   </div>
 
   <!-- Size -->
@@ -292,7 +302,7 @@ h1 {
 
 </div>
 <script>
-const { createApp, ref, computed } = Vue;
+const { createApp, ref, computed, provide } = Vue;
 
 const STRINGS = {
   back:        { en: 'All Games',        he: 'כל המשחקים' },
@@ -309,6 +319,7 @@ const STRINGS = {
   mode2p:      { en: '👥 2 Players',    he: '👥 2 שחקנים' },
   modeEasy:    { en: '🤖 Easy',         he: '🤖 קל' },
   modeHard:    { en: '🤖 Hard',         he: '🤖 קשה' },
+  modeNet:     { en: '🌐 Network',     he: '🌐 רשת' },
 };
 
 const SVG_MARGIN = 28;
@@ -439,6 +450,7 @@ function launchFireworks(player) {
 const SAVE_KEY = 'dotsboxes-save';
 
 createApp({
+  components: { NetPanel },
   setup() {
     const lang    = ref('en');
     const mode    = ref('2p');
@@ -452,6 +464,15 @@ createApp({
     const scores  = ref([0, 0, 0]);
     const aiThink = ref(false);
     const hover   = ref(null);
+
+    const netCtrl = createNetplay({
+      onMove(data) {
+        if (data.type === 'move' && phase.value === 'playing') makeMove(data.lineType, data.idx, true);
+        else if (data.type === 'newgame') { initBoard(); turn.value = 1; phase.value = 'playing'; winner.value = null; aiThink.value = false; hover.value = null; }
+      },
+      onReset() { initBoard(); turn.value = 1; phase.value = 'playing'; winner.value = null; aiThink.value = false; hover.value = null; },
+    });
+    provide('_netplay', netCtrl);
 
     const isRTL = computed(() => lang.value === 'he');
     const UI    = computed(() => {
@@ -516,9 +537,11 @@ createApp({
     const p1Boxes = computed(() => boxes.value.filter(b => b===1).length);
     const p2Boxes = computed(() => boxes.value.filter(b => b===2).length);
 
-    const canDraw = computed(() =>
-      phase.value === 'playing' && !aiThink.value && (mode.value === '2p' || turn.value === 1)
-    );
+    const canDraw = computed(() => {
+      if (phase.value !== 'playing' || aiThink.value) return false;
+      if (mode.value === 'net') return netCtrl.netStatus === 'connected' && netCtrl.isMyTurn(turn.value);
+      return mode.value === '2p' || turn.value === 1;
+    });
 
     const statusClass = computed(() => {
       if (phase.value === 'over') return winner.value===1 ? 'won-p1' : winner.value===2 ? 'won-p2' : 'draw';
@@ -532,13 +555,14 @@ createApp({
       boxes.value  = new Array(n * n).fill(0);
     }
 
-    function makeMove(lineType, idx) {
+    function makeMove(lineType, idx, remote = false) {
       const n = N.value;
       const { h, v, boxes: nb, claimed } = applyLine(
         [...hLines.value], [...vLines.value], [...boxes.value], turn.value, lineType, idx, n
       );
       hLines.value = h; vLines.value = v; boxes.value = nb;
       hover.value = null;
+      if (!remote && mode.value === 'net') netCtrl.send({ type: 'move', lineType, idx });
 
       const total = n * n;
       const p1 = nb.filter(b=>b===1).length, p2 = nb.filter(b=>b===2).length;
@@ -554,7 +578,7 @@ createApp({
 
       if (claimed === 0) turn.value = turn.value === 1 ? 2 : 1;
 
-      if (mode.value !== '2p' && turn.value === 2 && phase.value === 'playing') {
+      if (mode.value !== '2p' && mode.value !== 'net' && turn.value === 2 && phase.value === 'playing') {
         triggerAI();
       }
     }
@@ -581,15 +605,16 @@ createApp({
       initBoard();
       turn.value = 1; phase.value = 'playing'; winner.value = null;
       aiThink.value = false; hover.value = null;
+      if (mode.value === 'net') netCtrl.send({ type: 'newgame' });
     }
 
     function resetScores() { scores.value = [0, 0, 0]; save(); }
     function setLang(l) { lang.value = l; save(); }
-    function setMode(m) { mode.value = m; newGame(); save(); }
+    function setMode(m) { netCtrl.close(); mode.value = m; newGame(); save(); }
     function setSize(n) { N.value = n; newGame(); save(); }
 
     function save() {
-      try { localStorage.setItem(SAVE_KEY, JSON.stringify({ lang: lang.value, mode: mode.value, N: N.value, scores: scores.value })); }
+      try { localStorage.setItem(SAVE_KEY, JSON.stringify({ lang: lang.value, mode: mode.value === 'net' ? '2p' : mode.value, N: N.value, scores: scores.value })); }
       catch (_) {}
     }
     function load() {
@@ -605,7 +630,7 @@ createApp({
     load(); initBoard();
 
     return {
-      lang, mode, N, hLines, vLines, boxes, turn, phase, winner, scores, aiThink, hover,
+      lang, mode, N, hLines, vLines, boxes, turn, phase, winner, scores, aiThink, hover, netCtrl,
       isRTL, UI, dotList, hLineList, vLineList, boxList, p1Boxes, p2Boxes,
       canDraw, statusClass,
       clickLine, newGame, resetScores, setLang, setMode, setSize,

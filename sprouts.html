@@ -8,10 +8,15 @@
 <meta name="theme-color" content="#0d1117">
 <link rel="apple-touch-icon" href="icon.svg">
 <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+<script src="netplay.js"></script>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
-:root { --board: min(320px, calc(100vw - 32px)); }
+:root {
+  --board: min(320px, calc(100vw - 32px));
+  --net-panel-width: var(--board);
+  --net-btn-bg: #091c14; --net-btn-border: #10b981; --net-btn-color: #34d399;
+}
 
 body {
   font-family: 'Segoe UI', system-ui, sans-serif;
@@ -243,8 +248,10 @@ h1 {
     </div>
   </div>
 
+  <net-panel v-if="mode === 'net' && netCtrl.netStatus !== 'connected'" />
+
   <div class="status" :class="statusClass">
-    <span v-if="phase==='playing' && !aiThink" class="turn-dot" :class="current===1 ? 'p1' : 'p2'"></span>
+    <span v-if="phase==='playing' && !aiThink && !(mode==='net' && netCtrl.netStatus!=='connected')" class="turn-dot" :class="current===1 ? 'p1' : 'p2'"></span>
     <span>{{ statusText }}</span>
     <span v-if="phase==='won'">🎉</span>
   </div>
@@ -295,6 +302,7 @@ h1 {
     <button class="mode-btn" :class="{active: mode==='2p'}"   @click="setMode('2p')">{{ UI.mode2p }}</button>
     <button class="mode-btn" :class="{active: mode==='easy'}" @click="setMode('easy')">{{ UI.modeEasy }}</button>
     <button class="mode-btn" :class="{active: mode==='hard'}" @click="setMode('hard')">{{ UI.modeHard }}</button>
+    <button class="mode-btn" :class="{active: mode==='net'}"  @click="setMode('net')">{{ UI.modeNet }}</button>
   </div>
 
   <div class="mode-bar">
@@ -311,7 +319,7 @@ h1 {
 </div>
 
 <script>
-const { createApp, ref, computed } = Vue;
+const { createApp, ref, computed, provide } = Vue;
 
 const STRINGS = {
   back:        { en: 'All Games',      he: 'כל המשחקים',   es: 'Todos los juegos', ar: 'كل الألعاب' },
@@ -326,6 +334,7 @@ const STRINGS = {
   mode2p:      { en: '👥 2 Players',  he: '👥 2 שחקנים',   es: '👥 2 Jugadores',   ar: '👥 لاعبان' },
   modeEasy:    { en: '🤖 Easy',        he: '🤖 קל',          es: '🤖 Fácil',         ar: '🤖 سهل' },
   modeHard:    { en: '🤖 Hard',        he: '🤖 קשה',         es: '🤖 Difícil',       ar: '🤖 صعب' },
+  modeNet:     { en: '🌐 Network',    he: '🌐 רשת',         es: '🌐 Red',           ar: '🌐 شبكة' },
   newGame:     { en: 'New Game',       he: 'משחק חדש',      es: 'Nueva partida',    ar: 'لعبة جديدة' },
   resetScores: { en: 'Reset scores',   he: 'אפס ניקוד',     es: 'Reiniciar puntos', ar: 'إعادة النقاط' },
   dots2:       { en: '2 dots',         he: '2 נקודות',      es: '2 puntos',         ar: '2 نقاط' },
@@ -506,6 +515,7 @@ function negamax(conns) {
 const SAVE_KEY = 'sprouts-save';
 
 createApp({
+  components: { NetPanel },
   setup() {
     let nid=0, neid=0;
 
@@ -523,17 +533,34 @@ createApp({
 
     let flashTimer=null;
 
+    const netCtrl = createNetplay({
+      onMove(data) {
+        if (data.type === 'move' && phase.value === 'playing') makeMove(data.fromId, data.toId, true);
+        else if (data.type === 'newgame') {
+          nid=0;neid=0;
+          const n=startDots.value,cx=160,cy=160,r=90,off=n===2?0:-Math.PI/2;
+          dots.value=Array.from({length:n},(_,i)=>{const a=2*Math.PI*i/n+off;return{id:nid++,x:Math.round(cx+r*Math.cos(a)),y:Math.round(cy+r*Math.sin(a)),conns:0};});
+          edges.value=[];selected.value=null;current.value=1;phase.value='playing';aiThink.value=false;flashMsg.value='';
+        }
+      },
+      onReset: () => newGame(),
+    });
+    provide('_netplay', netCtrl);
+
     /* ── Computed ─────────────────────────────────────────────────── */
     const isRTL   = computed(() => lang.value==='he'||lang.value==='ar');
     const UI      = computed(() => {
       const l=lang.value;
       return Object.fromEntries(Object.entries(STRINGS).map(([k,v])=>[k,v[l]||v.en]));
     });
-    const canInteract = computed(() =>
-      phase.value==='playing' && !aiThink.value && (mode.value==='2p'||current.value===1)
-    );
+    const canInteract = computed(() => {
+      if (phase.value !== 'playing' || aiThink.value) return false;
+      if (mode.value === 'net') return netCtrl.netStatus === 'connected' && netCtrl.isMyTurn(current.value);
+      return mode.value === '2p' || current.value === 1;
+    });
     const statusText = computed(() => {
       const ui=UI.value;
+      if(mode.value==='net' && netCtrl.netStatus!=='connected') return '';
       if(aiThink.value) return ui.thinking;
       if(phase.value==='won'){const w=current.value===1?ui.p1:ui.p2;return `${w} ${ui.wins}`;}
       const whose=current.value===1?ui.p1:ui.p2;
@@ -605,7 +632,7 @@ createApp({
       return false;
     }
 
-    function makeMove(fromId, toId) {
+    function makeMove(fromId, toId, remote = false) {
       const fd=dots.value.find(d=>d.id===fromId);
       const td=dots.value.find(d=>d.id===toId);
       if(!fd||!td) return;
@@ -630,6 +657,7 @@ createApp({
       ];
       edges.value=[...edges.value,{id:neid++,fromId,toId,midId:midDot.id,path,pts,player:current.value}];
       selected.value=null;
+      if(!remote && mode.value==='net') netCtrl.send({type:'move',fromId,toId});
 
       if(!hasValidMoves()){
         phase.value='won';
@@ -638,7 +666,7 @@ createApp({
         save(); return;
       }
       current.value=current.value===1?2:1;
-      if(mode.value!=='2p'&&current.value===2) triggerAI();
+      if(mode.value!=='2p'&&mode.value!=='net'&&current.value===2) triggerAI();
     }
 
     function clickDot(id) {
@@ -712,14 +740,15 @@ createApp({
       });
       edges.value=[];selected.value=null;current.value=1;
       phase.value='playing';aiThink.value=false;flashMsg.value='';
+      if (mode.value === 'net') netCtrl.send({ type: 'newgame' });
     }
-    function setMode(m)      {mode.value=m;      newGame();save();}
+    function setMode(m)      {netCtrl.close();mode.value=m;newGame();save();}
     function setStartDots(n) {startDots.value=n; newGame();save();}
     function setLang(l)      {lang.value=l;save();}
     function resetScores()   {scores.value={1:0,2:0};newGame();save();}
 
     function save(){
-      try{localStorage.setItem(SAVE_KEY,JSON.stringify({lang:lang.value,mode:mode.value,startDots:startDots.value,scores:scores.value}));}catch{}
+      try{localStorage.setItem(SAVE_KEY,JSON.stringify({lang:lang.value,mode:mode.value==='net'?'2p':mode.value,startDots:startDots.value,scores:scores.value}));}catch{}
     }
     function load(){
       try{
@@ -735,7 +764,7 @@ createApp({
     load(); newGame();
 
     return {
-      lang,mode,startDots,dots,edges,selected,current,phase,scores,aiThink,flashMsg,
+      lang,mode,startDots,dots,edges,selected,current,phase,scores,aiThink,flashMsg,netCtrl,
       isRTL,UI,statusText,statusClass,
       dotVisClass,dotHitClass,clickDot,onSvgClick,
       newGame,setMode,setStartDots,setLang,resetScores,

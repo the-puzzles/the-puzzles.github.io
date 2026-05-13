@@ -8,10 +8,15 @@
 <meta name="theme-color" content="#0d1117">
 <link rel="apple-touch-icon" href="icon.svg">
 <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+<script src="netplay.js"></script>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
-:root { --board: min(320px, calc(100vw - 48px)); }
+:root {
+  --board: min(320px, calc(100vw - 48px));
+  --net-panel-width: var(--board);
+  --net-btn-bg: #120d1f; --net-btn-border: #8b5cf6; --net-btn-color: #a78bfa;
+}
 
 body {
   font-family: 'Segoe UI', system-ui, sans-serif;
@@ -314,9 +319,12 @@ h1 {
     </div>
   </div>
 
+  <net-panel v-if="mode === 'net' && netCtrl.netStatus !== 'connected'" />
+
   <!-- Status -->
   <div class="status" :class="statusClass">
-    <template v-if="isRTL">
+    <template v-if="mode === 'net' && netCtrl.netStatus !== 'connected'"></template>
+    <template v-else-if="isRTL">
       <template v-if="gamePhase === 'over' && winner">
         <span>{{ UI.wonVerb }}</span>
         <span>{{ winner === 1 ? UI.p1 : UI.p2 }}</span>
@@ -330,7 +338,7 @@ h1 {
         <span :style="{color: turn === 1 ? '#f97316' : '#8b5cf6'}">{{ turn === 1 ? UI.p1 : UI.p2 }}</span>
       </template>
     </template>
-    <template v-else>
+    <template v-else-if="!isRTL">
       <template v-if="gamePhase === 'over' && winner">
         <span :style="{color: winner === 1 ? '#f97316' : '#8b5cf6'}">{{ winner === 1 ? UI.p1 : UI.p2 }}</span>
         <span>{{ UI.wonVerb }}</span>
@@ -411,6 +419,7 @@ h1 {
     <button class="mode-btn" :class="{active: mode==='2p'}"   @click="setMode('2p')">{{ UI.mode2p }}</button>
     <button class="mode-btn" :class="{active: mode==='easy'}" @click="setMode('easy')">{{ UI.modeEasy }}</button>
     <button class="mode-btn" :class="{active: mode==='hard'}" @click="setMode('hard')">{{ UI.modeHard }}</button>
+    <button class="mode-btn" :class="{active: mode==='net'}"  @click="setMode('net')">{{ UI.modeNet }}</button>
   </div>
 
   <!-- Actions -->
@@ -422,7 +431,7 @@ h1 {
 </div>
 
 <script>
-const { createApp, ref, computed } = Vue;
+const { createApp, ref, computed, provide } = Vue;
 
 const STRINGS = {
   back:       { en: 'All Games',         he: 'כל המשחקים' },
@@ -439,6 +448,7 @@ const STRINGS = {
   mode2p:     { en: '👥 2 Players',     he: '👥 2 שחקנים' },
   modeEasy:   { en: '🤖 Easy',          he: '🤖 קל' },
   modeHard:   { en: '🤖 Hard',          he: '🤖 קשה' },
+  modeNet:    { en: '🌐 Network',       he: '🌐 רשת' },
   phasePlace: { en: 'Placing pieces',    he: 'מניחים כלים' },
   phaseMove:  { en: 'Moving pieces',     he: 'מזיזים כלים' },
 };
@@ -647,6 +657,7 @@ function launchFireworks(player) {
 const SAVE_KEY = 'morris-save';
 
 createApp({
+  components: { NetPanel },
   setup() {
     const lang      = ref('en');
     const mode      = ref('2p');
@@ -661,6 +672,28 @@ createApp({
     const aiThink   = ref(false);
     const justPlaced = ref(null);
     const moveCount  = ref(0);
+
+    const netCtrl = createNetplay({
+      onMove(data) {
+        if (data.type === 'newgame') {
+          board.value=[...Array(9).fill(0)];placed.value=[0,0];turn.value=1;selected.value=null;
+          gamePhase.value='placing';winner.value=null;winLine.value=null;aiThink.value=false;moveCount.value=0;justPlaced.value=null;
+          return;
+        }
+        if (data.type === 'move' && gamePhase.value !== 'over') {
+          const move = data.action === 'place'
+            ? { type: 'place', to: data.to }
+            : { type: 'move', from: data.from, to: data.to };
+          const { board: nb, placed: np } = applyMove([...board.value], [...placed.value], move, turn.value);
+          justPlaced.value = data.to;
+          setTimeout(() => { justPlaced.value = null; }, 350);
+          if (move.type === 'move') selected.value = null;
+          afterMove(nb, np);
+        }
+      },
+      onReset: () => newGame(),
+    });
+    provide('_netplay', netCtrl);
 
     const isRTL = computed(() => lang.value === 'he');
     const UI = computed(() => {
@@ -682,16 +715,19 @@ createApp({
       return ADJ[selected.value].filter(i => board.value[i] === 0);
     });
 
+    function canInteract() {
+      if (gamePhase.value === 'over' || aiThink.value) return false;
+      if (mode.value === 'net') return netCtrl.netStatus === 'connected' && netCtrl.isMyTurn(turn.value);
+      return mode.value === '2p' || turn.value === 1;
+    }
+
     function pointClass(idx) {
-      if (gamePhase.value === 'over') return '';
-      if (aiThink.value) return '';
+      if (!canInteract()) return '';
       const b = board.value;
       const ph = gamePhase.value;
-      if (ph === 'placing' && idx !== 4 && b[idx] === 0 && (mode.value === '2p' || turn.value === 1)) return 'can-place';
+      if (ph === 'placing' && idx !== 4 && b[idx] === 0) return 'can-place';
       if (ph === 'moving') {
-        // own piece → selectable
-        if (b[idx] === turn.value && (mode.value === '2p' || turn.value === 1)) return 'can-select';
-        // empty adjacent to selected → can move there
+        if (b[idx] === turn.value) return 'can-select';
         if (selected.value !== null && b[idx] === 0 && ADJ[selected.value].includes(idx)) return 'can-move-to';
       }
       return '';
@@ -738,7 +774,7 @@ createApp({
       placed.value = p;
       turn.value = next;
 
-      if (mode.value !== '2p' && next === 2) {
+      if (mode.value !== '2p' && mode.value !== 'net' && next === 2) {
         aiThink.value = true;
         setTimeout(doAiMove, 380);
       }
@@ -757,9 +793,7 @@ createApp({
     }
 
     function clickPoint(idx) {
-      if (gamePhase.value === 'over') return;
-      if (aiThink.value) return;
-      if (mode.value !== '2p' && turn.value === 2) return;
+      if (!canInteract()) return;
 
       const b = board.value;
       const ph = gamePhase.value;
@@ -771,17 +805,18 @@ createApp({
         const { board: nb, placed: np } = applyMove([...b], [...placed.value], { type: 'place', to: idx }, turn.value);
         justPlaced.value = idx;
         setTimeout(() => { justPlaced.value = null; }, 350);
+        if (mode.value === 'net') netCtrl.send({ type: 'move', action: 'place', to: idx });
         afterMove(nb, np);
       } else if (ph === 'moving') {
         if (b[idx] === turn.value) {
-          // select own piece
           selected.value = selected.value === idx ? null : idx;
         } else if (selected.value !== null && b[idx] === 0 && ADJ[selected.value].includes(idx)) {
-          // move to adjacent empty
-          const { board: nb, placed: np } = applyMove([...b], [...placed.value], { type: 'move', from: selected.value, to: idx }, turn.value);
+          const from = selected.value;
+          const { board: nb, placed: np } = applyMove([...b], [...placed.value], { type: 'move', from, to: idx }, turn.value);
           justPlaced.value = idx;
           setTimeout(() => { justPlaced.value = null; }, 350);
           selected.value = null;
+          if (mode.value === 'net') netCtrl.send({ type: 'move', action: 'move', from, to: idx });
           afterMove(nb, np);
         } else {
           selected.value = null;
@@ -800,6 +835,7 @@ createApp({
       aiThink.value  = false;
       moveCount.value = 0;
       justPlaced.value = null;
+      if (mode.value === 'net') netCtrl.send({ type: 'newgame' });
     }
 
     function resetScores() {
@@ -810,6 +846,7 @@ createApp({
     function setLang(l) { lang.value = l; save(); }
 
     function setMode(m) {
+      netCtrl.close();
       mode.value = m;
       newGame();
       save();
@@ -817,7 +854,7 @@ createApp({
 
     function save() {
       try {
-        localStorage.setItem(SAVE_KEY, JSON.stringify({ lang: lang.value, mode: mode.value, scores: scores.value }));
+        localStorage.setItem(SAVE_KEY, JSON.stringify({ lang: lang.value, mode: mode.value === 'net' ? '2p' : mode.value, scores: scores.value }));
       } catch (_) {}
     }
 
@@ -834,7 +871,7 @@ createApp({
 
     return {
       lang, mode, board, placed, turn, selected, gamePhase, winner, winLine,
-      scores, aiThink, justPlaced, isRTL, UI, statusClass, moveHints,
+      scores, aiThink, justPlaced, isRTL, UI, statusClass, moveHints, netCtrl,
       POS, clickPoint, pointClass, newGame, resetScores, setLang, setMode,
     };
   }

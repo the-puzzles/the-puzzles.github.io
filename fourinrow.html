@@ -19,6 +19,8 @@
   --accent1-dim: #450a0a;
   --accent2: #eab308;
   --accent2-dim: #422006;
+  --net-panel-width: calc(var(--cell) * 7 + var(--gap) * 6);
+  --net-btn-bg: #1a0d0f; --net-btn-border: #ef4444; --net-btn-color: #fca5a5;
 }
 
 body {
@@ -243,42 +245,6 @@ h1 .y { color: var(--accent2); }
 .btn.danger { border-color: #f87171; color: #f87171; }
 .btn.danger:hover { background: #1a0000; }
 
-/* ── Net panel ───────────────────────────────────────────────────── */
-.net-panel {
-  width: min(calc(var(--cell) * 7 + var(--gap) * 6), 96vw);
-  background: #161b22; border: 1px solid #30363d;
-  border-radius: 12px; padding: 16px; margin-bottom: 16px;
-  display: flex; flex-direction: column; gap: 10px;
-}
-.net-label { font-size: 0.8rem; color: #8b949e; }
-.net-code-display {
-  background: #0d1117; border: 1px solid #30363d; color: #c9d1d9;
-  border-radius: 8px; padding: 12px; font-size: 1rem; font-family: monospace;
-  letter-spacing: 0.08em; text-align: center;
-}
-.net-code-input {
-  width: 100%; background: #0d1117; border: 1px solid #30363d; color: #c9d1d9;
-  border-radius: 8px; padding: 8px 12px; font-size: 0.9rem; font-family: monospace;
-  outline: none; box-sizing: border-box;
-}
-.net-code-input:focus { border-color: #6e7681; }
-.net-code {
-  width: 100%; background: #0d1117; border: 1px solid #30363d;
-  color: #c9d1d9; border-radius: 8px; padding: 8px;
-  font-size: 0.7rem; font-family: monospace; resize: none; height: 76px;
-  word-break: break-all; box-sizing: border-box;
-}
-.net-divider { border: none; border-top: 1px solid #21262d; margin: 2px 0; }
-.net-row { display: flex; gap: 8px; }
-.net-btn {
-  flex: 1; background: #1a0d0f; border: 1px solid #ef4444; color: #fca5a5;
-  border-radius: 8px; padding: 9px 16px; font-size: 0.82rem; font-weight: 600;
-  font-family: inherit; cursor: pointer; transition: opacity 0.15s;
-}
-.net-btn:hover:not(:disabled) { opacity: 0.85; }
-.net-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-.net-btn.secondary { background: #161b22; border-color: #30363d; color: #8b949e; }
-.net-btn.secondary:hover { color: #c9d1d9; border-color: #6e7681; }
 </style>
 </head>
 <body>
@@ -309,57 +275,10 @@ h1 .y { color: var(--accent2); }
     </div>
   </div>
 
-  <!-- Net setup panel -->
-  <div v-if="mode === 'net' && netStatus !== 'connected'" class="net-panel">
-    <template v-if="netStatus === 'idle'">
-      <div class="net-row">
-        <button class="net-btn" @click="startHost">Host Game</button>
-        <button class="net-btn secondary" @click="startJoin">Join Game</button>
-      </div>
-      <hr class="net-divider">
-      <p class="net-label">Advanced — manual SDP:</p>
-      <div class="net-row">
-        <button class="net-btn secondary" @click="startHostAdv">Host (SDP)</button>
-        <button class="net-btn secondary" @click="startJoinAdv">Join (SDP)</button>
-      </div>
-    </template>
-    <template v-else-if="netStatus === 'adv-offer-ready'">
-      <p class="net-label">Share this offer with your opponent:</p>
-      <textarea class="net-code" readonly :value="offerText"></textarea>
-      <button class="net-btn" @click="copyAdv">{{ copied ? 'Copied!' : 'Copy' }}</button>
-      <p class="net-label">Paste their answer:</p>
-      <textarea class="net-code" v-model="netInput" placeholder="Paste answer…"></textarea>
-      <button class="net-btn" @click="connectAnswerAdv" :disabled="!netInput.trim()">Connect</button>
-    </template>
-    <template v-else-if="netStatus === 'adv-joining'">
-      <p class="net-label">Paste the host's offer:</p>
-      <textarea class="net-code" v-model="netInput" placeholder="Paste offer…"></textarea>
-      <button class="net-btn" @click="connectOfferAdv" :disabled="!netInput.trim()">Generate Answer</button>
-    </template>
-    <template v-else-if="netStatus === 'adv-answer-ready'">
-      <p class="net-label">Send this answer to your host:</p>
-      <textarea class="net-code" readonly :value="offerText"></textarea>
-      <button class="net-btn" @click="copyAdv">{{ copied ? 'Copied!' : 'Copy' }}</button>
-      <p class="net-label">Waiting for host to connect…</p>
-    </template>
-    <template v-else-if="netStatus === 'hosting'">
-      <p class="net-label">Share this code with your opponent:</p>
-      <div class="net-code-display">{{ formatCode(roomCode) }}</div>
-      <button class="net-btn" @click="copyCode">{{ copied ? 'Copied!' : 'Copy Code' }}</button>
-      <p class="net-label">Waiting for opponent to join…</p>
-    </template>
-    <template v-else-if="netStatus === 'joining'">
-      <p class="net-label">Enter the host's room code:</p>
-      <input class="net-code-input" v-model="netInput" placeholder="ocean-maple-river" spellcheck="false" />
-      <button class="net-btn" @click="connectRoom" :disabled="!netInput.trim()">Connect</button>
-    </template>
-    <template v-else-if="netStatus === 'connecting'">
-      <p class="net-label">Connecting…</p>
-    </template>
-  </div>
+  <net-panel v-if="mode === 'net' && netCtrl.netStatus !== 'connected'" />
 
   <div class="status" :class="statusClass">
-    <template v-if="mode === 'net' && netStatus !== 'connected'"></template>
+    <template v-if="mode === 'net' && netCtrl.netStatus !== 'connected'"></template>
     <template v-else-if="phase === 'playing'">
       <span class="dot" :class="'p' + turn"></span>
       <span>{{ aiThink ? t('thinking') : (turn===1 ? t('p1') : t('p2')) }}</span>
@@ -425,7 +344,7 @@ h1 .y { color: var(--accent2); }
 
 </div>
 <script>
-const { createApp, ref, computed, onMounted } = Vue;
+const { createApp, ref, computed, onMounted, provide } = Vue;
 
 const R = 6, C = 7;
 
@@ -558,6 +477,7 @@ function bestMove(board, ai) {
 // ── Vue app ─────────────────────────────────────────────────────────────
 
 createApp({
+  components: { NetPanel },
   setup() {
     const lang    = ref('en');
     const mode    = ref('2p');
@@ -571,23 +491,16 @@ createApp({
     const hover    = ref(-1);
     const dropAnim = ref(null);
 
-    // Net play state
-    const netStatus = ref('idle'); // 'idle'|'hosting'|'joining'|'connecting'|'adv-offer-ready'|'adv-joining'|'adv-answer-ready'|'connected'
-    const netRole   = ref(null);   // 'host'|'guest'
-    const roomCode  = ref('');
-    const offerText = ref('');
-    const netInput  = ref('');
-    const copied    = ref(false);
-    let   net       = null;
+    const netCtrl = createNetplay({
+      onMove(data) {
+        if (data.type === 'move' && phase.value === 'playing') makeMove(data.col, true);
+        else if (data.type === 'newgame') resetBoard();
+      },
+      onReset: () => resetBoard(),
+    });
+    provide('_netplay', netCtrl);
 
     const isRTL = computed(() => lang.value === 'he');
-
-    const isMyTurn = computed(() => {
-      if (mode.value !== 'net') return true;
-      if (netStatus.value !== 'connected') return false;
-      return (netRole.value === 'host' && turn.value === 1) ||
-             (netRole.value === 'guest' && turn.value === 2);
-    });
 
     const statusClass = computed(() => {
       if (phase.value === 'won') return winner.value === 1 ? 's1' : 's2';
@@ -604,7 +517,7 @@ createApp({
     function drop(col) {
       if (phase.value !== 'playing' || aiThink.value) return;
       if (mode.value === 'net') {
-        if (!isMyTurn.value) return;
+        if (!netCtrl.isMyTurn(turn.value)) return;
       } else if (mode.value !== '2p' && turn.value === 2) return;
       if (!canDrop(col)) return;
       makeMove(col);
@@ -618,9 +531,7 @@ createApp({
       b[row*C+col] = turn.value;
       board.value = b;
 
-      if (!remote && mode.value === 'net' && net) {
-        net.send({ type: 'move', col });
-      }
+      if (!remote && mode.value === 'net') netCtrl.send({ type: 'move', col });
 
       const cellH = getCellSize();
       const fromPx = -((row + 1) * (cellH + 6) + 8);
@@ -667,13 +578,11 @@ createApp({
 
     function newGame() {
       resetBoard();
-      if (mode.value === 'net' && net) net.send({ type: 'newgame' });
+      if (mode.value === 'net') netCtrl.send({ type: 'newgame' });
     }
 
     function setMode(m) {
-      if (net) { net.close(); net = null; }
-      netStatus.value = 'idle';
-      netRole.value   = null;
+      netCtrl.close();
       mode.value = m;
       resetBoard();
       save();
@@ -695,111 +604,6 @@ createApp({
         if (s.mode)   mode.value   = s.mode;
       } catch {}
     });
-
-    // ── Net play ──────────────────────────────────────────────────
-    function initNet() {
-      net = new NetPlay({
-        onMove(data) {
-          if (data.type === 'move' && phase.value === 'playing') makeMove(data.col, true);
-          else if (data.type === 'newgame') resetBoard();
-        },
-        onConnected(role) {
-          netStatus.value = 'connected';
-          netRole.value   = role;
-          resetBoard();
-        },
-        onDisconnected() {
-          netStatus.value = 'idle';
-          netRole.value   = null;
-        },
-      });
-    }
-
-    async function startHost() {
-      initNet();
-      netStatus.value = 'hosting';
-      try {
-        roomCode.value = await net.host();
-      } catch {
-        alert('Could not create room — try again.');
-        net.close(); net = null;
-        netStatus.value = 'idle';
-      }
-    }
-
-    function startJoin() {
-      initNet();
-      netInput.value  = '';
-      netStatus.value = 'joining';
-    }
-
-    async function connectRoom() {
-      netStatus.value = 'connecting';
-      try {
-        await net.join(netInput.value.trim());
-      } catch {
-        alert('Room not found — check the code and try again.');
-        netStatus.value = 'joining';
-      }
-    }
-
-    function copyCode() {
-      navigator.clipboard.writeText(formatCode(roomCode.value)).then(() => {
-        copied.value = true;
-        setTimeout(() => { copied.value = false; }, 1500);
-      });
-    }
-
-    function formatCode(code) {
-      return code;
-    }
-
-    async function startHostAdv() {
-      initNet();
-      try {
-        offerText.value = await net.createOffer();
-        netInput.value  = '';
-        netStatus.value = 'adv-offer-ready';
-      } catch {
-        alert('Failed to create offer — try again.');
-        net.close(); net = null;
-        netStatus.value = 'idle';
-      }
-    }
-
-    function startJoinAdv() {
-      initNet();
-      netInput.value  = '';
-      netStatus.value = 'adv-joining';
-    }
-
-    async function connectOfferAdv() {
-      try {
-        offerText.value = await net.acceptOffer(netInput.value.trim());
-        netInput.value  = '';
-        netStatus.value = 'adv-answer-ready';
-      } catch {
-        alert('Invalid offer — please try again.');
-        netInput.value = '';
-      }
-    }
-
-    async function connectAnswerAdv() {
-      try {
-        await net.acceptAnswer(netInput.value.trim());
-        netInput.value = '';
-      } catch {
-        alert('Invalid answer — please try again.');
-        netInput.value = '';
-      }
-    }
-
-    function copyAdv() {
-      navigator.clipboard.writeText(offerText.value).then(() => {
-        copied.value = true;
-        setTimeout(() => { copied.value = false; }, 1500);
-      });
-    }
 
     // ── i18n ──
     const S = {
@@ -862,11 +666,8 @@ createApp({
 
     return {
       lang, isRTL, t, mode, board, turn, phase, winner, winLine,
-      scores, aiThink, hover, dropAnim, statusClass, isMyTurn,
-      netStatus, netRole, roomCode, offerText, netInput, copied,
+      scores, aiThink, hover, dropAnim, statusClass, netCtrl,
       canDrop, drop, newGame, setMode, resetScores,
-      startHost, startJoin, connectRoom, copyCode, formatCode,
-      startHostAdv, startJoinAdv, connectOfferAdv, connectAnswerAdv, copyAdv,
     };
   }
 }).mount('#app');
