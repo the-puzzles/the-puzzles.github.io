@@ -7,8 +7,6 @@
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0d1117">
 <link rel="apple-touch-icon" href="icon.svg">
-<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
-<script src="netplay.js"></script>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -357,10 +355,6 @@ footer {
   <a href="how-to-play.html" style="display:inline-block;margin-top:12px;font-size:0.82rem;color:#6e7681;text-decoration:none;border:1px solid #30363d;border-radius:6px;padding:5px 12px;transition:color 0.15s,border-color 0.15s" onmouseover="this.style.color='#c9d1d9';this.style.borderColor='#6e7681'" onmouseout="this.style.color='#6e7681';this.style.borderColor='#30363d'">How to Play ↗</a>
 </header>
 
-<div id="net-app" style="width:100%;max-width:380px;margin-bottom:40px;">
-  <div style="font-size:0.7rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#444c56;margin-bottom:12px;">Network Play</div>
-  <net-panel></net-panel>
-</div>
 
 <div class="categories">
 
@@ -1066,17 +1060,6 @@ footer {
   &nbsp;·&nbsp; <span id="ver" style="font-family:monospace"></span>
 </footer>
 
-<script>
-const { createApp, provide } = Vue;
-createApp({
-  components: { NetPanel },
-  setup() {
-    const ctrl = createNetplay({});
-    provide('_netplay', ctrl);
-    return {};
-  }
-}).mount('#net-app');
-</script>
 <script>
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
 (function(){
