@@ -43,6 +43,9 @@ export default {
 
     if (origin !== ALLOWED_ORIGIN) return new Response('Forbidden', { status: 403 })
 
+    const { method } = request
+    const path = new URL(request.url).pathname
+
     // Rate limiting only on writes — GET polling is read-only and self-limited by the client
     if (method === 'POST') {
       const ip      = request.headers.get('CF-Connecting-IP') ?? 'unknown'
@@ -53,9 +56,6 @@ export default {
       if (rateCount >= RATE_LIMIT) return json({ error: 'Too many requests' }, 429, origin)
       await env.ROOMS.put(rateKey, String(rateCount + 1), { expirationTtl: RATE_TTL })
     }
-
-    const { method } = request
-    const path = new URL(request.url).pathname
 
     // POST /room — host creates room with offer
     if (method === 'POST' && path === '/room') {
