@@ -11,6 +11,7 @@
 <script src="netplay.js"></script>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
+[v-cloak] { display: none; }
 
 :root {
   --board: min(320px, calc(100vw - 32px));
@@ -223,7 +224,7 @@ h1 {
 </style>
 </head>
 <body>
-<div id="app" :dir="isRTL ? 'rtl' : 'ltr'">
+<div id="app" v-cloak :dir="isRTL ? 'rtl' : 'ltr'">
 
   <div class="top-bar">
     <a class="back-link" href="index.html">{{ UI.back }}</a>
@@ -248,10 +249,10 @@ h1 {
     </div>
   </div>
 
-  <net-panel v-if="mode === 'net' && netCtrl.netStatus !== 'connected'"></net-panel>
+  <net-panel v-if="mode === 'net'"></net-panel>
 
   <div class="status" :class="statusClass">
-    <span v-if="phase==='playing' && !aiThink && !(mode==='net' && netCtrl.netStatus!=='connected')" class="turn-dot" :class="current===1 ? 'p1' : 'p2'"></span>
+    <span v-if="phase==='playing' && !aiThink" class="turn-dot" :class="current===1 ? 'p1' : 'p2'"></span>
     <span>{{ statusText }}</span>
     <span v-if="phase==='won'">🎉</span>
   </div>
@@ -527,14 +528,19 @@ createApp({
     const selected  = ref(null);
     const current   = ref(1);
     const phase     = ref('playing');
-    const scores    = ref({1:0,2:0});
+    const humanScores = ref({1:0,2:0});
+    const aiScores    = ref({1:0,2:0});
+    function scoresRef() { return ['easy','hard'].includes(mode.value) ? aiScores : humanScores }
+    const scores = computed(() => scoresRef().value);
     const aiThink   = ref(false);
     const flashMsg  = ref('');
 
     let flashTimer=null;
 
     const netCtrl = createNetplay({
+      gameId: 'sprouts',
       onMove(data) {
+        if (mode.value !== 'net') return;
         if (data.type === 'move' && phase.value === 'playing') makeMove(data.fromId, data.toId, true);
         else if (data.type === 'newgame') {
           nid=0;neid=0;
@@ -544,6 +550,7 @@ createApp({
         }
       },
       onReset: () => newGame(),
+      onSync() { if (netCtrl.netStatus === 'connected') mode.value = 'net'; },
     });
     provide('_netplay', netCtrl);
 
@@ -661,7 +668,7 @@ createApp({
 
       if(!hasValidMoves()){
         phase.value='won';
-        scores.value={...scores.value,[current.value]:scores.value[current.value]+1};
+        { const sr=scoresRef(); sr.value={...sr.value,[current.value]:sr.value[current.value]+1}; }
         launchFireworks(current.value);
         save(); return;
       }
@@ -742,22 +749,24 @@ createApp({
       phase.value='playing';aiThink.value=false;flashMsg.value='';
       if (mode.value === 'net') netCtrl.send({ type: 'newgame' });
     }
-    function setMode(m)      {netCtrl.close();mode.value=m;newGame();save();}
+    function setMode(m)      {mode.value=m;newGame();save();}
     function setStartDots(n) {startDots.value=n; newGame();save();}
     function setLang(l)      {lang.value=l;save();}
-    function resetScores()   {scores.value={1:0,2:0};newGame();save();}
+    function resetScores()   {humanScores.value={1:0,2:0};aiScores.value={1:0,2:0};newGame();save();}
 
     function save(){
-      try{localStorage.setItem(SAVE_KEY,JSON.stringify({lang:lang.value,mode:mode.value==='net'?'2p':mode.value,startDots:startDots.value,scores:scores.value}));}catch{}
+      try{localStorage.setItem(SAVE_KEY,JSON.stringify({lang:lang.value,mode:mode.value==='net'?'2p':mode.value,startDots:startDots.value,humanScores:humanScores.value,aiScores:aiScores.value}));}catch{}
     }
     function load(){
       try{
         const s=JSON.parse(localStorage.getItem(SAVE_KEY)||'null');
         if(!s)return;
-        if(s.lang)      lang.value=s.lang;
-        if(s.mode)      mode.value=s.mode;
-        if(s.startDots) startDots.value=s.startDots;
-        if(s.scores)    scores.value=s.scores;
+        if(s.lang)        lang.value=s.lang;
+        if(s.mode)        mode.value=s.mode;
+        if(s.startDots)   startDots.value=s.startDots;
+        if(s.humanScores) humanScores.value=s.humanScores;
+        if(s.aiScores)    aiScores.value=s.aiScores;
+        if(s.scores&&!s.humanScores) humanScores.value=s.scores;
       }catch{}
     }
 

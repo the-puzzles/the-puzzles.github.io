@@ -11,6 +11,7 @@
 <script src="netplay.js"></script>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
+[v-cloak] { display: none; }
 
 :root {
   --cell: clamp(52px, calc((100vw - 32px) / 5), 68px);
@@ -225,7 +226,7 @@ h1 {
 </style>
 </head>
 <body>
-<div id="app" :dir="isRTL ? 'rtl' : 'ltr'">
+<div id="app" v-cloak :dir="isRTL ? 'rtl' : 'ltr'">
 
   <div class="top-bar">
     <a class="back-link" href="index.html">{{ UI.back }}</a>
@@ -252,7 +253,7 @@ h1 {
     </div>
   </div>
 
-  <net-panel v-if="mode === 'net' && netCtrl.netStatus !== 'connected'"></net-panel>
+  <net-panel v-if="mode === 'net'"></net-panel>
 
   <div class="status" :class="statusClass">
     <template v-if="mode === 'net' && netCtrl.netStatus !== 'connected'"></template>
@@ -519,15 +520,21 @@ createApp({
     const phase         = ref('playing'); // 'playing' | 'won' | 'lost' | 'draw'
     const winner        = ref(null);
     const highlightLine = ref(null);
-    const scores        = ref([0, 0, 0]); // [p1, p2, draws]
+    const humanScores = ref([0, 0, 0]);
+    const aiScores    = ref([0, 0, 0]);
+    function scoresRef() { return ['easy','hard'].includes(mode.value) ? aiScores : humanScores }
+    const scores = computed(() => scoresRef().value);
     const aiThink       = ref(false);
 
     const netCtrl = createNetplay({
+      gameId: 'squava',
       onMove(data) {
+        if (mode.value !== 'net') return;
         if (data.type === 'move' && phase.value === 'playing') makeMove(data.i, true);
         else if (data.type === 'newgame') resetBoard();
       },
       onReset: () => resetBoard(),
+      onSync() { if (netCtrl.netStatus === 'connected') mode.value = 'net'; },
     });
     provide('_netplay', netCtrl);
 
@@ -555,7 +562,7 @@ createApp({
 
     function endGame(result, line, mover) {
       highlightLine.value = line;
-      const s = [...scores.value];
+      const sr = scoresRef(), s = [...sr.value];
       if (result === 'win') {
         phase.value = 'won';
         winner.value = mover;
@@ -571,7 +578,7 @@ createApp({
         winner.value = null;
         s[2]++;
       }
-      scores.value = s;
+      sr.value = s;
       save();
     }
 
@@ -619,25 +626,26 @@ createApp({
       if (mode.value === 'net') netCtrl.send({ type: 'newgame' });
     }
 
-    function resetScores() { scores.value = [0, 0, 0]; save(); }
+    function resetScores() { humanScores.value = [0,0,0]; aiScores.value = [0,0,0]; save(); }
     function setLang(l)    { lang.value = l; save(); }
     function setMode(m) {
-      netCtrl.close();
       mode.value = m;
       resetBoard();
       save();
     }
 
     function save() {
-      try { localStorage.setItem(SAVE_KEY, JSON.stringify({ lang: lang.value, mode: mode.value === 'net' ? '2p' : mode.value, scores: scores.value })); }
+      try { localStorage.setItem(SAVE_KEY, JSON.stringify({ lang: lang.value, mode: mode.value === 'net' ? '2p' : mode.value, humanScores: humanScores.value, aiScores: aiScores.value })); }
       catch (_) {}
     }
     function load() {
       try {
         const d = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}');
-        if (d.lang)   lang.value   = d.lang;
-        if (d.mode)   mode.value   = d.mode;
-        if (d.scores) scores.value = d.scores;
+        if (d.lang)        lang.value        = d.lang;
+        if (d.mode)        mode.value        = d.mode;
+        if (d.humanScores) humanScores.value = d.humanScores;
+        if (d.aiScores)    aiScores.value    = d.aiScores;
+        if (d.scores && !d.humanScores) humanScores.value = d.scores;
       } catch (_) {}
     }
 

@@ -202,146 +202,111 @@ class NetPlay {
 }
 
 // ── createNetplay composable ──────────────────────────────────────
-// Returns a reactive ctrl object. Call provide('_netplay', ctrl) in setup().
-// options.onMove(data)  — called when opponent sends a move
-// options.onReset()     — called on connect (reset board for fresh game)
-function createNetplay({ onMove, onReset } = {}) {
+// gameId  — this game’s identifier for routing moves
+// onMove  — called when opponent sends a move
+// onReset — called when a fresh connection is established
+// onSync  — called once after initial status sync with the worker
+function createNetplay({ gameId, onMove, onReset, onSync } = {}) {
   const { reactive } = Vue
 
   const ctrl = reactive({
-    netStatus: 'idle',
+    netStatus: ‘idle’,
     netRole:   null,
-    roomCode:  '',
-    offerText: '',
-    netInput:  '',
+    roomCode:  ‘’,
+    offerText: ‘’,
+    netInput:  ‘’,
     copied:    false,
+    swapped:   false,
   })
 
-  let _net = null
+  const worker = new SharedWorker(‘netplay-worker.js’)
+  const port = worker.port
+  port.start()
+
+  let synced = false
+
+  port.onmessage = ({ data }) => {
+    switch (data.type) {
+      case ‘status’:
+        ctrl.netStatus = data.netStatus
+        ctrl.netRole   = data.role   ?? null
+        ctrl.roomCode  = data.roomCode  ?? ‘’
+        ctrl.offerText = data.offerText ?? ‘’
+        ctrl.swapped   = data.swapped   ?? false
+        if (!synced) { synced = true; onSync?.() }
+        break
+      case ‘move’:
+        onMove?.(data.data)
+        break
+      case ‘connected’:
+        ctrl.netStatus = ‘connected’
+        ctrl.netRole   = data.role
+        ctrl.swapped   = false
+        onReset?.()
+        break
+      case ‘disconnected’:
+        ctrl.netStatus = ‘idle’
+        ctrl.netRole   = null
+        ctrl.swapped   = false
+        break
+      case ‘error’:
+        alert(data.message)
+        break
+    }
+  }
+
+  if (gameId) port.postMessage({ type: ‘subscribe’, gameId })
+  port.postMessage({ type: ‘getStatus’ })
 
   ctrl.isMyTurn = function (turn) {
-    if (ctrl.netStatus !== 'connected') return false
-    return (ctrl.netRole === 'host' && turn === 1) ||
-           (ctrl.netRole === 'guest' && turn === 2)
+    if (ctrl.netStatus !== ‘connected’) return false
+    if (ctrl.netRole === ‘host’)  return turn === (ctrl.swapped ? 2 : 1)
+    if (ctrl.netRole === ‘guest’) return turn === (ctrl.swapped ? 1 : 2)
+    return false
   }
 
-  ctrl.send = function (data) { _net?.send(data) }
-
-  ctrl.close = function () {
-    _net?.close(); _net = null
-    ctrl.netStatus = 'idle'
-    ctrl.netRole   = null
+  ctrl.send = function (data) {
+    if (gameId) port.postMessage({ type: ‘send’, gameId, data })
   }
 
-  function initNet() {
-    _net = new NetPlay({
-      onMove(data)  { onMove?.(data) },
-      onConnected(role) {
-        ctrl.netStatus = 'connected'
-        ctrl.netRole   = role
-        onReset?.()
-      },
-      onDisconnected() {
-        ctrl.netStatus = 'idle'
-        ctrl.netRole   = null
-      },
-    })
-  }
+  // Disconnect completely (kills WebRTC for all tabs)
+  ctrl.close = function () { port.postMessage({ type: ‘close’ }) }
 
-  ctrl.startHost = async function () {
-    initNet()
-    ctrl.netStatus = 'hosting'
-    try {
-      ctrl.roomCode = await _net.host()
-    } catch {
-      alert('Could not create room — try again.')
-      _net.close(); _net = null
-      ctrl.netStatus = 'idle'
-    }
-  }
-
-  ctrl.startJoin = function () {
-    initNet()
-    ctrl.netInput  = ''
-    ctrl.netStatus = 'joining'
-  }
-
-  ctrl.connectRoom = async function () {
-    ctrl.netStatus = 'connecting'
-    try {
-      await _net.join(ctrl.netInput.trim())
-    } catch {
-      alert('Room not found — check the code and try again.')
-      ctrl.netStatus = 'joining'
-    }
-  }
+  ctrl.startHost     = function ()  { port.postMessage({ type: ‘startHost’ }) }
+  ctrl.startJoin     = function ()  { ctrl.netInput = ‘’; port.postMessage({ type: ‘startJoin’ }) }
+  ctrl.connectRoom   = function ()  { port.postMessage({ type: ‘connectRoom’, code: ctrl.netInput.trim() }) }
+  ctrl.swapRoles     = function ()  { port.postMessage({ type: ‘swapRoles’ }) }
+  ctrl.startHostAdv  = function ()  { port.postMessage({ type: ‘startHostAdv’ }) }
+  ctrl.startJoinAdv  = function ()  { ctrl.netInput = ‘’; port.postMessage({ type: ‘startJoinAdv’ }) }
+  ctrl.connectOfferAdv  = function () { port.postMessage({ type: ‘connectOfferAdv’,  offerInput:  ctrl.netInput.trim() }); ctrl.netInput = ‘’ }
+  ctrl.connectAnswerAdv = function () { port.postMessage({ type: ‘connectAnswerAdv’, answerInput: ctrl.netInput.trim() }); ctrl.netInput = ‘’ }
 
   ctrl.copyCode = function () {
-    navigator.clipboard.writeText(ctrl.roomCode).then(() => {
-      ctrl.copied = true
-      setTimeout(() => { ctrl.copied = false }, 1500)
-    })
+    navigator.clipboard.writeText(ctrl.roomCode).then(() => { ctrl.copied = true; setTimeout(() => { ctrl.copied = false }, 1500) })
   }
-
-  ctrl.startHostAdv = async function () {
-    initNet()
-    try {
-      ctrl.offerText = await _net.createOffer()
-      ctrl.netInput  = ''
-      ctrl.netStatus = 'adv-offer-ready'
-    } catch {
-      alert('Failed to create offer — try again.')
-      _net.close(); _net = null
-      ctrl.netStatus = 'idle'
-    }
-  }
-
-  ctrl.startJoinAdv = function () {
-    initNet()
-    ctrl.netInput  = ''
-    ctrl.netStatus = 'adv-joining'
-  }
-
-  ctrl.connectOfferAdv = async function () {
-    try {
-      ctrl.offerText = await _net.acceptOffer(ctrl.netInput.trim())
-      ctrl.netInput  = ''
-      ctrl.netStatus = 'adv-answer-ready'
-    } catch {
-      alert('Invalid offer — please try again.')
-      ctrl.netInput = ''
-    }
-  }
-
-  ctrl.connectAnswerAdv = async function () {
-    try {
-      await _net.acceptAnswer(ctrl.netInput.trim())
-      ctrl.netInput = ''
-    } catch {
-      alert('Invalid answer — please try again.')
-      ctrl.netInput = ''
-    }
-  }
-
   ctrl.copyAdv = function () {
-    navigator.clipboard.writeText(ctrl.offerText).then(() => {
-      ctrl.copied = true
-      setTimeout(() => { ctrl.copied = false }, 1500)
-    })
+    navigator.clipboard.writeText(ctrl.offerText).then(() => { ctrl.copied = true; setTimeout(() => { ctrl.copied = false }, 1500) })
   }
 
   return ctrl
 }
 
 // ── NetPanel component ────────────────────────────────────────────
-// Inject '_netplay' from parent setup() to get the ctrl object.
+// Inject ‘_netplay’ from parent setup() to get the ctrl object.
 window.NetPanel = {
-  setup() {
-    return { c: Vue.inject('_netplay') }
-  },
+  setup() { return { c: Vue.inject(‘_netplay’) } },
   template: `
     <div class="net-panel">
-      <template v-if="c.netStatus === 'idle'">
+      <template v-if="c.netStatus === ‘connected’">
+        <div class="net-label">Connected — you are
+          <strong>{{ c.netRole === ‘host’ ? (c.swapped ? ‘Player 2’ : ‘Player 1’) : (c.swapped ? ‘Player 1’ : ‘Player 2’) }}</strong>
+        </div>
+        <div class="net-row">
+          <button class="net-btn" @click="c.swapRoles()">⇄ Swap Roles</button>
+          <button class="net-btn secondary" @click="c.close()">Disconnect</button>
+        </div>
+      </template>
+      <template v-else-if="c.netStatus === ‘idle’">
         <div class="net-row">
           <button class="net-btn" @click="c.startHost()">Host Game</button>
           <button class="net-btn secondary" @click="c.startJoin()">Join Game</button>
@@ -353,37 +318,37 @@ window.NetPanel = {
           <button class="net-btn secondary" @click="c.startJoinAdv()">Join (SDP)</button>
         </div>
       </template>
-      <template v-else-if="c.netStatus === 'adv-offer-ready'">
+      <template v-else-if="c.netStatus === ‘adv-offer-ready’">
         <p class="net-label">Share this offer with your opponent:</p>
         <textarea class="net-code" readonly :value="c.offerText"></textarea>
-        <button class="net-btn" @click="c.copyAdv()">{{ c.copied ? 'Copied!' : 'Copy' }}</button>
+        <button class="net-btn" @click="c.copyAdv()">{{ c.copied ? ‘Copied!’ : ‘Copy’ }}</button>
         <p class="net-label">Paste their answer:</p>
         <textarea class="net-code" :value="c.netInput" @input="c.netInput=$event.target.value" placeholder="Paste answer…"></textarea>
         <button class="net-btn" @click="c.connectAnswerAdv()" :disabled="!c.netInput.trim()">Connect</button>
       </template>
-      <template v-else-if="c.netStatus === 'adv-joining'">
+      <template v-else-if="c.netStatus === ‘adv-joining’">
         <p class="net-label">Paste the host’s offer:</p>
         <textarea class="net-code" :value="c.netInput" @input="c.netInput=$event.target.value" placeholder="Paste offer…"></textarea>
         <button class="net-btn" @click="c.connectOfferAdv()" :disabled="!c.netInput.trim()">Generate Answer</button>
       </template>
-      <template v-else-if="c.netStatus === 'adv-answer-ready'">
+      <template v-else-if="c.netStatus === ‘adv-answer-ready’">
         <p class="net-label">Send this answer to your host:</p>
         <textarea class="net-code" readonly :value="c.offerText"></textarea>
-        <button class="net-btn" @click="c.copyAdv()">{{ c.copied ? 'Copied!' : 'Copy' }}</button>
+        <button class="net-btn" @click="c.copyAdv()">{{ c.copied ? ‘Copied!’ : ‘Copy’ }}</button>
         <p class="net-label">Waiting for host to connect…</p>
       </template>
-      <template v-else-if="c.netStatus === 'hosting'">
+      <template v-else-if="c.netStatus === ‘hosting’">
         <p class="net-label">Share this code with your opponent:</p>
         <div class="net-code-display">{{ c.roomCode }}</div>
-        <button class="net-btn" @click="c.copyCode()">{{ c.copied ? 'Copied!' : 'Copy Code' }}</button>
+        <button class="net-btn" @click="c.copyCode()">{{ c.copied ? ‘Copied!’ : ‘Copy Code’ }}</button>
         <p class="net-label">Waiting for opponent to join…</p>
       </template>
-      <template v-else-if="c.netStatus === 'joining'">
+      <template v-else-if="c.netStatus === ‘joining’">
         <p class="net-label">Enter the host’s room code:</p>
         <input class="net-code-input" :value="c.netInput" @input="c.netInput=$event.target.value" placeholder="ocean-maple-river" spellcheck="false" />
         <button class="net-btn" @click="c.connectRoom()" :disabled="!c.netInput.trim()">Connect</button>
       </template>
-      <template v-else-if="c.netStatus === 'connecting'">
+      <template v-else-if="c.netStatus === ‘connecting’">
         <p class="net-label">Connecting…</p>
       </template>
     </div>

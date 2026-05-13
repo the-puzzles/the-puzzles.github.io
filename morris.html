@@ -11,6 +11,7 @@
 <script src="netplay.js"></script>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
+[v-cloak] { display: none; }
 
 :root {
   --board: min(320px, calc(100vw - 48px));
@@ -290,7 +291,7 @@ h1 {
 </style>
 </head>
 <body>
-<div id="app" :dir="isRTL ? 'rtl' : 'ltr'">
+<div id="app" v-cloak :dir="isRTL ? 'rtl' : 'ltr'">
 
   <!-- Top bar -->
   <div class="top-bar">
@@ -319,7 +320,7 @@ h1 {
     </div>
   </div>
 
-  <net-panel v-if="mode === 'net' && netCtrl.netStatus !== 'connected'"></net-panel>
+  <net-panel v-if="mode === 'net'"></net-panel>
 
   <!-- Status -->
   <div class="status" :class="statusClass">
@@ -668,13 +669,18 @@ createApp({
     const gamePhase = ref('placing');          // 'placing' | 'moving' | 'over'
     const winner    = ref(null);
     const winLine   = ref(null);
-    const scores    = ref([0, 0, 0]);          // [p1wins, p2wins, draws]
+    const humanScores = ref([0, 0, 0]);
+    const aiScores    = ref([0, 0, 0]);
+    function scoresRef() { return ['easy','hard'].includes(mode.value) ? aiScores : humanScores }
+    const scores = computed(() => scoresRef().value);
     const aiThink   = ref(false);
     const justPlaced = ref(null);
     const moveCount  = ref(0);
 
     const netCtrl = createNetplay({
+      gameId: 'morris',
       onMove(data) {
+        if (mode.value !== 'net') return;
         if (data.type === 'newgame') {
           board.value=[...Array(9).fill(0)];placed.value=[0,0];turn.value=1;selected.value=null;
           gamePhase.value='placing';winner.value=null;winLine.value=null;aiThink.value=false;moveCount.value=0;justPlaced.value=null;
@@ -692,6 +698,7 @@ createApp({
         }
       },
       onReset: () => newGame(),
+      onSync() { if (netCtrl.netStatus === 'connected') mode.value = 'net'; },
     });
     provide('_netplay', netCtrl);
 
@@ -738,14 +745,10 @@ createApp({
       winner.value = w;
       if (w) {
         winLine.value = checkWinner(board.value)?.line ?? null;
-        const s = [...scores.value];
-        s[w - 1]++;
-        scores.value = s;
+        const sr = scoresRef(), s = [...sr.value]; s[w - 1]++; sr.value = s;
         launchFireworks(w);
       } else {
-        const s = [...scores.value];
-        s[2]++;
-        scores.value = s;
+        const sr = scoresRef(), s = [...sr.value]; s[2]++; sr.value = s;
       }
       save();
     }
@@ -839,14 +842,14 @@ createApp({
     }
 
     function resetScores() {
-      scores.value = [0, 0, 0];
+      humanScores.value = [0,0,0];
+      aiScores.value    = [0,0,0];
       save();
     }
 
     function setLang(l) { lang.value = l; save(); }
 
     function setMode(m) {
-      netCtrl.close();
       mode.value = m;
       newGame();
       save();
@@ -854,16 +857,18 @@ createApp({
 
     function save() {
       try {
-        localStorage.setItem(SAVE_KEY, JSON.stringify({ lang: lang.value, mode: mode.value === 'net' ? '2p' : mode.value, scores: scores.value }));
+        localStorage.setItem(SAVE_KEY, JSON.stringify({ lang: lang.value, mode: mode.value === 'net' ? '2p' : mode.value, humanScores: humanScores.value, aiScores: aiScores.value }));
       } catch (_) {}
     }
 
     function load() {
       try {
         const d = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}');
-        if (d.lang)   lang.value   = d.lang;
-        if (d.mode)   mode.value   = d.mode;
-        if (d.scores) scores.value = d.scores;
+        if (d.lang)        lang.value        = d.lang;
+        if (d.mode)        mode.value        = d.mode;
+        if (d.humanScores) humanScores.value = d.humanScores;
+        if (d.aiScores)    aiScores.value    = d.aiScores;
+        if (d.scores && !d.humanScores) humanScores.value = d.scores;
       } catch (_) {}
     }
 

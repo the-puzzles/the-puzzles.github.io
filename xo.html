@@ -11,6 +11,7 @@
 <script src="netplay.js"></script>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
+[v-cloak] { display: none; }
 
 :root {
   --cell: clamp(92px, calc((100vw - 48px) / 3), 124px);
@@ -279,7 +280,7 @@ h1 .o { color: #60a5fa; }
 </style>
 </head>
 <body>
-<div id="app" :dir="isRTL ? 'rtl' : 'ltr'">
+<div id="app" v-cloak :dir="isRTL ? 'rtl' : 'ltr'">
 
   <!-- Top bar -->
   <div class="top-bar">
@@ -310,7 +311,7 @@ h1 .o { color: #60a5fa; }
     </div>
   </div>
 
-  <net-panel v-if="mode === 'net' && netCtrl.netStatus !== 'connected'"></net-panel>
+  <net-panel v-if="mode === 'net'"></net-panel>
 
   <!-- Status -->
   <div class="status" :class="statusClass">
@@ -515,14 +516,21 @@ createApp({
     const phase   = ref('playing');
     const winLine = ref(null);
     const scores  = ref({ X: 0, O: 0, draw: 0 });
-    const aiThink = ref(false);
+    const aiThink      = ref(false);
+    const humanScores  = ref({ X: 0, O: 0, draw: 0 });
+    const aiScores     = ref({ X: 0, O: 0, draw: 0 });
+    function scoresRef() { return ['easy','medium','hard'].includes(mode.value) ? aiScores : humanScores }
+    const scores = computed(() => scoresRef().value);
 
     const netCtrl = createNetplay({
+      gameId: 'xo',
       onMove(data) {
+        if (mode.value !== 'net') return;
         if (data.type === 'move' && phase.value === 'playing') makeMove(data.i, true);
         else if (data.type === 'newgame') resetBoard();
       },
       onReset: () => resetBoard(),
+      onSync() { if (netCtrl.netStatus === 'connected') mode.value = 'net'; },
     });
     provide('_netplay', netCtrl);
 
@@ -557,8 +565,7 @@ createApp({
       if (aiThink.value) return false;
       if (mode.value === 'net') {
         if (netCtrl.netStatus !== 'connected') return false;
-        return (netCtrl.netRole === 'host'  && current.value === 'X') ||
-               (netCtrl.netRole === 'guest' && current.value === 'O');
+        return netCtrl.isMyTurn(current.value === 'X' ? 1 : 2);
       }
       if (mode.value !== '2p' && current.value === 'O') return false;
       return true;
@@ -583,14 +590,14 @@ createApp({
       if (result) {
         winLine.value = result.line;
         phase.value = 'won';
-        scores.value = { ...scores.value, [current.value]: scores.value[current.value] + 1 };
+        const sr = scoresRef(); sr.value = { ...sr.value, [current.value]: sr.value[current.value] + 1 };
         launchFireworks(current.value);
         save();
         return;
       }
       if (b.every(c => c !== null)) {
         phase.value = 'draw';
-        scores.value = { ...scores.value, draw: scores.value.draw + 1 };
+        const sr = scoresRef(); sr.value = { ...sr.value, draw: sr.value.draw + 1 };
         save();
         return;
       }
@@ -620,7 +627,6 @@ createApp({
     }
 
     function setMode(m) {
-      netCtrl.close();
       mode.value = m;
       resetBoard();
       save();
@@ -632,7 +638,8 @@ createApp({
     }
 
     function resetScores() {
-      scores.value = { X: 0, O: 0, draw: 0 };
+      humanScores.value = { X: 0, O: 0, draw: 0 };
+      aiScores.value    = { X: 0, O: 0, draw: 0 };
       resetBoard();
       save();
     }
@@ -642,7 +649,8 @@ createApp({
         localStorage.setItem(SAVE_KEY, JSON.stringify({
           lang: lang.value,
           mode: mode.value === 'net' ? '2p' : mode.value,
-          scores: scores.value,
+          humanScores: humanScores.value,
+          aiScores: aiScores.value,
         }));
       } catch {}
     }
@@ -651,9 +659,11 @@ createApp({
       try {
         const s = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null');
         if (!s) return;
-        if (s.lang)   lang.value   = s.lang;
-        if (s.mode)   mode.value   = s.mode;
-        if (s.scores) scores.value = s.scores;
+        if (s.lang)        lang.value        = s.lang;
+        if (s.mode)        mode.value        = s.mode;
+        if (s.humanScores) humanScores.value = s.humanScores;
+        if (s.aiScores)    aiScores.value    = s.aiScores;
+        if (s.scores && !s.humanScores) humanScores.value = s.scores;
       } catch {}
     }
 

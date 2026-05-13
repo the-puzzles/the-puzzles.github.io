@@ -11,6 +11,7 @@
 <script src="netplay.js"></script>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
+[v-cloak] { display: none; }
 
 :root {
   --cell: clamp(44px, calc((100vw - 32px) / 7.5), 68px);
@@ -248,7 +249,7 @@ h1 .y { color: var(--accent2); }
 </style>
 </head>
 <body>
-<div id="app" :dir="isRTL ? 'rtl' : 'ltr'">
+<div id="app" v-cloak :dir="isRTL ? 'rtl' : 'ltr'">
 
   <div class="top-bar">
     <a class="back-link" href="index.html">{{ t('back') }}</a>
@@ -275,7 +276,7 @@ h1 .y { color: var(--accent2); }
     </div>
   </div>
 
-  <net-panel v-if="mode === 'net' && netCtrl.netStatus !== 'connected'"></net-panel>
+  <net-panel v-if="mode === 'net'"></net-panel>
 
   <div class="status" :class="statusClass">
     <template v-if="mode === 'net' && netCtrl.netStatus !== 'connected'"></template>
@@ -486,17 +487,23 @@ createApp({
     const phase   = ref('playing');
     const winner  = ref(null);
     const winLine = ref(null);
-    const scores  = ref([0, 0, 0]);
+    const humanScores = ref([0, 0, 0]);
+    const aiScores    = ref([0, 0, 0]);
+    function scoresRef() { return ['easy','hard'].includes(mode.value) ? aiScores : humanScores }
+    const scores = computed(() => scoresRef().value);
     const aiThink = ref(false);
     const hover    = ref(-1);
     const dropAnim = ref(null);
 
     const netCtrl = createNetplay({
+      gameId: 'fourinrow',
       onMove(data) {
+        if (mode.value !== 'net') return;
         if (data.type === 'move' && phase.value === 'playing') makeMove(data.col, true);
         else if (data.type === 'newgame') resetBoard();
       },
       onReset: () => resetBoard(),
+      onSync() { if (netCtrl.netStatus === 'connected') mode.value = 'net'; },
     });
     provide('_netplay', netCtrl);
 
@@ -505,6 +512,12 @@ createApp({
     const statusClass = computed(() => {
       if (phase.value === 'won') return winner.value === 1 ? 's1' : 's2';
       return turn.value === 1 ? 's1' : 's2';
+    });
+
+    const isMyTurn = computed(() => {
+      if (mode.value === 'net') return netCtrl.isMyTurn(turn.value);
+      if (mode.value !== '2p') return turn.value === 1;
+      return true;
     });
 
     function canDrop(col) { return board.value[col] === 0; }
@@ -543,14 +556,14 @@ createApp({
         winLine.value = win;
         winner.value = turn.value;
         phase.value = 'won';
-        const s = [...scores.value]; s[turn.value - 1]++; scores.value = s;
+        { const sr = scoresRef(), s = [...sr.value]; s[turn.value - 1]++; sr.value = s; }
         save();
         launchFireworks(turn.value);
         return;
       }
       if (b.every(v => v !== 0)) {
         phase.value = 'draw';
-        const s = [...scores.value]; s[2]++; scores.value = s;
+        { const sr = scoresRef(), s = [...sr.value]; s[2]++; sr.value = s; }
         save();
         return;
       }
@@ -582,17 +595,17 @@ createApp({
     }
 
     function setMode(m) {
-      netCtrl.close();
       mode.value = m;
       resetBoard();
       save();
     }
 
-    function resetScores() { scores.value = [0,0,0]; resetBoard(); save(); }
+    function resetScores() { humanScores.value = [0,0,0]; aiScores.value = [0,0,0]; resetBoard(); save(); }
 
     function save() {
       localStorage.setItem('fourinrow-save', JSON.stringify({
-        scores: scores.value,
+        humanScores: humanScores.value,
+        aiScores: aiScores.value,
         mode: mode.value === 'net' ? '2p' : mode.value,
       }));
     }
@@ -600,8 +613,10 @@ createApp({
     onMounted(() => {
       try {
         const s = JSON.parse(localStorage.getItem('fourinrow-save') || '{}');
-        if (s.scores) scores.value = s.scores;
-        if (s.mode)   mode.value   = s.mode;
+        if (s.humanScores) humanScores.value = s.humanScores;
+        if (s.aiScores)    aiScores.value    = s.aiScores;
+        if (s.scores && !s.humanScores) humanScores.value = s.scores;
+        if (s.mode) mode.value = s.mode;
       } catch {}
     });
 
@@ -666,7 +681,7 @@ createApp({
 
     return {
       lang, isRTL, t, mode, board, turn, phase, winner, winLine,
-      scores, aiThink, hover, dropAnim, statusClass, netCtrl,
+      scores, aiThink, hover, dropAnim, statusClass, netCtrl, isMyTurn,
       canDrop, drop, newGame, setMode, resetScores,
     };
   }
