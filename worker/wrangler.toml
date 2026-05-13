@@ -2,6 +2,7 @@ name = "puzzles-signal"
 main = "index.js"
 compatibility_date = "2024-01-01"
 
-[[kv_namespaces]]
-binding = "ROOMS"
-id = "be759f49dbba4688ac692f3b35bd4dda"
+[[d1_databases]]
+binding = "DB"
+database_name = "puzzles-signal"
+database_id = "5439d0da-69d7-4c19-a203-61cfe52780db"
