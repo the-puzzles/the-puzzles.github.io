@@ -1,2 +1,9 @@
 worker/wrangler.local.toml
 worker/.wrangler/
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+.env*
+!.env.example

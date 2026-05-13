@@ -43,14 +43,16 @@ export default {
 
     if (origin !== ALLOWED_ORIGIN) return new Response('Forbidden', { status: 403 })
 
-    // Rate limiting — fixed per-minute bucket so counter resets cleanly each minute
-    const ip      = request.headers.get('CF-Connecting-IP') ?? 'unknown'
-    const bucket  = Math.floor(Date.now() / 60000)
-    const rateKey = `rl:${ip}:${bucket}`
-    const rateRaw = await env.ROOMS.get(rateKey)
-    const rateCount = rateRaw ? parseInt(rateRaw, 10) : 0
-    if (rateCount >= RATE_LIMIT) return json({ error: 'Too many requests' }, 429, origin)
-    await env.ROOMS.put(rateKey, String(rateCount + 1), { expirationTtl: RATE_TTL })
+    // Rate limiting only on writes — GET polling is read-only and self-limited by the client
+    if (method === 'POST') {
+      const ip      = request.headers.get('CF-Connecting-IP') ?? 'unknown'
+      const bucket  = Math.floor(Date.now() / 60000)
+      const rateKey = `rl:${ip}:${bucket}`
+      const rateRaw = await env.ROOMS.get(rateKey)
+      const rateCount = rateRaw ? parseInt(rateRaw, 10) : 0
+      if (rateCount >= RATE_LIMIT) return json({ error: 'Too many requests' }, 429, origin)
+      await env.ROOMS.put(rateKey, String(rateCount + 1), { expirationTtl: RATE_TTL })
+    }
 
     const { method } = request
     const path = new URL(request.url).pathname
