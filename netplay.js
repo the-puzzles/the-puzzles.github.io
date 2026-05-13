@@ -103,7 +103,7 @@ class NetPlay {
         }
       };
       pc.addEventListener('icegatheringstatechange', onchange);
-      setTimeout(done, 4000);
+      setTimeout(done, 2000);
     });
   }
 
