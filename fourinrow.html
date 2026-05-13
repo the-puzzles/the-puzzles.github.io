@@ -275,7 +275,7 @@ h1 .y { color: var(--accent2); }
     </div>
   </div>
 
-  <net-panel v-if="mode === 'net' && netCtrl.netStatus !== 'connected'" />
+  <net-panel v-if="mode === 'net' && netCtrl.netStatus !== 'connected'"></net-panel>
 
   <div class="status" :class="statusClass">
     <template v-if="mode === 'net' && netCtrl.netStatus !== 'connected'"></template>

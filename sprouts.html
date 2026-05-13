@@ -248,7 +248,7 @@ h1 {
     </div>
   </div>
 
-  <net-panel v-if="mode === 'net' && netCtrl.netStatus !== 'connected'" />
+  <net-panel v-if="mode === 'net' && netCtrl.netStatus !== 'connected'"></net-panel>
 
   <div class="status" :class="statusClass">
     <span v-if="phase==='playing' && !aiThink && !(mode==='net' && netCtrl.netStatus!=='connected')" class="turn-dot" :class="current===1 ? 'p1' : 'p2'"></span>
