@@ -338,10 +338,13 @@ window.NetPanel = {
         <p class="net-label">Waiting for host to connect…</p>
       </template>
       <template v-else-if="c.netStatus === 'hosting'">
-        <p class="net-label">Share this code with your opponent:</p>
-        <div class="net-code-display">{{ c.roomCode }}</div>
-        <button class="net-btn" @click="c.copyCode()">{{ c.copied ? 'Copied!' : 'Copy Code' }}</button>
-        <p class="net-label">Waiting for opponent to join…</p>
+        <template v-if="c.roomCode">
+          <p class="net-label">Share this code with your opponent:</p>
+          <div class="net-code-display">{{ c.roomCode }}</div>
+          <button class="net-btn" @click="c.copyCode()">{{ c.copied ? 'Copied!' : 'Copy Code' }}</button>
+          <p class="net-label">Waiting for opponent to join…</p>
+        </template>
+        <p v-else class="net-label">Creating room…</p>
       </template>
       <template v-else-if="c.netStatus === 'joining'">
         <p class="net-label">Enter the host's room code:</p>

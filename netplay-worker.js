@@ -84,13 +84,13 @@ function waitIce(p) {
 // ── Signaling actions ─────────────────────────────────────────────
 async function startHost() {
   if (netStatus !== 'idle') return
-  role = 'host'; netStatus = 'hosting'
-  const p = await newPc()
-  wireChannel(p.createDataChannel('game'))
-  await p.setLocalDescription(await p.createOffer())
-  await waitIce(p)
-  offerText = encode(p.localDescription)
+  role = 'host'; netStatus = 'hosting'; syncStatus()
   try {
+    const p = await newPc()
+    wireChannel(p.createDataChannel('game'))
+    await p.setLocalDescription(await p.createOffer())
+    await waitIce(p)
+    offerText = encode(p.localDescription)
     const r = await fetch(`${SIGNAL_URL}/room`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ offer: offerText }),
