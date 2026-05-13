@@ -11,16 +11,17 @@ class NetPlay {
     this.role       = null; // 'host' | 'guest'
   }
 
-  _createPc() {
-    const pc = new RTCPeerConnection({
-      iceServers: [
-        { urls: 'stun:stun.l.google.com:19302' },
-        { urls: 'stun:openrelay.metered.ca:80' },
-        { urls: 'turn:openrelay.metered.ca:80',  username: 'openrelayproject', credential: 'openrelayproject' },
-        { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' },
-        { urls: 'turns:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' },
-      ],
-    });
+  async _fetchIceConfig() {
+    try {
+      const res = await fetch(`${NETPLAY_SIGNAL_URL}/ice-config`)
+      if (res.ok) return (await res.json()).iceServers
+    } catch {}
+    return [{ urls: 'stun:stun.l.google.com:19302' }]
+  }
+
+  async _createPc() {
+    const iceServers = await this._fetchIceConfig()
+    const pc = new RTCPeerConnection({ iceServers });
     pc.onconnectionstatechange = () => {
       if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') {
         this._onDisconnected();
@@ -120,7 +121,7 @@ class NetPlay {
 
   async _createOffer() {
     this.role = 'host';
-    const pc = this._createPc();
+    const pc = await this._createPc();
     this._attachChannel(pc.createDataChannel('game'));
     await pc.setLocalDescription(await pc.createOffer());
     await this._waitForGathering(pc);
@@ -133,7 +134,7 @@ class NetPlay {
 
   async _acceptOffer(str) {
     this.role = 'guest';
-    const pc = this._createPc();
+    const pc = await this._createPc();
     pc.ondatachannel = e => this._attachChannel(e.channel);
     await pc.setRemoteDescription(this._decode(str));
     await pc.setLocalDescription(await pc.createAnswer());

@@ -57,6 +57,27 @@ export default {
       await env.ROOMS.put(rateKey, String(rateCount + 1), { expirationTtl: RATE_TTL })
     }
 
+    // GET /ice-config — returns TURN credentials (secrets never exposed in source)
+    if (method === 'GET' && path === '/ice-config') {
+      return json({
+        iceServers: [
+          { urls: ['stun:stun.cloudflare.com:3478', 'stun:stun.cloudflare.com:53'] },
+          {
+            urls: [
+              'turn:turn.cloudflare.com:3478?transport=udp',
+              'turn:turn.cloudflare.com:3478?transport=tcp',
+              'turns:turn.cloudflare.com:5349?transport=tcp',
+              'turn:turn.cloudflare.com:53?transport=udp',
+              'turn:turn.cloudflare.com:80?transport=tcp',
+              'turns:turn.cloudflare.com:443?transport=tcp',
+            ],
+            username:   env.TURN_USERNAME,
+            credential: env.TURN_CREDENTIAL,
+          },
+        ],
+      }, 200, origin)
+    }
+
     // POST /room — host creates room with offer
     if (method === 'POST' && path === '/room') {
       const { offer } = await request.json()
