@@ -335,7 +335,7 @@ function createNetplay({ onMove, onReset } = {}) {
 
 // ── NetPanel component ────────────────────────────────────────────
 // Inject '_netplay' from parent setup() to get the ctrl object.
-const NetPanel = {
+window.NetPanel = {
   setup() {
     return { c: Vue.inject('_netplay') }
   },
