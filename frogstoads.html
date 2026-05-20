@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Frogs &amp; Toads</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0d1117">
+<link rel="apple-touch-icon" href="icon.svg">
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+[v-cloak] { display: none; }
+
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: #0d1117;
+  color: #c9d1d9;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 16px 48px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* ── Top bar ─────────────────────────────────────────────────────── */
+.top-bar {
+  width: 100%; max-width: 480px;
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 20px;
+}
+.back-link {
+  color: #6e7681; text-decoration: none; font-size: 0.85rem;
+  transition: color 0.15s; display: inline-flex; align-items: center; gap: 4px;
+}
+.back-link:hover { color: #c9d1d9; }
+[dir="ltr"] .back-link::before { content: '←'; }
+[dir="rtl"] .back-link::after  { content: '→'; }
+.lang-toggle { display: flex; gap: 4px; }
+.lang-btn {
+  background: none; border: 1px solid #30363d; color: #6e7681;
+  border-radius: 6px; padding: 4px 8px; font-size: 0.78rem; font-weight: 700;
+  font-family: inherit; cursor: pointer; transition: all 0.15s;
+}
+.lang-btn.active  { background: #0d2010; border-color: #4ade80; color: #4ade80; }
+.lang-btn:hover:not(.active) { color: #c9d1d9; border-color: #6e7681; }
+
+/* ── Title ───────────────────────────────────────────────────────── */
+h1 {
+  font-size: 2.6rem; font-weight: 900; letter-spacing: 0.12em;
+  margin-bottom: 24px; text-align: center; line-height: 1;
+}
+h1 .fg { color: #4ade80; }
+h1 .am { color: #444c56; }
+h1 .td { color: #fb923c; }
+
+/* ── Score bar ───────────────────────────────────────────────────── */
+.score-bar {
+  display: flex;
+  background: #161b22; border: 1px solid #21262d;
+  border-radius: 14px; overflow: hidden; margin-bottom: 14px;
+}
+.score-item {
+  flex: 1; padding: 12px 8px 14px;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  position: relative; transition: background 0.2s;
+}
+.score-item + .score-item { border-inline-start: 1px solid #21262d; }
+.score-item::after {
+  content: ''; position: absolute; bottom: 0; left: 12px; right: 12px;
+  height: 3px; border-radius: 2px 2px 0 0;
+  transform: scaleX(0); transition: transform 0.25s ease;
+}
+.score-solved.active { background: rgba(74,222,128,0.07); }
+.score-solved.active::after { background: #4ade80; transform: scaleX(1); }
+.score-moves.active  { background: rgba(251,146,60,0.06); }
+.score-moves.active::after  { background: #fb923c; transform: scaleX(1); }
+
+.score-label { font-size: 0.68rem; color: #6e7681; text-transform: uppercase; letter-spacing: 0.12em; font-weight: 700; }
+.score-val   { font-size: 2rem; font-weight: 800; line-height: 1; min-width: 1.2ch; text-align: center; }
+.score-solved .score-val { color: #4ade80; }
+.score-moves  .score-val { color: #fb923c; }
+.score-best   .score-val { color: #6e7681; }
+.score-best.has-best .score-val { color: #fbbf24; }
+
+/* ── Status ──────────────────────────────────────────────────────── */
+.status {
+  height: 2.2rem; font-size: 1.05rem; font-weight: 700; color: #c9d1d9;
+  margin-bottom: 14px; display: flex; align-items: center; justify-content: center;
+  gap: 6px; letter-spacing: 0.01em;
+}
+.status.solved   { color: #4ade80; }
+.status.new-best { color: #fbbf24; }
+.status.stuck    { color: #f87171; }
+
+/* ── Board ───────────────────────────────────────────────────────── */
+.board-wrap { display: flex; flex-direction: column; align-items: center; gap: 8px; margin-bottom: 24px; }
+
+.dir-row {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+}
+.dir-row .d-frog { color: rgba(74,222,128,0.65); }
+.dir-row .d-toad { color: rgba(251,146,60,0.65); }
+
+.board { display: flex; }
+
+.cell {
+  width: var(--sz); height: var(--sz);
+  border-radius: 12px;
+  border: 2px solid #21262d;
+  background: #161b22;
+  display: flex; align-items: center; justify-content: center;
+  cursor: default;
+  position: relative;
+  flex-shrink: 0;
+  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s, transform 0.1s;
+}
+.cell + .cell { margin-inline-start: var(--gap); }
+
+.cell.has-frog { border-color: rgba(74,222,128,0.4); background: rgba(74,222,128,0.06); }
+.cell.has-toad { border-color: rgba(251,146,60,0.4); background: rgba(251,146,60,0.06); }
+.cell.is-empty { border-style: dashed; }
+
+.cell.movable { cursor: pointer; }
+.cell.has-frog.movable:hover { border-color: #4ade80; box-shadow: 0 4px 14px rgba(74,222,128,0.35); transform: translateY(-2px); }
+.cell.has-toad.movable:hover { border-color: #fb923c; box-shadow: 0 4px 14px rgba(251,146,60,0.35); transform: translateY(-2px); }
+
+.cell.hint-piece { border-color: #60a5fa !important; box-shadow: 0 0 14px rgba(96,165,250,0.55); animation: hintGlow 0.9s ease infinite; }
+.cell.hint-dest  { border-color: rgba(96,165,250,0.5) !important; background: rgba(96,165,250,0.07); border-style: dashed; }
+
+@keyframes hintGlow {
+  0%,100% { box-shadow: 0 0 8px rgba(96,165,250,0.4); }
+  50%      { box-shadow: 0 0 20px rgba(96,165,250,0.8); }
+}
+
+.piece { font-size: calc(var(--sz) * 0.6); line-height: 1; display: block; }
+
+.hint-arrow { font-size: calc(var(--sz) * 0.42); color: rgba(96,165,250,0.65); font-weight: 900; }
+
+@keyframes popIn {
+  from { transform: scale(0.35); opacity: 0; }
+  to   { transform: scale(1);    opacity: 1; }
+}
+.pop-enter-active { animation: popIn 0.2s cubic-bezier(0.34,1.56,0.64,1); }
+
+/* ── Mode bar ────────────────────────────────────────────────────── */
+.mode-bar { display: flex; gap: 6px; margin-bottom: 20px; justify-content: center; }
+.mode-btn {
+  background: #161b22; border: 1px solid #30363d; color: #8b949e;
+  border-radius: 20px; padding: 6px 16px; font-size: 0.82rem;
+  font-weight: 600; font-family: inherit; cursor: pointer; transition: all 0.15s;
+}
+.mode-btn:hover:not(.active) { border-color: #6e7681; color: #c9d1d9; }
+.mode-btn.active { background: #0d2010; border-color: #4ade80; color: #4ade80; }
+
+/* ── Buttons ─────────────────────────────────────────────────────── */
+.btn-row { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.new-btn {
+  background: #0d2010; border: 1px solid #4ade80; color: #4ade80;
+  border-radius: 10px; padding: 11px 32px; font-size: 0.92rem; font-weight: 700;
+  font-family: inherit; cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s, box-shadow 0.15s; letter-spacing: 0.04em;
+}
+.new-btn:hover  { opacity: 0.85; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(74,222,128,0.2); }
+.new-btn:active { transform: translateY(0); box-shadow: none; }
+.icon-btn {
+  background: #161b22; border: 1px solid #30363d; color: #8b949e;
+  border-radius: 10px; padding: 11px 14px; font-size: 0.9rem;
+  font-family: inherit; cursor: pointer; transition: color 0.15s, border-color 0.15s;
+}
+.icon-btn:hover { color: #c9d1d9; border-color: #6e7681; }
+.icon-btn:disabled { opacity: 0.3; cursor: default; pointer-events: none; }
+</style>
+</head>
+<body>
+<div id="app" v-cloak :dir="isRTL ? 'rtl' : 'ltr'">
+
+  <div class="top-bar">
+    <a class="back-link" href="index.html">{{ UI.back }}</a>
+    <div class="lang-toggle">
+      <button class="lang-btn" :class="{active: lang==='en'}" @click="setLang('en')">EN</button>
+      <button class="lang-btn" :class="{active: lang==='he'}" @click="setLang('he')">עב</button>
+    </div>
+  </div>
+
+  <h1><span class="fg">FROGS</span> <span class="am">&amp;</span> <span class="td">TOADS</span></h1>
+
+  <div class="score-bar" dir="ltr" :style="{ width: boardWidth }">
+    <div class="score-item score-solved" :class="{ active: phase === 'solved' }">
+      <div class="score-label">{{ UI.solved }}</div>
+      <div class="score-val">{{ solvedCount }}</div>
+    </div>
+    <div class="score-item score-moves" :class="{ active: phase === 'playing' }">
+      <div class="score-label">{{ UI.moves }}</div>
+      <div class="score-val">{{ moveCount }}</div>
+    </div>
+    <div class="score-item score-best" :class="{ 'has-best': hasBest }">
+      <div class="score-label">{{ UI.best }}</div>
+      <div class="score-val">{{ hasBest ? currentBest : '—' }}</div>
+    </div>
+  </div>
+
+  <div class="status" :class="statusClass">
+    <template v-if="phase === 'playing'">
+      <template v-if="moveCount === 0">{{ UI.tapHint }}</template>
+      <template v-else>{{ moveCount }} {{ UI.movesUnit }}</template>
+    </template>
+    <template v-else-if="phase === 'solved'">
+      <template v-if="isNewBest">{{ UI.newBest }} {{ moveCount }} {{ UI.movesUnit }} 🏆</template>
+      <template v-else>{{ UI.solvedIn }} {{ moveCount }} {{ UI.movesUnit }} 🎉</template>
+    </template>
+    <template v-else-if="phase === 'stuck'">{{ UI.stuck }}</template>
+  </div>
+
+  <div class="board-wrap" dir="ltr">
+    <div class="dir-row" :style="{ width: boardWidth }">
+      <span class="d-toad">← {{ UI.toads }}</span>
+      <span class="d-frog">{{ UI.frogs }} →</span>
+    </div>
+    <div class="board" :style="{ '--sz': cellSz + 'px', '--gap': gapSz + 'px' }">
+      <div
+        v-for="(cell, i) in board"
+        :key="i"
+        class="cell"
+        :class="{
+          'has-frog':   cell === 'F',
+          'has-toad':   cell === 'T',
+          'is-empty':   cell === '',
+          movable:      movable.has(i) && phase === 'playing',
+          'hint-piece': hintMove && hintMove.from === i,
+          'hint-dest':  hintMove && hintMove.to === i,
+        }"
+        @click="clickCell(i)"
+      >
+        <transition name="pop">
+          <span v-if="cell === 'F'" :key="'F'+i" class="piece">🐸</span>
+          <span v-else-if="cell === 'T'" :key="'T'+i" class="piece">🦎</span>
+        </transition>
+        <span v-if="cell === '' && hintMove && hintMove.to === i" class="hint-arrow">
+          {{ hintMove.from < i ? '→' : '←' }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <div class="mode-bar">
+    <button class="mode-btn" :class="{active: size===2}" @click="setSize(2)">{{ UI.size2 }}</button>
+    <button class="mode-btn" :class="{active: size===3}" @click="setSize(3)">{{ UI.size3 }}</button>
+    <button class="mode-btn" :class="{active: size===4}" @click="setSize(4)">{{ UI.size4 }}</button>
+  </div>
+
+  <div class="btn-row">
+    <button class="new-btn" @click="newGame">{{ UI.newGame }}</button>
+    <button class="icon-btn" @click="undo"     :disabled="!history.length || phase !== 'playing'" :title="UI.undo">↩</button>
+    <button class="icon-btn" @click="showHint" :disabled="phase !== 'playing'" :title="UI.hint">💡</button>
+    <button class="icon-btn" @click="resetScores" :title="UI.resetScores">↺</button>
+  </div>
+
+</div>
+<script>
+const { createApp, ref, computed } = Vue;
+
+const STRINGS = {
+  back:        { en: 'All Games',              he: 'כל המשחקים' },
+  solved:      { en: 'Solved',                 he: 'פתור' },
+  moves:       { en: 'Moves',                  he: 'מהלכים' },
+  best:        { en: 'Best',                   he: 'שיא' },
+  movesUnit:   { en: 'moves',                  he: 'מהלכים' },
+  tapHint:     { en: 'Tap a piece to move',    he: 'הקש על כלי להזזה' },
+  solvedIn:    { en: 'Solved in',              he: 'פתרת ב' },
+  newBest:     { en: 'New best!',              he: 'שיא חדש!' },
+  stuck:       { en: 'Stuck — no moves left',  he: 'תקוע — אין מהלכים' },
+  frogs:       { en: 'Frogs',                  he: 'צפרדעים' },
+  toads:       { en: 'Toads',                  he: 'קרפדות' },
+  newGame:     { en: 'New Puzzle',             he: 'חידה חדשה' },
+  undo:        { en: 'Undo',                   he: 'בטל מהלך' },
+  hint:        { en: 'Hint',                   he: 'רמז' },
+  resetScores: { en: 'Reset scores',           he: 'אפס ניקוד' },
+  size2:       { en: '2 + 2',                  he: '2 + 2' },
+  size3:       { en: '3 + 3',                  he: '3 + 3' },
+  size4:       { en: '4 + 4',                  he: '4 + 4' },
+};
+
+function makeBoard(n) {
+  return [...Array(n).fill('F'), '', ...Array(n).fill('T')];
+}
+
+function goalBoard(n) {
+  return [...Array(n).fill('T'), '', ...Array(n).fill('F')];
+}
+
+function legalMoves(board) {
+  const moves = [];
+  for (let i = 0; i < board.length; i++) {
+    const p = board[i];
+    if (!p) continue;
+    if (p === 'F') {
+      if (board[i + 1] === '')                          moves.push({ from: i, to: i + 1 });
+      if (board[i + 1] === 'T' && board[i + 2] === '') moves.push({ from: i, to: i + 2 });
+    } else {
+      if (board[i - 1] === '')                          moves.push({ from: i, to: i - 1 });
+      if (board[i - 1] === 'F' && board[i - 2] === '') moves.push({ from: i, to: i - 2 });
+    }
+  }
+  return moves;
+}
+
+function applyMove(board, { from, to }) {
+  const b = [...board];
+  b[to] = b[from]; b[from] = '';
+  return b;
+}
+
+function isGoal(board, n) {
+  const g = goalBoard(n);
+  return board.every((v, i) => v === g[i]);
+}
+
+// BFS — find first move on the shortest path to goal
+function getHint(board, n) {
+  const goal = goalBoard(n).join(',');
+  const start = board.join(',');
+  if (start === goal) return null;
+  const queue = [{ b: board, fm: null }];
+  const seen = new Set([start]);
+  while (queue.length) {
+    const { b, fm } = queue.shift();
+    for (const mv of legalMoves(b)) {
+      const next = applyMove(b, mv);
+      const key = next.join(',');
+      if (seen.has(key)) continue;
+      seen.add(key);
+      const first = fm ?? mv;
+      if (key === goal) return first;
+      queue.push({ b: next, fm: first });
+    }
+  }
+  return null;
+}
+
+function fireworks() {
+  const cv = document.createElement('canvas');
+  cv.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:200;';
+  cv.width = innerWidth; cv.height = innerHeight;
+  document.body.appendChild(cv);
+  const ctx = cv.getContext('2d');
+  const cols = ['#4ade80','#86efac','#bbf7d0','#fb923c','#fdba74','#fbbf24'];
+  const ps = [];
+  const burst = (x, y) => {
+    for (let i = 0; i < 65; i++) {
+      const a = Math.PI * 2 * i / 65, s = 2 + Math.random() * 6;
+      ps.push({ x, y, vx: Math.cos(a)*s, vy: Math.sin(a)*s-2, alpha: 1,
+        c: cols[~~(Math.random()*cols.length)], r: 2+Math.random()*3 });
+    }
+  };
+  const end = Date.now() + 3000; let lb = 0;
+  const frame = now => {
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    if (now - lb > 420 && Date.now() < end - 500) {
+      burst(cv.width*(0.2+Math.random()*0.6), cv.height*(0.1+Math.random()*0.4)); lb = now;
+    }
+    for (const p of ps) {
+      p.x+=p.vx; p.y+=p.vy; p.vy+=0.12; p.alpha-=0.016;
+      if (p.alpha <= 0) continue;
+      ctx.globalAlpha = p.alpha; ctx.fillStyle = p.c;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    ps.splice(0, ps.length, ...ps.filter(p => p.alpha > 0));
+    if (Date.now() < end || ps.length) requestAnimationFrame(frame);
+    else document.body.removeChild(cv);
+  };
+  burst(cv.width * 0.5, cv.height * 0.35);
+  requestAnimationFrame(frame);
+}
+
+const KEY = 'frogstoads-save';
+
+createApp({
+  setup() {
+    const lang      = ref('en');
+    const size      = ref(3);
+    const board     = ref(makeBoard(3));
+    const history   = ref([]);
+    const moveCount = ref(0);
+    const phase     = ref('playing');
+    const hintMove  = ref(null);
+    const isNewBest = ref(false);
+
+    const solvedMap = ref({ 2: 0, 3: 0, 4: 0 });
+    const bestMap   = ref({ 2: null, 3: null, 4: null });
+
+    const isRTL = computed(() => lang.value === 'he');
+    const UI    = computed(() => {
+      const l = lang.value;
+      return Object.fromEntries(Object.entries(STRINGS).map(([k, v]) => [k, v[l] ?? v.en]));
+    });
+
+    const solvedCount = computed(() => solvedMap.value[size.value]);
+    const currentBest = computed(() => bestMap.value[size.value]);
+    const hasBest     = computed(() => currentBest.value !== null);
+
+    const cellSz = computed(() => {
+      const cols = size.value * 2 + 1;
+      const gap  = cols > 7 ? 4 : 6;
+      const avail = Math.min(innerWidth, 480) - 24 - (cols - 1) * gap;
+      return Math.min(72, Math.max(36, Math.floor(avail / cols)));
+    });
+    const gapSz = computed(() => size.value * 2 + 1 > 7 ? 4 : 6);
+    const boardWidth = computed(() => {
+      const cols = size.value * 2 + 1;
+      return (cellSz.value * cols + (cols - 1) * gapSz.value) + 'px';
+    });
+
+    const statusClass = computed(() => {
+      if (phase.value === 'solved') return isNewBest.value ? 'new-best' : 'solved';
+      if (phase.value === 'stuck')  return 'stuck';
+      return '';
+    });
+
+    const movable = computed(() => {
+      if (phase.value !== 'playing') return new Set();
+      return new Set(legalMoves(board.value).map(m => m.from));
+    });
+
+    function clickCell(i) {
+      if (phase.value !== 'playing') return;
+      hintMove.value = null;
+      const moves = legalMoves(board.value).filter(m => m.from === i);
+      if (!moves.length) return;
+      doMove(moves[0]);
+    }
+
+    function doMove({ from, to }) {
+      history.value = [...history.value, [...board.value]];
+      const b = applyMove(board.value, { from, to });
+      board.value = b;
+      moveCount.value++;
+
+      if (isGoal(b, size.value)) {
+        const m = moveCount.value;
+        const prev = bestMap.value[size.value];
+        isNewBest.value = prev === null || m < prev;
+        if (isNewBest.value) bestMap.value = { ...bestMap.value, [size.value]: m };
+        solvedMap.value = { ...solvedMap.value, [size.value]: solvedMap.value[size.value] + 1 };
+        phase.value = 'solved';
+        fireworks();
+        save();
+        return;
+      }
+      if (!legalMoves(b).length) phase.value = 'stuck';
+      save();
+    }
+
+    function undo() {
+      if (!history.value.length || phase.value !== 'playing') return;
+      const h = [...history.value];
+      board.value = h.pop();
+      history.value = h;
+      moveCount.value--;
+      hintMove.value = null;
+    }
+
+    function showHint() {
+      if (phase.value !== 'playing') return;
+      hintMove.value = getHint(board.value, size.value);
+    }
+
+    function newGame() {
+      board.value = makeBoard(size.value);
+      history.value = [];
+      moveCount.value = 0;
+      phase.value = 'playing';
+      hintMove.value = null;
+      isNewBest.value = false;
+      save();
+    }
+
+    function setSize(n) { size.value = n; newGame(); }
+    function setLang(l) { lang.value = l; save(); }
+
+    function resetScores() {
+      solvedMap.value = { 2: 0, 3: 0, 4: 0 };
+      bestMap.value   = { 2: null, 3: null, 4: null };
+      save();
+    }
+
+    function save() {
+      try {
+        localStorage.setItem(KEY, JSON.stringify({
+          lang: lang.value, size: size.value,
+          solvedMap: solvedMap.value, bestMap: bestMap.value,
+        }));
+      } catch (_) {}
+    }
+
+    function load() {
+      try {
+        const d = JSON.parse(localStorage.getItem(KEY) || '{}');
+        if (d.lang)      lang.value      = d.lang;
+        if (d.size)      size.value      = d.size;
+        if (d.solvedMap) solvedMap.value = d.solvedMap;
+        if (d.bestMap)   bestMap.value   = d.bestMap;
+        board.value = makeBoard(size.value);
+      } catch (_) {}
+    }
+
+    load();
+
+    return {
+      lang, size, board, history, moveCount, phase, hintMove, isNewBest,
+      solvedCount, currentBest, hasBest,
+      isRTL, UI, statusClass, movable,
+      cellSz, gapSz, boardWidth,
+      clickCell, undo, showHint, newGame, setSize, setLang, resetScores,
+    };
+  }
+}).mount('#app');
+</script>
+<script>
+(function(){
+  const d=new Date(document.lastModified),p=n=>String(n).padStart(2,"0");
+  const v=document.createElement("div");
+  v.style.cssText="position:fixed;bottom:4px;right:6px;font-size:0.6rem;color:#444c56;pointer-events:none;font-family:monospace;z-index:999";
+  v.textContent=d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())+" "+p(d.getHours())+":"+p(d.getMinutes());
+  document.body.appendChild(v);
+})();
+</script>
+</body>
+</html>
