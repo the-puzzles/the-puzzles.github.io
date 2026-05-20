@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reversi</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0d1117">
+<link rel="apple-touch-icon" href="icon.svg">
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+[v-cloak] { display: none; }
+
+:root {
+  --cell: clamp(38px, calc((100vw - 50px) / 8), 58px);
+}
+
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: #0d1117;
+  color: #c9d1d9;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 16px 48px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* ── Top bar ─────────────────────────────────────────────────────── */
+.top-bar {
+  width: 100%; max-width: 520px;
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 20px;
+}
+.back-link {
+  color: #6e7681; text-decoration: none; font-size: 0.85rem;
+  transition: color 0.15s; display: inline-flex; align-items: center; gap: 4px;
+}
+.back-link:hover { color: #c9d1d9; }
+[dir="ltr"] .back-link::before { content: '←'; }
+[dir="rtl"] .back-link::after  { content: '→'; }
+.lang-toggle { display: flex; gap: 4px; }
+.lang-btn {
+  background: none; border: 1px solid #30363d; color: #6e7681;
+  border-radius: 6px; padding: 4px 8px; font-size: 0.78rem; font-weight: 700;
+  font-family: inherit; cursor: pointer; transition: all 0.15s;
+}
+.lang-btn.active  { background: #160a2a; border-color: #a78bfa; color: #c4b5fd; }
+.lang-btn:hover:not(.active) { color: #c9d1d9; border-color: #6e7681; }
+
+/* ── Title ───────────────────────────────────────────────────────── */
+h1 {
+  font-size: 3rem; font-weight: 900; letter-spacing: 0.22em;
+  margin-bottom: 24px; text-align: center; line-height: 1;
+  background: linear-gradient(135deg, #a78bfa, #e879f9);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+
+/* ── Score bar ───────────────────────────────────────────────────── */
+.score-bar {
+  display: flex;
+  width: calc(var(--cell) * 8 + 14px);
+  background: #161b22; border: 1px solid #21262d;
+  border-radius: 14px; overflow: hidden; margin-bottom: 14px;
+}
+.score-item {
+  flex: 1; padding: 12px 8px 14px;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  position: relative; transition: background 0.2s;
+}
+.score-item + .score-item { border-inline-start: 1px solid #21262d; }
+.score-item::after {
+  content: ''; position: absolute; bottom: 0; left: 12px; right: 12px;
+  height: 3px; border-radius: 2px 2px 0 0;
+  transform: scaleX(0); transition: transform 0.25s ease;
+}
+.score-p1.active  { background: rgba(167,139,250,0.07); }
+.score-p1.active::after { background: #a78bfa; transform: scaleX(1); }
+.score-p2.active  { background: rgba(232,121,249,0.07); }
+.score-p2.active::after { background: #e879f9; transform: scaleX(1); }
+
+.score-label { font-size: 0.68rem; color: #6e7681; text-transform: uppercase; letter-spacing: 0.12em; font-weight: 700; }
+.score-val   { font-size: 2rem; font-weight: 800; line-height: 1; min-width: 1.2ch; text-align: center; }
+.score-p1    .score-val { color: #a78bfa; }
+.score-draw  .score-val { color: #6e7681; }
+.score-p2    .score-val { color: #e879f9; }
+
+/* ── Status ──────────────────────────────────────────────────────── */
+.status {
+  height: 2.2rem; font-size: 1.05rem; font-weight: 700; color: #c9d1d9;
+  margin-bottom: 14px; display: flex; align-items: center; justify-content: center;
+  gap: 6px; letter-spacing: 0.01em;
+}
+.status.won-p1 { color: #a78bfa; }
+.status.won-p2 { color: #e879f9; }
+.status.draw   { color: #8b949e; }
+
+.turn-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+  animation: pulse 1.4s ease infinite;
+}
+.turn-dot.dot-p1 { background: #a78bfa; }
+.turn-dot.dot-p2 { background: #e879f9; }
+@keyframes pulse {
+  0%,100% { opacity: 1;   transform: scale(1); }
+  50%      { opacity: 0.4; transform: scale(0.65); }
+}
+
+/* ── Board ───────────────────────────────────────────────────────── */
+.board {
+  display: grid;
+  grid-template-columns: repeat(8, var(--cell));
+  grid-template-rows:    repeat(8, var(--cell));
+  gap: 2px;
+  background: #1e3a22;
+  border: 2px solid #1e3a22;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.cell {
+  background: #0d1f10;
+  display: flex; align-items: center; justify-content: center;
+  cursor: default; position: relative; transition: background 0.1s;
+}
+.cell.clickable { cursor: pointer; }
+.cell.clickable:hover { background: #162a18; }
+
+/* valid move hint dot */
+.cell.valid::after {
+  content: '';
+  position: absolute;
+  width: calc(var(--cell) * 0.22);
+  height: calc(var(--cell) * 0.22);
+  border-radius: 50%;
+  background: rgba(255,255,255,0.18);
+  pointer-events: none;
+}
+
+/* last-move highlight */
+.cell.last-move { background: #142a17; }
+
+/* pieces */
+.piece {
+  width: calc(var(--cell) * 0.74);
+  height: calc(var(--cell) * 0.74);
+  border-radius: 50%;
+  position: relative; z-index: 1;
+  transition: transform 0.12s;
+}
+.piece.p1 {
+  background: radial-gradient(circle at 38% 35%, #475569, #0f172a);
+  box-shadow: 0 0 0 2px #a78bfa, 0 2px 6px rgba(0,0,0,0.5);
+}
+.piece.p2 {
+  background: radial-gradient(circle at 38% 35%, #f8fafc, #cbd5e1);
+  box-shadow: 0 0 0 2px #e879f9, 0 2px 6px rgba(0,0,0,0.4);
+}
+
+/* win glow */
+.won-p1 .piece.p1 { box-shadow: 0 0 0 2px #a78bfa, 0 0 12px 3px rgba(167,139,250,0.7); }
+.won-p2 .piece.p2 { box-shadow: 0 0 0 2px #e879f9, 0 0 12px 3px rgba(232,121,249,0.7); }
+
+/* pop-in */
+@keyframes popIn {
+  0%   { transform: scale(0.2); opacity: 0; }
+  65%  { transform: scale(1.2); }
+  100% { transform: scale(1);   opacity: 1; }
+}
+.pop-enter-active { animation: popIn 0.22s cubic-bezier(0.34,1.56,0.64,1); }
+
+/* flip */
+@keyframes flipPiece {
+  0%   { transform: scaleX(1); }
+  50%  { transform: scaleX(0); }
+  100% { transform: scaleX(1); }
+}
+.flipping { animation: flipPiece 0.28s ease; }
+
+/* ── Piece count bar (below board) ───────────────────────────────── */
+.count-bar {
+  width: calc(var(--cell) * 8 + 14px);
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 20px; font-size: 0.82rem; font-weight: 700;
+}
+.count-label { color: #6e7681; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; flex-shrink: 0; }
+.count-track {
+  flex: 1; height: 6px; border-radius: 3px;
+  background: #21262d; overflow: hidden; position: relative;
+}
+.count-fill-p1 {
+  position: absolute; left: 0; top: 0; height: 100%;
+  background: #a78bfa; border-radius: 3px;
+  transition: width 0.3s ease;
+}
+.count-num-p1 { color: #a78bfa; min-width: 2ch; text-align: right; }
+.count-num-p2 { color: #e879f9; min-width: 2ch; }
+
+/* ── Mode bar ────────────────────────────────────────────────────── */
+.mode-bar {
+  display: flex; gap: 6px; margin-bottom: 20px; justify-content: center;
+  width: calc(var(--cell) * 8 + 14px); flex-wrap: wrap;
+}
+.mode-btn {
+  background: #161b22; border: 1px solid #30363d; color: #8b949e;
+  border-radius: 20px; padding: 6px 14px; font-size: 0.82rem;
+  font-weight: 600; font-family: inherit; cursor: pointer; transition: all 0.15s;
+}
+.mode-btn:hover:not(.active) { border-color: #6e7681; color: #c9d1d9; }
+.mode-btn.active { background: #160a2a; border-color: #a78bfa; color: #c4b5fd; }
+
+/* ── Buttons ─────────────────────────────────────────────────────── */
+.btn-row { display: flex; gap: 10px; }
+.new-game-btn {
+  background: #160a2a; border: 1px solid #a78bfa; color: #c4b5fd;
+  border-radius: 10px; padding: 11px 40px; font-size: 0.92rem; font-weight: 700;
+  font-family: inherit; cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s, box-shadow 0.15s; letter-spacing: 0.04em;
+}
+.new-game-btn:hover  { opacity: 0.85; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(167,139,250,0.25); }
+.new-game-btn:active { transform: translateY(0); box-shadow: none; }
+.reset-scores-btn {
+  background: none; border: 1px solid #30363d; color: #6e7681;
+  border-radius: 10px; padding: 11px 14px; font-size: 0.9rem;
+  font-family: inherit; cursor: pointer; transition: color 0.15s, border-color 0.15s;
+}
+.reset-scores-btn:hover { color: #c9d1d9; border-color: #6e7681; }
+</style>
+</head>
+<body>
+<div id="app" v-cloak :dir="isRTL ? 'rtl' : 'ltr'">
+
+  <div class="top-bar">
+    <a class="back-link" href="index.html">{{ UI.back }}</a>
+    <div class="lang-toggle">
+      <button class="lang-btn" :class="{active: lang==='en'}" @click="setLang('en')">EN</button>
+      <button class="lang-btn" :class="{active: lang==='he'}" @click="setLang('he')">עב</button>
+    </div>
+  </div>
+
+  <h1>REVERSI</h1>
+
+  <div class="score-bar" dir="ltr">
+    <div class="score-item score-p1" :class="{active: phase==='playing' && turn===1 && !aiThink}">
+      <div class="score-label">{{ UI.p1 }}</div>
+      <div class="score-val">{{ scores[0] }}</div>
+    </div>
+    <div class="score-item score-draw">
+      <div class="score-label">{{ UI.draws }}</div>
+      <div class="score-val">{{ scores[2] }}</div>
+    </div>
+    <div class="score-item score-p2" :class="{active: phase==='playing' && turn===2 && !aiThink}">
+      <div class="score-label">{{ UI.p2 }}</div>
+      <div class="score-val">{{ scores[1] }}</div>
+    </div>
+  </div>
+
+  <div class="status" :class="statusClass">
+    <template v-if="phase === 'playing'">
+      <template v-if="skipped !== null">
+        <span>{{ skipped === 1 ? UI.p1 : UI.p2 }}</span>
+        <span>{{ UI.skippedWord }}</span>
+      </template>
+      <template v-else-if="isRTL">
+        <span v-if="!aiThink" class="turn-dot" :class="turn===1?'dot-p1':'dot-p2'"></span>
+        <span>{{ aiThink ? UI.thinking : UI.turnWord }}</span>
+        <span :style="{color: turn===1?'#a78bfa':'#e879f9'}">{{ turn===1 ? UI.p1 : UI.p2 }}</span>
+      </template>
+      <template v-else>
+        <span v-if="!aiThink" class="turn-dot" :class="turn===1?'dot-p1':'dot-p2'"></span>
+        <span :style="{color: turn===1?'#a78bfa':'#e879f9'}">{{ turn===1 ? UI.p1 : UI.p2 }}</span>
+        <span>{{ aiThink ? UI.thinking : UI.turnWord }}</span>
+      </template>
+    </template>
+    <template v-else-if="phase === 'won'">
+      <template v-if="isRTL">
+        <span>{{ UI.wonVerb }}</span>
+        <span>{{ winner===1 ? UI.p1 : UI.p2 }}</span>
+        <span>🎉</span>
+      </template>
+      <template v-else>
+        <span>{{ winner===1 ? UI.p1 : UI.p2 }}</span>
+        <span>{{ UI.wonVerb }}</span>
+        <span>🎉</span>
+      </template>
+    </template>
+    <template v-else-if="phase === 'draw'">{{ UI.draw }}</template>
+  </div>
+
+  <div class="board" :class="phase !== 'playing' ? statusClass : ''">
+    <div
+      v-for="(cell, i) in board"
+      :key="i"
+      class="cell"
+      :class="{
+        clickable: canClick(i),
+        valid:     validSet.has(i) && phase === 'playing' && !cell && !aiThink,
+        'last-move': lastMove === i,
+      }"
+      @click="clickCell(i)"
+    >
+      <transition name="pop">
+        <div
+          v-if="cell"
+          :key="cell + '-' + i"
+          class="piece"
+          :class="[cell === 1 ? 'p1' : 'p2', flipping.has(i) ? 'flipping' : '']"
+        ></div>
+      </transition>
+    </div>
+  </div>
+
+  <div class="count-bar" dir="ltr">
+    <span class="count-num-p1">{{ countP1 }}</span>
+    <div class="count-track">
+      <div class="count-fill-p1" :style="{width: countP1 / (countP1 + countP2) * 100 + '%'}"></div>
+    </div>
+    <span class="count-num-p2">{{ countP2 }}</span>
+  </div>
+
+  <div class="mode-bar">
+    <button class="mode-btn" :class="{active: mode==='2p'}"   @click="setMode('2p')">{{ UI.mode2p }}</button>
+    <button class="mode-btn" :class="{active: mode==='easy'}" @click="setMode('easy')">{{ UI.modeEasy }}</button>
+    <button class="mode-btn" :class="{active: mode==='hard'}" @click="setMode('hard')">{{ UI.modeHard }}</button>
+  </div>
+
+  <div class="btn-row">
+    <button class="new-game-btn" @click="newGame">{{ UI.newGame }}</button>
+    <button class="reset-scores-btn" @click="resetScores" :title="UI.resetScores">↺</button>
+  </div>
+
+</div>
+<script>
+const { createApp, ref, computed } = Vue;
+
+const STRINGS = {
+  back:        { en: 'All Games',     he: 'כל המשחקים' },
+  p1:          { en: 'Black',         he: 'שחור' },
+  p2:          { en: 'White',         he: 'לבן' },
+  draws:       { en: 'Draws',         he: 'תיקו' },
+  wonVerb:     { en: 'wins!',         he: 'ניצח!' },
+  turnWord:    { en: "'s turn",       he: 'תור' },
+  draw:        { en: "It's a draw!",  he: 'תיקו!' },
+  thinking:    { en: 'Thinking…',     he: 'חושב…' },
+  skippedWord: { en: 'has no moves — passing', he: 'אין מהלכים — מדלג' },
+  newGame:     { en: 'New Game',      he: 'משחק חדש' },
+  resetScores: { en: 'Reset scores',  he: 'אפס ניקוד' },
+  mode2p:      { en: '👥 2 Players',  he: '👥 2 שחקנים' },
+  modeEasy:    { en: '🤖 Easy',       he: '🤖 קל' },
+  modeHard:    { en: '🤖 Hard',       he: '🤖 קשה' },
+};
+
+const DIRS = [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]];
+
+// Positional weights — corners high, edges near corners negative, etc.
+const WEIGHTS = [
+   100,-20, 10,  5,  5, 10,-20,100,
+   -20,-50, -2, -2, -2, -2,-50,-20,
+    10, -2,  0,  0,  0,  0, -2, 10,
+     5, -2,  0,  0,  0,  0, -2,  5,
+     5, -2,  0,  0,  0,  0, -2,  5,
+    10, -2,  0,  0,  0,  0, -2, 10,
+   -20,-50, -2, -2, -2, -2,-50,-20,
+   100,-20, 10,  5,  5, 10,-20,100,
+];
+
+function makeInitialBoard() {
+  const b = Array(64).fill(0);
+  b[27] = 2; b[28] = 1; b[35] = 1; b[36] = 2;
+  return b;
+}
+
+function getFlips(board, idx, player) {
+  const opp = 3 - player;
+  const row = (idx / 8) | 0, col = idx % 8;
+  const flips = [];
+  for (const [dr, dc] of DIRS) {
+    const line = [];
+    let r = row + dr, c = col + dc;
+    while (r >= 0 && r < 8 && c >= 0 && c < 8) {
+      const j = r * 8 + c;
+      if (board[j] === opp) { line.push(j); r += dr; c += dc; }
+      else if (board[j] === player && line.length) { flips.push(...line); break; }
+      else break;
+    }
+  }
+  return flips;
+}
+
+function validMoves(board, player) {
+  const moves = [];
+  for (let i = 0; i < 64; i++)
+    if (!board[i] && getFlips(board, i, player).length) moves.push(i);
+  return moves;
+}
+
+function evaluate(board, player) {
+  let score = 0;
+  for (let i = 0; i < 64; i++) {
+    if (board[i] === player)       score += WEIGHTS[i];
+    else if (board[i] === 3-player) score -= WEIGHTS[i];
+  }
+  return score;
+}
+
+function minimax(board, player, depth, alpha, beta) {
+  const moves = validMoves(board, player);
+  if (!moves.length) {
+    const opp = 3 - player;
+    const oppMoves = validMoves(board, opp);
+    if (!oppMoves.length) {
+      let p1 = 0, p2 = 0;
+      for (const c of board) { if (c === 1) p1++; else if (c === 2) p2++; }
+      const diff = player === 1 ? p1 - p2 : p2 - p1;
+      return diff > 0 ? 10000 : diff < 0 ? -10000 : 0;
+    }
+    return -minimax(board, opp, depth, -beta, -alpha);
+  }
+  if (depth === 0) return evaluate(board, player);
+
+  for (const i of moves) {
+    const b = [...board];
+    b[i] = player;
+    for (const j of getFlips(b, i, player)) b[j] = player;
+    const score = -minimax(b, 3-player, depth-1, -beta, -alpha);
+    if (score > alpha) alpha = score;
+    if (alpha >= beta) return alpha;
+  }
+  return alpha;
+}
+
+function getBestMove(board, player) {
+  const moves = validMoves(board, player);
+  const empty = board.filter(c => !c).length;
+  const depth = empty > 20 ? 4 : empty > 10 ? 6 : 8;
+  let best = -Infinity, move = moves[0];
+  for (const i of moves) {
+    const b = [...board];
+    b[i] = player;
+    for (const j of getFlips(b, i, player)) b[j] = player;
+    const score = -minimax(b, 3-player, depth-1, -Infinity, Infinity);
+    if (score > best) { best = score; move = i; }
+  }
+  return move;
+}
+
+const PALETTES = {
+  1: ['#a78bfa','#c4b5fd','#8b5cf6','#7c3aed','#ddd6fe'],
+  2: ['#e879f9','#f0abfc','#d946ef','#f5d0fe','#fbbf24'],
+};
+
+function launchFireworks(player) {
+  const cv = document.createElement('canvas');
+  cv.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:200;';
+  cv.width = innerWidth; cv.height = innerHeight;
+  document.body.appendChild(cv);
+  const ctx = cv.getContext('2d');
+  const cols = PALETTES[player];
+  const ps = [];
+  const burst = (x, y) => {
+    for (let i = 0; i < 65; i++) {
+      const a = Math.PI * 2 * i / 65, s = 2 + Math.random() * 6;
+      ps.push({ x, y, vx: Math.cos(a)*s, vy: Math.sin(a)*s-2, alpha: 1,
+        c: cols[~~(Math.random()*cols.length)], r: 2+Math.random()*3 });
+    }
+  };
+  const end = Date.now() + 3000; let lb = 0;
+  const frame = now => {
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    if (now - lb > 420 && Date.now() < end - 500) {
+      burst(cv.width*(0.2+Math.random()*0.6), cv.height*(0.1+Math.random()*0.4)); lb = now;
+    }
+    for (const p of ps) {
+      p.x+=p.vx; p.y+=p.vy; p.vy+=0.12; p.alpha-=0.016;
+      if (p.alpha <= 0) continue;
+      ctx.globalAlpha = p.alpha; ctx.fillStyle = p.c;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    ps.splice(0, ps.length, ...ps.filter(p => p.alpha > 0));
+    if (Date.now() < end || ps.length) requestAnimationFrame(frame);
+    else document.body.removeChild(cv);
+  };
+  burst(cv.width * 0.5, cv.height * 0.35);
+  requestAnimationFrame(frame);
+}
+
+const SAVE_KEY = 'reversi-save';
+
+createApp({
+  setup() {
+    const lang    = ref('en');
+    const mode    = ref('2p');
+    const board   = ref(makeInitialBoard());
+    const turn    = ref(1);
+    const phase   = ref('playing');
+    const winner  = ref(null);
+    const lastMove = ref(null);
+    const skipped  = ref(null);
+    const aiThink  = ref(false);
+    const flipping = ref(new Set());
+
+    const humanScores = ref([0, 0, 0]);
+    const aiScores    = ref([0, 0, 0]);
+    function scoresRef() { return mode.value === '2p' ? humanScores : aiScores; }
+    const scores = computed(() => scoresRef().value);
+
+    const isRTL = computed(() => lang.value === 'he');
+    const UI    = computed(() => {
+      const l = lang.value;
+      return Object.fromEntries(Object.entries(STRINGS).map(([k, v]) => [k, v[l] ?? v.en]));
+    });
+
+    const validSet = computed(() => new Set(validMoves(board.value, turn.value)));
+
+    const countP1 = computed(() => board.value.filter(c => c === 1).length);
+    const countP2 = computed(() => board.value.filter(c => c === 2).length);
+
+    const statusClass = computed(() => {
+      if (phase.value === 'won')  return winner.value === 1 ? 'won-p1' : 'won-p2';
+      if (phase.value === 'draw') return 'draw';
+      return '';
+    });
+
+    function canClick(i) {
+      if (phase.value !== 'playing') return false;
+      if (aiThink.value) return false;
+      if (mode.value !== '2p' && turn.value === 2) return false;
+      return validSet.value.has(i);
+    }
+
+    function applyMove(b, i, player) {
+      const next = [...b];
+      next[i] = player;
+      const flips = getFlips(next, i, player);
+      for (const j of flips) next[j] = player;
+      return { board: next, flips };
+    }
+
+    function endGame(b) {
+      let p1 = 0, p2 = 0;
+      for (const c of b) { if (c === 1) p1++; else if (c === 2) p2++; }
+      const s = [...scoresRef().value];
+      if (p1 > p2)       { phase.value = 'won'; winner.value = 1; s[0]++; launchFireworks(1); }
+      else if (p2 > p1)  { phase.value = 'won'; winner.value = 2; s[1]++; launchFireworks(2); }
+      else               { phase.value = 'draw'; s[2]++; }
+      scoresRef().value = s;
+      save();
+    }
+
+    function advanceTurn(b, justMoved) {
+      const next = 3 - justMoved;
+      if (validMoves(b, next).length) {
+        turn.value = next;
+        skipped.value = null;
+        triggerAI(b, next);
+        return;
+      }
+      if (validMoves(b, justMoved).length) {
+        skipped.value = next;
+        turn.value = justMoved;
+        triggerAI(b, justMoved);
+        return;
+      }
+      endGame(b);
+    }
+
+    function triggerAI(b, player) {
+      if (mode.value === '2p' || player === 1) return;
+      aiThink.value = true;
+      const delay = mode.value === 'hard' ? 380 : 280;
+      setTimeout(() => {
+        aiThink.value = false;
+        const move = mode.value === 'hard'
+          ? getBestMove([...b], player)
+          : validMoves(b, player)[~~(Math.random() * validMoves(b, player).length)];
+        if (move !== undefined) makeMove(move, b, player);
+      }, delay);
+    }
+
+    function makeMove(i, b, player) {
+      const { board: next, flips } = applyMove(b, i, player);
+      board.value = next;
+      lastMove.value = i;
+      skipped.value = null;
+
+      // brief flip animation
+      flipping.value = new Set(flips);
+      setTimeout(() => { flipping.value = new Set(); }, 320);
+
+      advanceTurn(next, player);
+      save();
+    }
+
+    function clickCell(i) {
+      if (!canClick(i)) return;
+      makeMove(i, board.value, turn.value);
+    }
+
+    function resetBoard() {
+      board.value = makeInitialBoard();
+      turn.value = 1;
+      phase.value = 'playing';
+      winner.value = null;
+      lastMove.value = null;
+      skipped.value = null;
+      aiThink.value = false;
+      flipping.value = new Set();
+    }
+
+    function newGame() {
+      resetBoard();
+      save();
+      if (mode.value !== '2p') triggerAI(board.value, 1); // AI never plays first in standard, but handle easy mode
+    }
+
+    function setMode(m) { mode.value = m; resetBoard(); save(); }
+    function setLang(l) { lang.value = l; save(); }
+    function resetScores() { humanScores.value = [0,0,0]; aiScores.value = [0,0,0]; save(); }
+
+    function save() {
+      try {
+        localStorage.setItem(SAVE_KEY, JSON.stringify({
+          lang: lang.value,
+          mode: mode.value,
+          humanScores: humanScores.value,
+          aiScores: aiScores.value,
+        }));
+      } catch (_) {}
+    }
+
+    function load() {
+      try {
+        const d = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}');
+        if (d.lang)        lang.value        = d.lang;
+        if (d.mode)        mode.value        = d.mode;
+        if (d.humanScores) humanScores.value = d.humanScores;
+        if (d.aiScores)    aiScores.value    = d.aiScores;
+      } catch (_) {}
+    }
+
+    load();
+
+    return {
+      lang, mode, board, turn, phase, winner, lastMove, skipped, aiThink, flipping,
+      scores, validSet, countP1, countP2,
+      isRTL, UI, statusClass,
+      canClick, clickCell, newGame, setMode, setLang, resetScores,
+    };
+  }
+}).mount('#app');
+</script>
+<script>
+(function(){
+  const d=new Date(document.lastModified),p=n=>String(n).padStart(2,"0");
+  const v=document.createElement("div");
+  v.style.cssText="position:fixed;bottom:4px;right:6px;font-size:0.6rem;color:#444c56;pointer-events:none;font-family:monospace;z-index:999";
+  v.textContent=d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())+" "+p(d.getHours())+":"+p(d.getMinutes());
+  document.body.appendChild(v);
+})();
+</script>
+</body>
+</html>

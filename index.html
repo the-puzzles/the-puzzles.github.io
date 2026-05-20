@@ -102,6 +102,7 @@ header {
 .card.braille:hover     { border-color: #a78bfa; box-shadow: 0 12px 40px rgba(167,139,250,0.15); }
 .card.woodoku:hover     { border-color: #a3e635; box-shadow: 0 12px 40px rgba(163,230,53,0.15); }
 .card.frogstoads:hover  { border-color: #4ade80; box-shadow: 0 12px 40px rgba(74,222,128,0.15); }
+.card.reversi:hover     { border-color: #a78bfa; box-shadow: 0 12px 40px rgba(167,139,250,0.15); }
 
 /* ── Card header ─────────────────────────────────────────────────────── */
 .card-header { display: flex; align-items: center; gap: 14px; }
@@ -129,6 +130,7 @@ header {
 .dotsboxes  .card-icon { background: #0c1e2e; }
 .woodoku    .card-icon { background: #0d1f05; }
 .frogstoads .card-icon { background: #0d2010; }
+.reversi    .card-icon { background: #160a2a; }
 
 .card-title {
   font-size: 1.5rem;
@@ -231,6 +233,12 @@ header {
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+.reversi .card-title {
+  background: linear-gradient(135deg, #a78bfa, #e879f9);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
 
 /* ── Preview board ───────────────────────────────────────────────────── */
 .preview {
@@ -299,6 +307,7 @@ header {
 .dotsboxes   .rule-dot { background: #38bdf8; }
 .woodoku     .rule-dot { background: #a3e635; }
 .frogstoads  .rule-dot { background: #4ade80; }
+.reversi     .rule-dot { background: #a78bfa; }
 
 /* ── Play button ─────────────────────────────────────────────────────── */
 .play-btn {
@@ -336,6 +345,7 @@ header {
 .dotsboxes   .play-btn { background: #0c1e2e; color: #7dd3fc; border: 1px solid #38bdf8; }
 .woodoku     .play-btn { background: #0d1f05; color: #a3e635; border: 1px solid #a3e635; }
 .frogstoads  .play-btn { background: #0d2010; color: #4ade80; border: 1px solid #4ade80; }
+.reversi     .play-btn { background: #160a2a; color: #c4b5fd; border: 1px solid #a78bfa; }
 
 .play-arrow { font-size: 1rem; transition: transform 0.15s; }
 .play-btn:hover .play-arrow { transform: translateX(3px); }
@@ -1026,6 +1036,45 @@ footer {
     </div>
 
     <div class="play-btn">Play Three Men's Morris <span class="play-arrow">→</span></div>
+  </a>
+
+  <!-- ── Reversi ──────────────────────────────────────────────────── -->
+  <a class="card reversi" href="reversi.html">
+    <div class="card-header">
+      <div class="card-icon">⬤</div>
+      <div class="card-title">REVERSI</div>
+    </div>
+
+    <!-- Mini board: 4×4 excerpt showing a mid-game state -->
+    <div class="preview" style="grid-template-columns: repeat(4,36px); gap:1px; background:#1e3a22; border-radius:6px; padding:1px;">
+      <div class="preview-cell" style="background:#0d1f10; border-radius:3px;"><div class="preview-dot" style="background:#1e293b; box-shadow:0 0 0 1.5px #a78bfa; width:20px; height:20px;"></div></div>
+      <div class="preview-cell" style="background:#0d1f10; border-radius:3px;"><div class="preview-dot" style="background:#f8fafc; box-shadow:0 0 0 1.5px #e879f9; width:20px; height:20px;"></div></div>
+      <div class="preview-cell" style="background:#0d1f10; border-radius:3px;"><div class="preview-dot" style="background:#1e293b; box-shadow:0 0 0 1.5px #a78bfa; width:20px; height:20px;"></div></div>
+      <div class="preview-cell" style="background:#0d1f10; border-radius:3px;"></div>
+      <div class="preview-cell" style="background:#0d1f10; border-radius:3px;"><div class="preview-dot" style="background:#f8fafc; box-shadow:0 0 0 1.5px #e879f9; width:20px; height:20px;"></div></div>
+      <div class="preview-cell" style="background:#0d1f10; border-radius:3px;"><div class="preview-dot" style="background:#1e293b; box-shadow:0 0 0 1.5px #a78bfa; width:20px; height:20px;"></div></div>
+      <div class="preview-cell" style="background:#0d1f10; border-radius:3px;"><div class="preview-dot" style="background:#f8fafc; box-shadow:0 0 0 1.5px #e879f9; width:20px; height:20px;"></div></div>
+      <div class="preview-cell" style="background:#0d1f10; border-radius:3px;"><div class="preview-dot" style="background:#1e293b; box-shadow:0 0 0 1.5px #a78bfa; width:20px; height:20px;"></div></div>
+      <div class="preview-cell" style="background:#0d1f10; border-radius:3px;"></div>
+      <div class="preview-cell" style="background:#0d1f10; border-radius:3px;"><div class="preview-dot" style="background:#1e293b; box-shadow:0 0 0 1.5px #a78bfa; width:20px; height:20px;"></div></div>
+      <div class="preview-cell" style="background:#0d1f10; border-radius:3px;"><div class="preview-dot" style="background:#f8fafc; box-shadow:0 0 0 1.5px #e879f9; width:20px; height:20px;"></div></div>
+      <div class="preview-cell" style="background:#0d1f10; border-radius:3px;"><div class="preview-dot" style="background:#1e293b; box-shadow:0 0 0 1.5px #a78bfa; width:20px; height:20px;"></div></div>
+      <div class="preview-cell" style="background:#142a17; border-radius:3px;"><div style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.2);"></div></div>
+      <div class="preview-cell" style="background:#0d1f10; border-radius:3px;"><div class="preview-dot" style="background:#f8fafc; box-shadow:0 0 0 1.5px #e879f9; width:20px; height:20px;"></div></div>
+      <div class="preview-cell" style="background:#0d1f10; border-radius:3px;"></div>
+      <div class="preview-cell" style="background:#0d1f10; border-radius:3px;"><div class="preview-dot" style="background:#f8fafc; box-shadow:0 0 0 1.5px #e879f9; width:20px; height:20px;"></div></div>
+    </div>
+
+    <p class="card-tagline">Place a disc to flip your opponent's pieces. Outflank them on all 8 directions — whoever has more discs when the board fills up wins.</p>
+
+    <div class="card-rules">
+      <div class="rule"><div class="rule-dot"></div><span>Place a disc to sandwich and flip opponent's pieces</span></div>
+      <div class="rule"><div class="rule-dot"></div><span>Flips happen in all 8 directions at once</span></div>
+      <div class="rule"><div class="rule-dot"></div><span>Most discs when no moves remain wins</span></div>
+      <div class="rule"><div class="rule-dot"></div><span>2-player or vs computer (Easy / Hard)</span></div>
+    </div>
+
+    <div class="play-btn">Play Reversi <span class="play-arrow">→</span></div>
   </a>
 
   <!-- ── Frogs & Toads ────────────────────────────────────────────── -->
