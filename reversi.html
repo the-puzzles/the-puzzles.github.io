@@ -323,9 +323,10 @@ h1 {
   </div>
 
   <div class="mode-bar">
-    <button class="mode-btn" :class="{active: mode==='2p'}"   @click="setMode('2p')">{{ UI.mode2p }}</button>
-    <button class="mode-btn" :class="{active: mode==='easy'}" @click="setMode('easy')">{{ UI.modeEasy }}</button>
-    <button class="mode-btn" :class="{active: mode==='hard'}" @click="setMode('hard')">{{ UI.modeHard }}</button>
+    <button class="mode-btn" :class="{active: mode==='2p'}"     @click="setMode('2p')">{{ UI.mode2p }}</button>
+    <button class="mode-btn" :class="{active: mode==='easy'}"   @click="setMode('easy')">{{ UI.modeEasy }}</button>
+    <button class="mode-btn" :class="{active: mode==='medium'}" @click="setMode('medium')">{{ UI.modeMedium }}</button>
+    <button class="mode-btn" :class="{active: mode==='hard'}"   @click="setMode('hard')">{{ UI.modeHard }}</button>
   </div>
 
   <div class="btn-row">
@@ -351,6 +352,7 @@ const STRINGS = {
   resetScores: { en: 'Reset scores',  he: 'אפס ניקוד' },
   mode2p:      { en: '👥 2 Players',  he: '👥 2 שחקנים' },
   modeEasy:    { en: '🤖 Easy',       he: '🤖 קל' },
+  modeMedium:  { en: '🤖 Medium',     he: '🤖 בינוני' },
   modeHard:    { en: '🤖 Hard',       he: '🤖 קשה' },
 };
 
@@ -431,6 +433,19 @@ function minimax(board, player, depth, alpha, beta) {
     if (alpha >= beta) return alpha;
   }
   return alpha;
+}
+
+function getMediumMove(board, player) {
+  const moves = validMoves(board, player);
+  let best = -Infinity, move = moves[0];
+  for (const i of moves) {
+    const b = [...board];
+    b[i] = player;
+    for (const j of getFlips(b, i, player)) b[j] = player;
+    const score = -minimax(b, 3-player, 1, -Infinity, Infinity);
+    if (score > best) { best = score; move = i; }
+  }
+  return move;
 }
 
 function getBestMove(board, player) {
@@ -572,12 +587,15 @@ createApp({
     function triggerAI(b, player) {
       if (mode.value === '2p' || player === 1) return;
       aiThink.value = true;
-      const delay = mode.value === 'hard' ? 380 : 280;
+      const delay = mode.value === 'hard' ? 380 : mode.value === 'medium' ? 320 : 280;
       setTimeout(() => {
         aiThink.value = false;
+        const moves = validMoves(b, player);
         const move = mode.value === 'hard'
           ? getBestMove([...b], player)
-          : validMoves(b, player)[~~(Math.random() * validMoves(b, player).length)];
+          : mode.value === 'medium'
+          ? getMediumMove([...b], player)
+          : moves[~~(Math.random() * moves.length)];
         if (move !== undefined) makeMove(move, b, player);
       }, delay);
     }
