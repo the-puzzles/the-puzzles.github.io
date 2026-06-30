@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Splice · Puzzle Games</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0d1117">
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+[v-cloak] { display: none; }
+
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: #0d1117;
+  color: #c9d1d9;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 16px 64px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.top-bar {
+  width: 100%;
+  max-width: 540px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+.back-link {
+  color: #6e7681; text-decoration: none; font-size: 0.85rem;
+  transition: color 0.15s; display: inline-flex; align-items: center; gap: 4px;
+}
+.back-link:hover { color: #c9d1d9; }
+[dir="ltr"] .back-link::before { content: '←'; }
+[dir="rtl"] .back-link::after  { content: '→'; }
+
+.lang-toggle { display: flex; gap: 4px; }
+.lang-btn {
+  background: none; border: 1px solid #30363d; color: #6e7681;
+  border-radius: 6px; padding: 4px 8px; font-size: 0.78rem;
+  font-weight: 700; font-family: inherit; cursor: pointer; transition: all 0.15s;
+}
+.lang-btn.active { background: #0c1d2e; border-color: #38bdf8; color: #38bdf8; }
+.lang-btn:hover:not(.active) { color: #c9d1d9; border-color: #6e7681; }
+
+h1 {
+  font-size: 2.4rem; font-weight: 900; letter-spacing: 0.14em;
+  margin-bottom: 4px; text-align: center;
+  background: linear-gradient(135deg, #38bdf8, #818cf8);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.subtitle {
+  font-size: 0.8rem; color: #6e7681; text-align: center; margin-bottom: 24px;
+  letter-spacing: 0.06em;
+}
+
+/* ── Status bar ───────────────────────────────────────────────────── */
+.status-bar {
+  height: 2.2rem; display: flex; align-items: center; justify-content: center;
+  font-size: 0.9rem; font-weight: 700; letter-spacing: 0.04em;
+  margin-bottom: 16px; width: 100%; max-width: 540px;
+}
+.status-bar.idle     { color: #6e7681; }
+.status-bar.correct  { color: #38bdf8; }
+.status-bar.wrong    { color: #f87171; }
+.status-bar.win      { color: #34d399; }
+
+/* ── Puzzle selector ──────────────────────────────────────────────── */
+.puzzle-nav {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 20px;
+}
+.nav-btn {
+  background: #161b22; border: 1px solid #30363d; color: #6e7681;
+  border-radius: 8px; padding: 6px 12px; font-size: 0.82rem; font-weight: 700;
+  cursor: pointer; transition: all 0.15s; font-family: inherit;
+}
+.nav-btn:hover:not(:disabled) { color: #c9d1d9; border-color: #6e7681; }
+.nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.puzzle-num { font-size: 0.85rem; color: #8b949e; min-width: 80px; text-align: center; }
+
+/* ── Clues ────────────────────────────────────────────────────────── */
+.clues {
+  width: 100%; max-width: 540px;
+  display: flex; flex-direction: column; gap: 8px;
+  margin-bottom: 20px;
+}
+.clue-row {
+  background: #161b22; border: 2px solid #21262d;
+  border-radius: 10px; padding: 10px 14px;
+  display: flex; align-items: center; gap: 12px;
+  transition: border-color 0.2s;
+}
+.clue-row.solved  { border-color: #1e4d3a; }
+.clue-row.active  { border-color: #38bdf8; }
+.clue-text {
+  font-size: 0.88rem; color: #8b949e; flex: 1; line-height: 1.4;
+}
+.clue-row.solved .clue-text { color: #4ade80; }
+.answer-tiles {
+  display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end;
+}
+.answer-chunk {
+  padding: 3px 7px; border-radius: 6px; font-size: 0.78rem; font-weight: 700;
+  letter-spacing: 0.06em; font-family: monospace;
+  background: #21262d; border: 1.5px solid #30363d; color: #6e7681;
+  transition: all 0.15s;
+}
+.clue-row.solved .answer-chunk { background: #0d2a1e; border-color: #4ade80; color: #4ade80; }
+.answer-chunk.pending { background: #0c1d2e; border-color: #38bdf8; color: #38bdf8; }
+
+/* ── Current input ────────────────────────────────────────────────── */
+.input-area {
+  width: 100%; max-width: 540px; background: #161b22;
+  border: 2px solid #30363d; border-radius: 12px;
+  padding: 12px 16px; margin-bottom: 16px;
+  display: flex; align-items: center; gap: 8px; min-height: 52px;
+}
+.input-area.has-input { border-color: #38bdf8; }
+.input-label { font-size: 0.72rem; color: #444c56; letter-spacing: 0.08em; flex-shrink: 0; }
+.input-tiles { display: flex; gap: 6px; flex-wrap: wrap; flex: 1; }
+.input-chunk {
+  padding: 4px 9px; border-radius: 7px; font-size: 0.85rem; font-weight: 700;
+  letter-spacing: 0.06em; font-family: monospace;
+  background: #0c1d2e; border: 1.5px solid #38bdf8; color: #7dd3fc;
+  cursor: pointer; transition: all 0.12s;
+}
+.input-chunk:hover { background: #112233; border-color: #67e8f9; color: #e0f2fe; }
+.input-empty { color: #30363d; font-size: 0.82rem; font-style: italic; }
+.clear-btn {
+  background: none; border: 1px solid #30363d; color: #6e7681; border-radius: 6px;
+  padding: 4px 8px; font-size: 0.75rem; cursor: pointer; transition: all 0.15s;
+  font-family: inherit; flex-shrink: 0;
+}
+.clear-btn:hover { color: #f87171; border-color: #f87171; }
+
+/* ── Chunk pool ───────────────────────────────────────────────────── */
+.pool {
+  width: 100%; max-width: 540px;
+  display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
+  margin-bottom: 24px;
+}
+.chunk-btn {
+  padding: 8px 14px; border-radius: 9px; font-size: 0.92rem; font-weight: 700;
+  letter-spacing: 0.07em; font-family: monospace;
+  background: #1c2230; border: 2px solid #30363d; color: #c9d1d9;
+  cursor: pointer; transition: all 0.12s;
+}
+.chunk-btn:hover { background: #0c1d2e; border-color: #38bdf8; color: #7dd3fc; }
+.chunk-btn:active { transform: scale(0.94); }
+.chunk-btn.used { opacity: 0; pointer-events: none; }
+
+/* ── Buttons ──────────────────────────────────────────────────────── */
+.action-row {
+  display: flex; gap: 10px; width: 100%; max-width: 540px; justify-content: center;
+}
+.action-btn {
+  padding: 10px 22px; border-radius: 9px; font-size: 0.88rem; font-weight: 700;
+  cursor: pointer; font-family: inherit; transition: all 0.15s; letter-spacing: 0.04em;
+  border: 1.5px solid #30363d; background: #161b22; color: #6e7681;
+}
+.action-btn:hover { color: #c9d1d9; border-color: #6e7681; }
+.action-btn.primary {
+  background: #0c1d2e; color: #38bdf8; border-color: #38bdf8;
+}
+.action-btn.primary:hover { background: #112233; }
+
+/* ── Timer ────────────────────────────────────────────────────────── */
+.timer { font-size: 0.8rem; color: #444c56; text-align: center; margin-top: 12px; }
+.timer span { color: #6e7681; font-variant-numeric: tabular-nums; font-family: monospace; }
+
+/* ── Fireworks ────────────────────────────────────────────────────── */
+.fw-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 999; }
+
+@media (max-width: 480px) {
+  h1 { font-size: 1.9rem; }
+  .chunk-btn { padding: 7px 11px; font-size: 0.84rem; }
+}
+</style>
+</head>
+<body>
+<div id="app" v-cloak :dir="isRTL ? 'rtl' : 'ltr'">
+
+  <div class="top-bar">
+    <a class="back-link" href="index.html">{{ t('back') }}</a>
+    <div class="lang-toggle">
+      <button class="lang-btn" :class="{active: lang==='en'}" @click="setLang('en')">EN</button>
+      <button class="lang-btn" :class="{active: lang==='he'}" @click="setLang('he')">HE</button>
+      <button class="lang-btn" :class="{active: lang==='es'}" @click="setLang('es')">ES</button>
+    </div>
+  </div>
+
+  <h1>SPLICE</h1>
+  <div class="subtitle">{{ t('subtitle') }}</div>
+
+  <div class="status-bar" :class="statusClass">{{ statusMsg }}</div>
+
+  <div class="puzzle-nav">
+    <button class="nav-btn" @click="prevPuzzle" :disabled="puzzleIdx === 0">‹</button>
+    <div class="puzzle-num">{{ t('puzzle') }} {{ puzzleIdx + 1 }} / {{ puzzles.length }}</div>
+    <button class="nav-btn" @click="nextPuzzle" :disabled="puzzleIdx === puzzles.length - 1">›</button>
+  </div>
+
+  <div class="clues">
+    <div
+      v-for="(clue, i) in currentPuzzle.clues"
+      :key="i"
+      class="clue-row"
+      :class="{ solved: solvedMask[i], active: activeClue === i && !solvedMask[i] }"
+    >
+      <div class="clue-text">{{ clue.clue }}</div>
+      <div class="answer-tiles">
+        <span
+          v-for="(ch, j) in clue.chunks"
+          :key="j"
+          class="answer-chunk"
+          :class="{ pending: isPending(i, j) }"
+        >{{ solvedMask[i] ? ch : '·'.repeat(ch.length) }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="input-area" :class="{ 'has-input': selectedChunks.length > 0 }">
+    <div class="input-label">{{ t('building') }}</div>
+    <div class="input-tiles">
+      <span
+        v-for="(item, i) in selectedChunks"
+        :key="i"
+        class="input-chunk"
+        @click="removeChunk(i)"
+        :title="t('clickRemove')"
+      >{{ item.text }}</span>
+      <span v-if="selectedChunks.length === 0" class="input-empty">{{ t('tapChunks') }}</span>
+    </div>
+    <button v-if="selectedChunks.length > 0" class="clear-btn" @click="clearInput">✕</button>
+  </div>
+
+  <div class="pool">
+    <button
+      v-for="(chunk, i) in poolChunks"
+      :key="i"
+      class="chunk-btn"
+      :class="{ used: chunk.used }"
+      @click="selectChunk(i)"
+    >{{ chunk.text }}</button>
+  </div>
+
+  <div class="action-row">
+    <button class="action-btn primary" @click="newGame">{{ t('newGame') }}</button>
+  </div>
+
+  <div class="timer" v-if="started">{{ t('time') }}: <span>{{ timerDisplay }}</span></div>
+
+  <canvas class="fw-canvas" ref="fwCanvas" width="1" height="1"></canvas>
+</div>
+
+<script>
+const { createApp, ref, computed, watch, onMounted, onUnmounted } = Vue;
+
+const PUZZLES = {
+  en: [
+    {
+      clues: [
+        { clue: 'Opposite of night',         answer: 'DAY' },
+        { clue: 'Capital of France',          answer: 'PARIS' },
+        { clue: 'Frozen water',               answer: 'ICE' },
+        { clue: 'Bright star at the center',  answer: 'SUN' },
+        { clue: 'A musical keyboard instrument', answer: 'PIANO' },
+        { clue: 'Fast feline predator',       answer: 'CHEETAH' },
+      ]
+    },
+    {
+      clues: [
+        { clue: 'Red fruit with seeds outside', answer: 'STRAWBERRY' },
+        { clue: 'Opposite of black',             answer: 'WHITE' },
+        { clue: 'Flying mammal',                 answer: 'BAT' },
+        { clue: 'Ocean in motion',               answer: 'WAVE' },
+        { clue: 'Written message sent online',   answer: 'EMAIL' },
+        { clue: 'Shape with three sides',        answer: 'TRIANGLE' },
+      ]
+    },
+    {
+      clues: [
+        { clue: 'Month after March',            answer: 'APRIL' },
+        { clue: 'Largest planet',               answer: 'JUPITER' },
+        { clue: 'Baby cat',                     answer: 'KITTEN' },
+        { clue: 'Type of metal, atomic number 26', answer: 'IRON' },
+        { clue: 'Sport played on ice with a puck', answer: 'HOCKEY' },
+        { clue: 'Round citrus fruit',           answer: 'ORANGE' },
+      ]
+    },
+    {
+      clues: [
+        { clue: 'Tallest animal on Earth',      answer: 'GIRAFFE' },
+        { clue: 'Country shaped like a boot',   answer: 'ITALY' },
+        { clue: 'Liquid that covers 70% of Earth', answer: 'WATER' },
+        { clue: 'Device for telling time',      answer: 'CLOCK' },
+        { clue: 'Seven days',                   answer: 'WEEK' },
+        { clue: 'Tool for writing on paper',    answer: 'PENCIL' },
+      ]
+    },
+    {
+      clues: [
+        { clue: 'Flying reptile from prehistory',  answer: 'DRAGON' },
+        { clue: 'Number of days in a year',        answer: 'THREESIXTYFIVE' },
+        { clue: 'Loud sound during a storm',       answer: 'THUNDER' },
+        { clue: 'To cook in hot oil',              answer: 'FRY' },
+        { clue: 'Planet with rings',               answer: 'SATURN' },
+        { clue: 'National language of Brazil',     answer: 'PORTUGUESE' },
+      ]
+    },
+  ],
+  he: [
+    {
+      clues: [
+        { clue: 'הפוך ללילה',             answer: 'יום' },
+        { clue: 'עיר הבירה של ישראל',     answer: 'ירושלים' },
+        { clue: 'מים קפואים',             answer: 'קרח' },
+        { clue: 'כוכב אור גדול במרכז',    answer: 'שמש' },
+        { clue: 'כלי נגינה עם קלידים',    answer: 'פסנתר' },
+        { clue: 'חיה הכי מהירה ביבשה',    answer: 'צ׳יטה' },
+      ]
+    },
+    {
+      clues: [
+        { clue: 'פרי אדום עם זרעים מבחוץ', answer: 'תות' },
+        { clue: 'הפוך לשחור',              answer: 'לבן' },
+        { clue: 'יונק מעופף',              answer: 'עטלף' },
+        { clue: 'תנועת ים',                answer: 'גל' },
+        { clue: 'הודעה שנשלחת ברשת',       answer: 'דואל' },
+        { clue: 'צורה עם שלושה צלעות',     answer: 'משולש' },
+      ]
+    },
+    {
+      clues: [
+        { clue: 'החודש אחרי מרץ',          answer: 'אפריל' },
+        { clue: 'הכוכב לכת הגדול ביותר',   answer: 'צדק' },
+        { clue: 'גור חתול',                answer: 'גורגור' },
+        { clue: 'מתכת, מספר אטומי 26',     answer: 'ברזל' },
+        { clue: 'ספורט עם דיסק על קרח',    answer: 'הוקי' },
+        { clue: 'פרי הדר עגול וכתום',      answer: 'תפוז' },
+      ]
+    },
+  ],
+  es: [
+    {
+      clues: [
+        { clue: 'Lo contrario de la noche',       answer: 'DIA' },
+        { clue: 'Capital de Francia',              answer: 'PARIS' },
+        { clue: 'Agua congelada',                  answer: 'HIELO' },
+        { clue: 'Estrella en el centro del sistema solar', answer: 'SOL' },
+        { clue: 'Instrumento musical con teclas',  answer: 'PIANO' },
+        { clue: 'El felino más rápido del mundo',  answer: 'GUEPARDO' },
+      ]
+    },
+    {
+      clues: [
+        { clue: 'Fruta roja con semillas por fuera', answer: 'FRESA' },
+        { clue: 'Lo contrario de negro',             answer: 'BLANCO' },
+        { clue: 'Mamífero que vuela',                answer: 'MURCIELAGO' },
+        { clue: 'Movimiento del agua del mar',       answer: 'OLA' },
+        { clue: 'Mensaje enviado por internet',      answer: 'CORREO' },
+        { clue: 'Figura con tres lados',             answer: 'TRIANGULO' },
+      ]
+    },
+    {
+      clues: [
+        { clue: 'El mes después de marzo',            answer: 'ABRIL' },
+        { clue: 'El planeta más grande',              answer: 'JUPITER' },
+        { clue: 'Cría de gato',                       answer: 'GATITO' },
+        { clue: 'Metal, número atómico 26',           answer: 'HIERRO' },
+        { clue: 'Deporte sobre hielo con un disco',   answer: 'HOCKEY' },
+        { clue: 'Fruta cítrica redonda y naranja',    answer: 'NARANJA' },
+      ]
+    },
+    {
+      clues: [
+        { clue: 'Animal más alto del planeta',        answer: 'JIRAFA' },
+        { clue: 'País con forma de bota',             answer: 'ITALIA' },
+        { clue: 'Líquido que cubre el 70% de la Tierra', answer: 'AGUA' },
+        { clue: 'Aparato para medir el tiempo',       answer: 'RELOJ' },
+        { clue: 'Siete días',                         answer: 'SEMANA' },
+        { clue: 'Herramienta para escribir en papel', answer: 'LAPIZ' },
+      ]
+    },
+  ],
+};
+
+function chunkWord(word) {
+  const chunks = [];
+  let i = 0;
+  while (i < word.length) {
+    const remaining = word.length - i;
+    if (remaining <= 3) {
+      chunks.push(word.slice(i));
+      break;
+    }
+    // prefer 2 or 3 chars; use 3 if remaining is odd to avoid 1-char tail
+    const size = (remaining % 2 === 1 && remaining > 3) ? 3 : 2;
+    chunks.push(word.slice(i, i + size));
+    i += size;
+  }
+  return chunks;
+}
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+createApp({
+  setup() {
+    const lang = ref(localStorage.getItem('splice-lang') || 'en');
+    const isRTL = computed(() => lang.value === 'he');
+
+    const I18N = {
+      en: {
+        back: 'Games', subtitle: 'Build each answer from the scrambled chunks',
+        puzzle: 'Puzzle', building: 'Building:', tapChunks: 'tap chunks below…',
+        clickRemove: 'click to remove', newGame: 'New Puzzle',
+        time: 'Time', correct: '✓ Correct!', wrong: '✗ Try again',
+        win: '🎉 Solved!', idle: 'Tap a chunk to start',
+      },
+      he: {
+        back: 'משחקים', subtitle: 'בנה כל תשובה מהחלקים המעורבבים',
+        puzzle: 'חידה', building: 'בונה:', tapChunks: 'לחץ על חלקים למטה…',
+        clickRemove: 'לחץ להסרה', newGame: 'חידה חדשה',
+        time: 'זמן', correct: '✓ נכון!', wrong: '✗ נסה שוב',
+        win: '🎉 פתרת!', idle: 'לחץ על חלק להתחלה',
+      },
+      es: {
+        back: 'Juegos', subtitle: 'Construye cada respuesta con los fragmentos',
+        puzzle: 'Puzzle', building: 'Construyendo:', tapChunks: 'toca fragmentos abajo…',
+        clickRemove: 'clic para quitar', newGame: 'Puzzle Nuevo',
+        time: 'Tiempo', correct: '✓ ¡Correcto!', wrong: '✗ Inténtalo de nuevo',
+        win: '🎉 ¡Resuelto!', idle: 'Toca un fragmento',
+      },
+    };
+
+    const t = key => I18N[lang.value][key] || key;
+
+    const puzzleIdx = ref(0);
+    const puzzles = computed(() => PUZZLES[lang.value]);
+
+    // build puzzle state from raw clues
+    function buildPuzzleState(rawClues) {
+      const clues = rawClues.map(c => ({
+        clue: c.clue,
+        answer: c.answer,
+        chunks: chunkWord(c.answer),
+      }));
+      // pool: flat list of {text, clueIdx, chunkIdx, used}
+      const allChunks = [];
+      clues.forEach((cl, ci) => {
+        cl.chunks.forEach((ch, ji) => {
+          allChunks.push({ text: ch, clueIdx: ci, chunkIdx: ji, used: false });
+        });
+      });
+      return { clues, pool: shuffle(allChunks) };
+    }
+
+    const puzzleState = ref(null);
+    const solvedMask = ref([]);
+    const selectedChunks = ref([]); // [{text, poolIdx}]
+    const activeClue = ref(null);
+    const statusMsg = ref('');
+    const statusClass = ref('idle');
+    const started = ref(false);
+    const elapsed = ref(0);
+    let timerInterval = null;
+    const fwCanvas = ref(null);
+
+    function loadPuzzle() {
+      const raw = puzzles.value[puzzleIdx.value];
+      puzzleState.value = buildPuzzleState(raw.clues);
+      solvedMask.value = raw.clues.map(() => false);
+      selectedChunks.value = [];
+      activeClue.value = null;
+      setStatus('idle');
+      started.value = false;
+      elapsed.value = 0;
+      clearInterval(timerInterval);
+    }
+
+    function setStatus(type, msg) {
+      statusClass.value = type;
+      statusMsg.value = msg || t(type);
+    }
+
+    const poolChunks = computed(() => puzzleState.value?.pool || []);
+
+    const currentPuzzle = computed(() => {
+      return puzzleState.value || { clues: [] };
+    });
+
+    const timerDisplay = computed(() => {
+      const m = Math.floor(elapsed.value / 60);
+      const s = elapsed.value % 60;
+      return `${m}:${String(s).padStart(2, '0')}`;
+    });
+
+    function isPending(clueIdx, chunkIdx) {
+      return selectedChunks.value.some(s => {
+        const pc = poolChunks.value[s.poolIdx];
+        return pc && pc.clueIdx === clueIdx && pc.chunkIdx === chunkIdx;
+      });
+    }
+
+    function selectChunk(i) {
+      const chunk = poolChunks.value[i];
+      if (chunk.used) return;
+
+      if (!started.value) {
+        started.value = true;
+        timerInterval = setInterval(() => elapsed.value++, 1000);
+      }
+
+      selectedChunks.value.push({ text: chunk.text, poolIdx: i });
+      chunk.used = true;
+      setStatus('idle');
+
+      // auto-check: try to match against any unsolved clue
+      tryMatch();
+    }
+
+    function removeChunk(i) {
+      const item = selectedChunks.value[i];
+      poolChunks.value[item.poolIdx].used = false;
+      selectedChunks.value.splice(i, 1);
+    }
+
+    function clearInput() {
+      selectedChunks.value.forEach(item => {
+        poolChunks.value[item.poolIdx].used = false;
+      });
+      selectedChunks.value = [];
+      activeClue.value = null;
+    }
+
+    function tryMatch() {
+      const typed = selectedChunks.value.map(s => s.text).join('');
+      const clues = currentPuzzle.value.clues;
+
+      for (let i = 0; i < clues.length; i++) {
+        if (solvedMask.value[i]) continue;
+        if (typed === clues[i].answer) {
+          solvedMask.value[i] = true;
+          selectedChunks.value = [];
+          activeClue.value = null;
+
+          if (solvedMask.value.every(Boolean)) {
+            clearInterval(timerInterval);
+            setStatus('win', t('win'));
+            launchFireworks();
+          } else {
+            setStatus('correct', t('correct'));
+            setTimeout(() => setStatus('idle'), 1200);
+          }
+          return;
+        }
+        // partial prefix match — highlight that clue
+        if (clues[i].answer.startsWith(typed)) {
+          activeClue.value = i;
+          setStatus('idle');
+          return;
+        }
+      }
+
+      // no match and no prefix — if typed length >= longest possible answer, flag wrong
+      const maxLen = Math.max(...clues.filter((_, i) => !solvedMask.value[i]).map(c => c.answer.length));
+      if (typed.length >= maxLen) {
+        setStatus('wrong', t('wrong'));
+        setTimeout(() => {
+          clearInput();
+          setStatus('idle');
+        }, 800);
+      } else {
+        activeClue.value = null;
+      }
+    }
+
+    function newGame() {
+      puzzleIdx.value = (puzzleIdx.value + 1) % puzzles.value.length;
+      loadPuzzle();
+    }
+
+    function prevPuzzle() {
+      if (puzzleIdx.value > 0) { puzzleIdx.value--; loadPuzzle(); }
+    }
+    function nextPuzzle() {
+      if (puzzleIdx.value < puzzles.value.length - 1) { puzzleIdx.value++; loadPuzzle(); }
+    }
+
+    function setLang(l) {
+      lang.value = l;
+      localStorage.setItem('splice-lang', l);
+      puzzleIdx.value = 0;
+      loadPuzzle();
+    }
+
+    // ── Fireworks ────────────────────────────────────────────────────
+    function launchFireworks() {
+      const canvas = fwCanvas.value;
+      if (!canvas) return;
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      const ctx = canvas.getContext('2d');
+      const palette = ['#38bdf8','#818cf8','#34d399','#f472b6','#fbbf24','#a5f3fc'];
+      const particles = [];
+
+      for (let b = 0; b < 6; b++) {
+        const cx = Math.random() * canvas.width;
+        const cy = Math.random() * canvas.height * 0.6;
+        for (let i = 0; i < 60; i++) {
+          const angle = (Math.PI * 2 * i) / 60;
+          const speed = 2 + Math.random() * 4;
+          particles.push({
+            x: cx, y: cy,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            alpha: 1,
+            color: palette[Math.floor(Math.random() * palette.length)],
+          });
+        }
+      }
+
+      let frame;
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => {
+          p.x += p.vx; p.y += p.vy; p.vy += 0.07; p.alpha -= 0.016;
+          ctx.globalAlpha = Math.max(0, p.alpha);
+          ctx.fillStyle = p.color;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+          ctx.fill();
+        });
+        if (particles.some(p => p.alpha > 0)) {
+          frame = requestAnimationFrame(draw);
+        } else {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+      }
+      frame = requestAnimationFrame(draw);
+    }
+
+    onMounted(loadPuzzle);
+    onUnmounted(() => clearInterval(timerInterval));
+
+    return {
+      lang, isRTL, t, puzzleIdx, puzzles,
+      currentPuzzle, poolChunks, solvedMask,
+      selectedChunks, activeClue, statusMsg, statusClass,
+      started, timerDisplay, fwCanvas,
+      isPending, selectChunk, removeChunk, clearInput,
+      newGame, prevPuzzle, nextPuzzle, setLang,
+    };
+  }
+}).mount('#app');
+</script>
+</body>
+</html>
