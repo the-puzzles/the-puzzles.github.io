@@ -48,7 +48,7 @@ h1 {
 .status-bar.idle    { color: #444c56; }
 .status-bar.correct { color: #38bdf8; }
 .status-bar.win     { color: #34d399; }
-.puzzle-nav { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.puzzle-nav { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; direction: ltr; }
 .nav-btn {
   background: #161b22; border: 1px solid #30363d; color: #6e7681;
   border-radius: 8px; padding: 5px 12px; font-size: .82rem; font-weight: 700;
@@ -127,9 +127,9 @@ h1 {
   <div class="status-bar" :class="statusClass">{{ statusMsg }}</div>
 
   <div class="puzzle-nav">
-    <button class="nav-btn" @click="prevPuzzle" :disabled="puzzleIdx === 0">{{ isRTL ? '›' : '‹' }}</button>
-    <div class="puzzle-num">{{ t('puzzle') }} <span dir="ltr">{{ puzzleIdx + 1 }} / {{ puzzles.length }}</span></div>
-    <button class="nav-btn" @click="nextPuzzle" :disabled="puzzleIdx === puzzles.length - 1">{{ isRTL ? '‹' : '›' }}</button>
+    <button class="nav-btn" @click="prevPuzzle" :disabled="puzzleIdx === 0">‹</button>
+    <div class="puzzle-num">{{ t('puzzle') }} {{ puzzleIdx + 1 }} / {{ puzzles.length }}</div>
+    <button class="nav-btn" @click="nextPuzzle" :disabled="puzzleIdx === puzzles.length - 1">›</button>
   </div>
 
   <svg viewBox="0 0 300 300" class="board">
@@ -153,11 +153,7 @@ h1 {
     {{ path.length === 0 ? t('tapNode') : currentWord }}
   </div>
 
-  <div class="progress">
-    {{ found.length }} {{ t('words') }} ·
-    <span v-if="!won">{{ t('goal').replace('{n}', puzzle.min) }}</span>
-    <span v-else>{{ t('goalReached') }}</span>
-  </div>
+  <div class="progress" :dir="isRTL ? 'rtl' : 'ltr'">{{ progressLine }}</div>
 
   <div class="found-list">
     <span v-for="w in found" :key="w" class="found-word" :dir="isRTL ? 'rtl' : 'ltr'">{{ w }}</span>
@@ -343,7 +339,14 @@ createApp({
 
     onMounted(loadPuzzle);
 
-    return { lang, isRTL, t, puzzles, puzzleIdx, puzzle, path, found, statusMsg, statusClass, won, fwCanvas, currentWord, allEdges, npos, nodeClass, tap, clearPath, prevPuzzle, nextPuzzle, newGame, setLang };
+    const progressLine = computed(() => {
+      const n = found.value.length;
+      const min = puzzle.value.min;
+      const suffix = won.value ? t('goalReached') : t('goal').replace('{n}', min);
+      return `${n} ${t('words')} · ${suffix}`;
+    });
+
+    return { lang, isRTL, t, puzzles, puzzleIdx, puzzle, path, found, statusMsg, statusClass, won, fwCanvas, currentWord, allEdges, npos, nodeClass, tap, clearPath, prevPuzzle, nextPuzzle, newGame, setLang, progressLine };
   }
 }).mount('#app');
 </script>
