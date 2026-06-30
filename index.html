@@ -6,359 +6,95 @@
 <title>Puzzle Games</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0d1117">
-<link rel="apple-touch-icon" href="icon.svg">
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
+[v-cloak] { display: none; }
 
 body {
   font-family: 'Segoe UI', system-ui, sans-serif;
-  background: #0d1117;
-  color: #c9d1d9;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 48px 20px 64px;
+  background: #0d1117; color: #c9d1d9;
+  min-height: 100vh; display: flex; flex-direction: column;
+  align-items: center; padding: 48px 20px 64px;
 }
 
-/* ── Header ─────────────────────────────────────────────────────────── */
-header {
-  text-align: center;
-  margin-bottom: 56px;
+header { text-align: center; margin-bottom: 56px; }
+.site-title { font-size: 3rem; font-weight: 900; letter-spacing: .06em; color: #e6edf3; margin-bottom: 10px; }
+.site-sub { color: #6e7681; font-size: 1rem; max-width: 420px; margin: 0 auto; line-height: 1.6; }
+.how-link {
+  display: inline-block; margin-top: 12px; font-size: .82rem; color: #6e7681;
+  text-decoration: none; border: 1px solid #30363d; border-radius: 6px; padding: 5px 12px;
+  transition: color .15s, border-color .15s;
 }
+.how-link:hover { color: #c9d1d9; border-color: #6e7681; }
 
-.site-title {
-  font-size: 3rem;
-  font-weight: 900;
-  letter-spacing: 0.06em;
-  color: #e6edf3;
-  margin-bottom: 10px;
-}
-
-.site-sub {
-  color: #6e7681;
-  font-size: 1rem;
-  max-width: 420px;
-  margin: 0 auto;
-  line-height: 1.6;
-}
-
-/* ── Category sections ───────────────────────────────────────────────── */
-.categories {
-  display: flex;
-  flex-direction: column;
-  gap: 48px;
-  max-width: 860px;
-  width: 100%;
-}
+.categories { display: flex; flex-direction: column; gap: 48px; max-width: 860px; width: 100%; }
 .category-label {
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: #444c56;
-  margin-bottom: 16px;
+  font-size: .7rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
+  color: #444c56; margin-bottom: 16px;
 }
-.cards {
-  display: flex;
-  gap: 28px;
-  flex-wrap: wrap;
-  justify-content: center;
-  width: 100%;
-}
+.cards { display: flex; gap: 28px; flex-wrap: wrap; justify-content: center; width: 100%; }
 
+/* ── Card ──────────────────────────────────────────────────────────── */
 .card {
-  background: #161b22;
-  border: 2px solid #30363d;
-  border-radius: 16px;
-  padding: 28px 28px 24px;
-  width: 380px;
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-  transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
-  text-decoration: none;
-  color: inherit;
+  background: #161b22; border: 2px solid #30363d; border-radius: 16px;
+  padding: 28px 28px 24px; width: 380px; display: flex; flex-direction: column;
+  gap: 18px; transition: border-color .2s, transform .2s, box-shadow .2s;
+  text-decoration: none; color: inherit;
 }
-
 .card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+  border-color: var(--accent);
+  box-shadow: 0 12px 40px var(--shadow);
 }
-
-.card.chromino:hover  { border-color: #58a6ff; box-shadow: 0 12px 40px rgba(88,166,255,0.15); }
-.card.tessera:hover   { border-color: #f7971e; box-shadow: 0 12px 40px rgba(247,151,30,0.15); }
-.card.colorku:hover   { border-color: #c084fc; box-shadow: 0 12px 40px rgba(192,132,252,0.15); }
-.card.outlines:hover    { border-color: #34d399; box-shadow: 0 12px 40px rgba(52,211,153,0.15); }
-.card.wordsearch:hover  { border-color: #fb923c; box-shadow: 0 12px 40px rgba(251,146,60,0.15); }
-.card.xo:hover          { border-color: #f43f5e; box-shadow: 0 12px 40px rgba(244,63,94,0.15); }
-.card.sprouts:hover     { border-color: #10b981; box-shadow: 0 12px 40px rgba(16,185,129,0.15); }
-.card.morris:hover      { border-color: #8b5cf6; box-shadow: 0 12px 40px rgba(139,92,246,0.15); }
-.card.squava:hover      { border-color: #f59e0b; box-shadow: 0 12px 40px rgba(245,158,11,0.15); }
-.card.fourinrow:hover   { border-color: #ef4444; box-shadow: 0 12px 40px rgba(239,68,68,0.15); }
-.card.dotsboxes:hover   { border-color: #38bdf8; box-shadow: 0 12px 40px rgba(56,189,248,0.15); }
-.card.morse:hover       { border-color: #fbbf24; box-shadow: 0 12px 40px rgba(251,191,36,0.15); }
-.card.wordladder:hover  { border-color: #22d3ee; box-shadow: 0 12px 40px rgba(34,211,238,0.15); }
-.card.braille:hover     { border-color: #a78bfa; box-shadow: 0 12px 40px rgba(167,139,250,0.15); }
-.card.woodoku:hover     { border-color: #a3e635; box-shadow: 0 12px 40px rgba(163,230,53,0.15); }
-.card.frogstoads:hover  { border-color: #4ade80; box-shadow: 0 12px 40px rgba(74,222,128,0.15); }
-.card.reversi:hover     { border-color: #a78bfa; box-shadow: 0 12px 40px rgba(167,139,250,0.15); }
-
-/* ── Card header ─────────────────────────────────────────────────────── */
 .card-header { display: flex; align-items: center; gap: 14px; }
-
 .card-icon {
-  width: 44px; height: 44px;
-  border-radius: 10px;
+  width: 44px; height: 44px; border-radius: 10px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 1.4rem;
-  flex-shrink: 0;
+  font-size: 1.4rem; flex-shrink: 0;
+  background: var(--icon-bg);
 }
-.chromino .card-icon { background: #1c2a3e; }
-.tessera  .card-icon { background: #1f1a0e; }
-.colorku  .card-icon { background: #21103a; }
-.outlines .card-icon  { background: #0d2a1e; }
-.wordsearch .card-icon { background: #1f1010; }
-.morse      .card-icon { background: #1c1a10; }
-.wordladder .card-icon { background: #0c1e24; }
-.braille    .card-icon { background: #1e1528; }
-.xo         .card-icon { background: #1a0d0f; }
-.sprouts    .card-icon { background: #091c14; }
-.morris     .card-icon { background: #120d1f; }
-.squava     .card-icon { background: #1a1400; }
-.fourinrow  .card-icon { background: #450a0a; }
-.dotsboxes  .card-icon { background: #0c1e2e; }
-.woodoku    .card-icon { background: #0d1f05; }
-.frogstoads .card-icon { background: #0d2010; }
-.reversi    .card-icon { background: #160a2a; }
-
 .card-title {
-  font-size: 1.5rem;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-}
-.chromino .card-title {
-  background: linear-gradient(135deg, #58a6ff, #a5d6ff);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-.tessera .card-title {
-  background: linear-gradient(135deg, #f7971e, #ffd200);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-.colorku .card-title {
-  background: linear-gradient(135deg, #c084fc, #f472b6);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-.outlines .card-title {
-  background: linear-gradient(135deg, #34d399, #06b6d4);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-.wordsearch .card-title {
-  background: linear-gradient(135deg, #fb923c, #f59e0b);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-.morse .card-title {
-  background: linear-gradient(135deg, #fbbf24, #fde68a);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-.wordladder .card-title {
-  background: linear-gradient(135deg, #22d3ee, #0ea5e9);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-.braille .card-title {
-  background: linear-gradient(135deg, #a78bfa, #7c3aed);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-.xo .card-title {
-  background: linear-gradient(135deg, #f43f5e, #fb923c);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-.sprouts .card-title {
-  background: linear-gradient(135deg, #10b981, #6ee7b7);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-.morris .card-title {
-  background: linear-gradient(135deg, #f97316, #8b5cf6);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-.fourinrow .card-title {
-  background: linear-gradient(135deg, #ef4444, #eab308);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-.squava .card-title {
-  background: linear-gradient(135deg, #f59e0b, #818cf8);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-.dotsboxes .card-title {
-  background: linear-gradient(135deg, #f472b6, #38bdf8);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-.woodoku .card-title {
-  background: linear-gradient(135deg, #a3e635, #fde047);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-.frogstoads .card-title {
-  background: linear-gradient(135deg, #4ade80, #fb923c);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-.reversi .card-title {
-  background: linear-gradient(135deg, #a78bfa, #e879f9);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  font-size: 1.5rem; font-weight: 800; letter-spacing: .06em;
+  background: var(--gradient);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
 }
 
-/* ── Preview board ───────────────────────────────────────────────────── */
+/* ── Preview ───────────────────────────────────────────────────────── */
 .preview {
-  border: 2px solid #21262d;
-  border-radius: 10px;
-  overflow: hidden;
-  background: #0d1117;
-  display: inline-grid;
-  align-self: center;
+  border: 2px solid #21262d; border-radius: 10px; overflow: hidden;
+  background: #0d1117; display: inline-grid; align-self: center;
 }
-
 .preview-cell {
-  width: 36px; height: 36px;
-  display: flex; align-items: center; justify-content: center;
-  border: 1px solid #21262d;
-  position: relative;
+  width: 36px; height: 36px; display: flex; align-items: center;
+  justify-content: center; border: 1px solid #21262d; position: relative;
 }
-
 .preview-dot {
-  width: 14px; height: 14px;
-  border-radius: 50%;
-  border: 1.5px solid rgba(255,255,255,0.3);
+  width: 14px; height: 14px; border-radius: 50%;
+  border: 1.5px solid rgba(255,255,255,.3);
 }
 
-/* ── Card body ───────────────────────────────────────────────────────── */
-.card-tagline {
-  font-size: 0.88rem;
-  color: #8b949e;
-  line-height: 1.6;
-}
+/* ── Card body ─────────────────────────────────────────────────────── */
+.card-tagline { font-size: .88rem; color: #8b949e; line-height: 1.6; }
+.card-rules { display: flex; flex-direction: column; gap: 6px; }
+.rule { display: flex; align-items: flex-start; gap: 8px; font-size: .82rem; color: #6e7681; line-height: 1.5; }
+.rule-dot { width: 6px; height: 6px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; background: var(--accent); }
 
-.card-rules {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.rule {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  font-size: 0.82rem;
-  color: #6e7681;
-  line-height: 1.5;
-}
-
-.rule-dot {
-  width: 6px; height: 6px;
-  border-radius: 50%;
-  margin-top: 5px;
-  flex-shrink: 0;
-}
-.chromino .rule-dot { background: #58a6ff; }
-.tessera  .rule-dot { background: #f7971e; }
-.colorku  .rule-dot { background: #c084fc; }
-.outlines    .rule-dot { background: #34d399; }
-.wordsearch  .rule-dot { background: #fb923c; }
-.morse       .rule-dot { background: #fbbf24; }
-.wordladder  .rule-dot { background: #22d3ee; }
-.braille     .rule-dot { background: #a78bfa; }
-.xo          .rule-dot { background: #f43f5e; }
-.sprouts     .rule-dot { background: #10b981; }
-.morris      .rule-dot { background: #8b5cf6; }
-.squava      .rule-dot { background: #f59e0b; }
-.fourinrow   .rule-dot { background: #ef4444; }
-.dotsboxes   .rule-dot { background: #38bdf8; }
-.woodoku     .rule-dot { background: #a3e635; }
-.frogstoads  .rule-dot { background: #4ade80; }
-.reversi     .rule-dot { background: #a78bfa; }
-
-/* ── Play button ─────────────────────────────────────────────────────── */
+/* ── Play button ───────────────────────────────────────────────────── */
 .play-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 12px 20px;
-  border-radius: 10px;
-  font-size: 0.9rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  border: none;
-  cursor: pointer;
-  text-decoration: none;
-  transition: opacity 0.15s, transform 0.1s;
-  margin-top: 4px;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 12px 20px; border-radius: 10px; font-size: .9rem; font-weight: 700;
+  letter-spacing: .04em; border: 1px solid var(--accent); cursor: pointer;
+  text-decoration: none; transition: opacity .15s, transform .1s; margin-top: 4px;
+  background: var(--btn-bg); color: var(--btn-color);
 }
-.play-btn:hover  { opacity: 0.88; transform: translateY(-1px); }
+.play-btn:hover { opacity: .88; transform: translateY(-1px); }
 .play-btn:active { transform: translateY(0); }
+.play-arrow { font-size: 1rem; transition: transform .15s; }
+.card:hover .play-arrow { transform: translateX(3px); }
 
-.chromino .play-btn { background: #1f6feb; color: #fff; }
-.tessera  .play-btn { background: #9a5c00; color: #ffd200; border: 1px solid #f7971e; }
-.colorku  .play-btn { background: #5b21b6; color: #e9d5ff; border: 1px solid #c084fc; }
-.outlines    .play-btn { background: #0d3d2a; color: #34d399; border: 1px solid #34d399; }
-.wordsearch  .play-btn { background: #7c2d00; color: #fb923c; border: 1px solid #fb923c; }
-.morse       .play-btn { background: #92400e; color: #fbbf24; border: 1px solid #fbbf24; }
-.wordladder  .play-btn { background: #0c2233; color: #22d3ee; border: 1px solid #22d3ee; }
-.braille     .play-btn { background: #2e1065; color: #a78bfa; border: 1px solid #a78bfa; }
-.xo          .play-btn { background: #1a0d0f; color: #f472b6; border: 1px solid #f43f5e; }
-.sprouts     .play-btn { background: #091c14; color: #34d399; border: 1px solid #10b981; }
-.morris      .play-btn { background: #120d1f; color: #a78bfa; border: 1px solid #8b5cf6; }
-.squava      .play-btn { background: #1a1400; color: #fbbf24; border: 1px solid #f59e0b; }
-.fourinrow   .play-btn { background: #450a0a; color: #fca5a5; border: 1px solid #ef4444; }
-.dotsboxes   .play-btn { background: #0c1e2e; color: #7dd3fc; border: 1px solid #38bdf8; }
-.woodoku     .play-btn { background: #0d1f05; color: #a3e635; border: 1px solid #a3e635; }
-.frogstoads  .play-btn { background: #0d2010; color: #4ade80; border: 1px solid #4ade80; }
-.reversi     .play-btn { background: #160a2a; color: #c4b5fd; border: 1px solid #a78bfa; }
+footer { margin-top: 64px; color: #444c56; font-size: .78rem; text-align: center; }
 
-.play-arrow { font-size: 1rem; transition: transform 0.15s; }
-.play-btn:hover .play-arrow { transform: translateX(3px); }
-
-/* ── Footer ──────────────────────────────────────────────────────────── */
-footer {
-  margin-top: 64px;
-  color: #444c56;
-  font-size: 0.78rem;
-  text-align: center;
-}
-
-/* ── Mobile ──────────────────────────────────────────────────────────── */
 @media (max-width: 480px) {
   .site-title { font-size: 2.2rem; }
   .card { width: 100%; max-width: 400px; padding: 22px 20px 20px; }
@@ -368,803 +104,84 @@ footer {
 </style>
 </head>
 <body>
+<div id="app" v-cloak>
+  <header>
+    <div class="site-title">Puzzle Games</div>
+    <p class="site-sub">A growing collection of puzzles and classic games — word, logic, and strategy.</p>
+    <a class="how-link" href="how-to-play.html">How to Play ↗</a>
+  </header>
 
-<header>
-  <div class="site-title">Puzzle Games</div>
-  <p class="site-sub">Color-constraint tile puzzles. Place shapes to cover the board — but a shape can't touch a dot of its own color.</p>
-  <a href="how-to-play.html" style="display:inline-block;margin-top:12px;font-size:0.82rem;color:#6e7681;text-decoration:none;border:1px solid #30363d;border-radius:6px;padding:5px 12px;transition:color 0.15s,border-color 0.15s" onmouseover="this.style.color='#c9d1d9';this.style.borderColor='#6e7681'" onmouseout="this.style.color='#6e7681';this.style.borderColor='#30363d'">How to Play ↗</a>
-</header>
-
-
-<div class="categories">
-
-<!-- ── SHAPES & COLORS ───────────────────────────────────────────── -->
-<div>
-  <div class="category-label">Shapes &amp; Colors</div>
-  <div class="cards">
-
-  <!-- ── Chromino ───────────────────────────────────────────────── -->
-  <a class="card chromino" href="chromino.html">
-    <div class="card-header">
-      <div class="card-icon">🎯</div>
-      <div class="card-title">CHROMINO</div>
-    </div>
-
-    <!-- Mini board: 5×5 with a few dots and one shape overlay -->
-    <div class="preview" style="grid-template-columns: repeat(5, 36px);">
-      <!-- Row 0 -->
-      <div class="preview-cell"></div>
-      <div class="preview-cell" style="background:#3498db33"></div><!-- T shape -->
-      <div class="preview-cell" style="background:#3498db33"></div>
-      <div class="preview-cell" style="background:#3498db33"></div>
-      <div class="preview-cell"></div>
-      <!-- Row 1 -->
-      <div class="preview-cell" style="background:#3498db33"></div>
-      <div class="preview-cell" style="background:#3498db33"><div class="preview-dot" style="background:#e74c3c"></div></div><!-- blue covers red dot ✓ -->
-      <div class="preview-cell" style="background:#3498db33"></div>
-      <div class="preview-cell"></div>
-      <div class="preview-cell"></div>
-      <!-- Row 2 -->
-      <div class="preview-cell"></div>
-      <div class="preview-cell"></div>
-      <div class="preview-cell"></div>
-      <div class="preview-cell"><div class="preview-dot" style="background:#e74c3c"></div></div>
-      <div class="preview-cell"></div>
-      <!-- Row 3 -->
-      <div class="preview-cell"></div>
-      <div class="preview-cell"></div>
-      <div class="preview-cell"></div>
-      <div class="preview-cell"></div>
-      <div class="preview-cell"></div>
-      <!-- Row 4 -->
-      <div class="preview-cell"></div>
-      <div class="preview-cell"></div>
-      <div class="preview-cell"><div class="preview-dot" style="background:#3498db"></div></div>
-      <div class="preview-cell"></div>
-      <div class="preview-cell"></div>
-    </div>
-
-    <p class="card-tagline">A sparse board scattered with colored dots. Drop tetromino shapes to cover every dot — without landing on one that matches your shape's color.</p>
-
-    <div class="card-rules">
-      <div class="rule"><div class="rule-dot"></div><span>Sparse board — only some cells have dots</span></div>
-      <div class="rule"><div class="rule-dot"></div><span>Cover <em>all</em> dots using the given shapes</span></div>
-      <div class="rule"><div class="rule-dot"></div><span>A shape can't land on a dot of the same color</span></div>
-      <div class="rule"><div class="rule-dot"></div><span>6 levels · drag &amp; rotate to place</span></div>
-    </div>
-
-    <div class="play-btn">Play Chromino <span class="play-arrow">→</span></div>
-  </a>
-
-  <!-- ── Tessera ────────────────────────────────────────────────── -->
-  <a class="card tessera" href="tessera.html">
-    <div class="card-header">
-      <div class="card-icon">🧩</div>
-      <div class="card-title">TESSERA</div>
-    </div>
-
-    <!-- Mini board: 4×4 fully filled with dots and shapes -->
-    <div class="preview" style="grid-template-columns: repeat(4, 36px);">
-      <!-- Red I covers row 0 -->
-      <div class="preview-cell" style="background:#e74c3caa"><div class="preview-dot" style="background:#3498db; opacity:0.5; transform:scale(0.65)"></div></div>
-      <div class="preview-cell" style="background:#e74c3caa"><div class="preview-dot" style="background:#2ecc71; opacity:0.5; transform:scale(0.65)"></div></div>
-      <div class="preview-cell" style="background:#e74c3caa"><div class="preview-dot" style="background:#e9c46a; opacity:0.5; transform:scale(0.65)"></div></div>
-      <div class="preview-cell" style="background:#e74c3caa"><div class="preview-dot" style="background:#3498db; opacity:0.5; transform:scale(0.65)"></div></div>
-      <!-- Yellow O covers middle -->
-      <div class="preview-cell" style="background:#3498dbaa"><div class="preview-dot" style="background:#e74c3c; opacity:0.5; transform:scale(0.65)"></div></div>
-      <div class="preview-cell" style="background:#e9c46aaa"><div class="preview-dot" style="background:#3498db; opacity:0.5; transform:scale(0.65)"></div></div>
-      <div class="preview-cell" style="background:#e9c46aaa"><div class="preview-dot" style="background:#2ecc71; opacity:0.5; transform:scale(0.65)"></div></div>
-      <div class="preview-cell" style="background:#2ecc71aa"><div class="preview-dot" style="background:#e74c3c; opacity:0.5; transform:scale(0.65)"></div></div>
-      <div class="preview-cell" style="background:#3498dbaa"><div class="preview-dot" style="background:#2ecc71; opacity:0.5; transform:scale(0.65)"></div></div>
-      <div class="preview-cell" style="background:#e9c46aaa"><div class="preview-dot" style="background:#e74c3c; opacity:0.5; transform:scale(0.65)"></div></div>
-      <div class="preview-cell" style="background:#e9c46aaa"><div class="preview-dot" style="background:#3498db; opacity:0.5; transform:scale(0.65)"></div></div>
-      <div class="preview-cell" style="background:#2ecc71aa"><div class="preview-dot" style="background:#e9c46a; opacity:0.5; transform:scale(0.65)"></div></div>
-      <!-- Blue L + Green J cover bottom -->
-      <div class="preview-cell" style="background:#3498dbaa"><div class="preview-dot" style="background:#2ecc71; opacity:0.5; transform:scale(0.65)"></div></div>
-      <div class="preview-cell" style="background:#3498dbaa"><div class="preview-dot" style="background:#e74c3c; opacity:0.5; transform:scale(0.65)"></div></div>
-      <div class="preview-cell" style="background:#2ecc71aa"><div class="preview-dot" style="background:#3498db; opacity:0.5; transform:scale(0.65)"></div></div>
-      <div class="preview-cell" style="background:#2ecc71aa"><div class="preview-dot" style="background:#e74c3c; opacity:0.5; transform:scale(0.65)"></div></div>
-    </div>
-
-    <p class="card-tagline">Every cell on the board holds a colored dot. Fill the board completely with tetromino shapes — without placing a shape on a dot of its own color.</p>
-
-    <div class="card-rules">
-      <div class="rule"><div class="rule-dot"></div><span>Full board — every cell has a dot</span></div>
-      <div class="rule"><div class="rule-dot"></div><span>Tile the <em>entire</em> board with no gaps</span></div>
-      <div class="rule"><div class="rule-dot"></div><span>A shape can't land on a dot of the same color</span></div>
-      <div class="rule"><div class="rule-dot"></div><span>6 levels · drag &amp; rotate to place</span></div>
-    </div>
-
-    <div class="play-btn">Play Tessera <span class="play-arrow">→</span></div>
-  </a>
-
-  <!-- ── Colorku ───────────────────────────────────────────────── -->
-  <a class="card colorku" href="colorku.html">
-    <div class="card-header">
-      <div class="card-icon">🎨</div>
-      <div class="card-title">COLORKU</div>
-    </div>
-
-    <!-- Mini preview: 3×3 grid with colored circles -->
-    <div class="preview" style="grid-template-columns: repeat(3, 36px);">
-      <div class="preview-cell" style="background:#191f2a"><div class="preview-dot" style="background:#e74c3c"></div></div>
-      <div class="preview-cell"><div class="preview-dot" style="background:#3498db"></div></div>
-      <div class="preview-cell" style="background:#191f2a"><div class="preview-dot" style="background:#2ecc71"></div></div>
-      <div class="preview-cell"><div class="preview-dot" style="background:#2ecc71"></div></div>
-      <div class="preview-cell" style="background:#191f2a"><div class="preview-dot" style="background:#e74c3c"></div></div>
-      <div class="preview-cell"><div class="preview-dot" style="background:#3498db"></div></div>
-      <div class="preview-cell" style="background:#191f2a"><div class="preview-dot" style="background:#3498db"></div></div>
-      <div class="preview-cell"><div class="preview-dot" style="background:#2ecc71"></div></div>
-      <div class="preview-cell" style="background:#191f2a"><div class="preview-dot" style="background:#e74c3c"></div></div>
-    </div>
-
-    <p class="card-tagline">A colorful spin on Sudoku. Fill the grid so every color appears exactly once in each row, column, and box.</p>
-
-    <div class="card-rules">
-      <div class="rule"><div class="rule-dot"></div><span>Each color appears once per row and column</span></div>
-      <div class="rule"><div class="rule-dot"></div><span>In larger grids, each box must also have all colors</span></div>
-      <div class="rule"><div class="rule-dot"></div><span>Conflicts highlight in red as you fill</span></div>
-      <div class="rule"><div class="rule-dot"></div><span>6 levels · 3×3 up to 6×6</span></div>
-    </div>
-
-    <div class="play-btn">Play Colorku <span class="play-arrow">→</span></div>
-  </a>
-
-  <!-- ── Woodoku ───────────────────────────────────────────────── -->
-  <a class="card woodoku" href="woodoku.html">
-    <div class="card-header">
-      <div class="card-icon">▦</div>
-      <div class="card-title">WOODOKU</div>
-    </div>
-
-    <div class="preview" style="grid-template-columns: repeat(6, 36px);">
-      <div class="preview-cell" style="background:#f472b633"></div>
-      <div class="preview-cell" style="background:#f472b633"></div>
-      <div class="preview-cell" style="background:#f472b633"></div>
-      <div class="preview-cell"></div>
-      <div class="preview-cell" style="background:#60a5fa33"></div>
-      <div class="preview-cell"></div>
-      <div class="preview-cell" style="background:#f472b633"></div>
-      <div class="preview-cell"></div>
-      <div class="preview-cell"></div>
-      <div class="preview-cell" style="background:#60a5fa33"></div>
-      <div class="preview-cell" style="background:#60a5fa33"></div>
-      <div class="preview-cell" style="background:#60a5fa33"></div>
-      <div class="preview-cell"></div>
-      <div class="preview-cell"></div>
-      <div class="preview-cell" style="background:#34d39933"></div>
-      <div class="preview-cell" style="background:#34d39933"></div>
-      <div class="preview-cell"></div>
-      <div class="preview-cell"></div>
-      <div class="preview-cell" style="background:#fbbf2433"></div>
-      <div class="preview-cell" style="background:#fbbf2433"></div>
-      <div class="preview-cell" style="background:#34d39933"></div>
-      <div class="preview-cell" style="background:#34d39933"></div>
-      <div class="preview-cell"></div>
-      <div class="preview-cell"></div>
-      <div class="preview-cell" style="background:#fbbf2433"></div>
-      <div class="preview-cell"></div>
-      <div class="preview-cell"></div>
-      <div class="preview-cell"></div>
-      <div class="preview-cell" style="background:#a78bfa33"></div>
-      <div class="preview-cell" style="background:#a78bfa33"></div>
-      <div class="preview-cell"></div>
-      <div class="preview-cell"></div>
-      <div class="preview-cell"></div>
-      <div class="preview-cell"></div>
-      <div class="preview-cell" style="background:#a78bfa33"></div>
-      <div class="preview-cell"></div>
-    </div>
-
-    <p class="card-tagline">Tetris-style blocks meet Sudoku. Fill rows, columns, and 3×3 boxes to clear them — and chain clears for big scores.</p>
-
-    <div class="card-rules">
-      <div class="rule"><div class="rule-dot"></div><span>Pick one of 3 blocks and click the board to place it</span></div>
-      <div class="rule"><div class="rule-dot"></div><span>Complete a row, column, or 3×3 box to clear it</span></div>
-      <div class="rule"><div class="rule-dot"></div><span>Clear multiple lines at once for bonus points</span></div>
-      <div class="rule"><div class="rule-dot"></div><span>Game ends when no block fits anywhere on the board</span></div>
-    </div>
-
-    <div class="play-btn">Play Woodoku <span class="play-arrow">→</span></div>
-  </a>
-
-  </div><!-- /cards shapes -->
-</div><!-- /category shapes -->
-
-<!-- ── GEOGRAPHY ─────────────────────────────────────────────────── -->
-<div>
-  <div class="category-label">Geography</div>
-  <div class="cards">
-
-  <!-- ── Outlines ──────────────────────────────────────────────── -->
-  <a class="card outlines" href="outlines.html">
-    <div class="card-header">
-      <div class="card-icon">🌍</div>
-      <div class="card-title">OUTLINES</div>
-    </div>
-
-    <!-- Mini preview: simplified country silhouettes -->
-    <div class="preview" style="grid-template-columns: repeat(3, 36px); padding: 8px;">
-      <div class="preview-cell" style="grid-column:1/-1; height:72px; background:transparent; border:none; display:flex; align-items:center; justify-content:center;">
-        <svg viewBox="0 0 108 72" style="width:108px;height:72px">
-          <!-- Rough Italy shape -->
-          <path d="M38 8 L44 10 L48 16 L50 24 L46 30 L50 38 L54 50 L52 58 L56 64 L52 66 L48 60 L44 52 L40 44 L36 36 L32 28 L30 18 L32 10 Z" fill="rgba(52,211,153,0.22)" stroke="#34d399" stroke-width="1.2"/>
-          <!-- Rough France shape -->
-          <path d="M62 14 L72 12 L80 16 L82 24 L78 32 L72 36 L64 34 L58 28 L58 20 Z" fill="rgba(52,211,153,0.22)" stroke="#34d399" stroke-width="1.2"/>
-          <!-- Rough Japan islands -->
-          <path d="M88 18 L93 16 L96 20 L94 26 L90 28 L87 24 Z" fill="rgba(52,211,153,0.22)" stroke="#34d399" stroke-width="1.2"/>
-          <path d="M84 30 L88 28 L92 32 L90 38 L86 40 L82 36 Z" fill="rgba(52,211,153,0.22)" stroke="#34d399" stroke-width="1.2"/>
-        </svg>
+  <div class="categories">
+    <div v-for="cat in CATEGORIES" :key="cat.label">
+      <div class="category-label">{{ cat.label }}</div>
+      <div class="cards">
+        <a
+          v-for="g in cat.games"
+          :key="g.id"
+          class="card"
+          :href="g.href"
+          :style="{ '--accent': g.accent, '--shadow': g.shadow, '--icon-bg': g.iconBg, '--gradient': g.gradient, '--btn-bg': g.btnBg, '--btn-color': g.btnColor }"
+        >
+          <div class="card-header">
+            <div class="card-icon">{{ g.icon }}</div>
+            <div class="card-title">{{ g.title }}</div>
+          </div>
+          <div v-html="g.preview"></div>
+          <p class="card-tagline">{{ g.tagline }}</p>
+          <div class="card-rules">
+            <div v-for="rule in g.rules" class="rule">
+              <div class="rule-dot"></div>
+              <span v-html="rule"></span>
+            </div>
+          </div>
+          <div class="play-btn" v-html="g.playLabel + ' <span class=\'play-arrow\'>→</span>'"></div>
+        </a>
       </div>
     </div>
-
-    <p class="card-tagline">A country's outline appears — no labels, no context. Can you name it from its shape alone? Use hints to reveal letters.</p>
-
-    <div class="card-rules">
-      <div class="rule"><div class="rule-dot"></div><span>39 countries drawn from a shuffled pool</span></div>
-      <div class="rule"><div class="rule-dot"></div><span>Type the country name to guess</span></div>
-      <div class="rule"><div class="rule-dot"></div><span>Up to 3 hints reveal letters of the answer</span></div>
-      <div class="rule"><div class="rule-dot"></div><span>10 countries per round · scored on hints used</span></div>
-    </div>
-
-    <div class="play-btn">Play Outlines <span class="play-arrow">→</span></div>
-  </a>
-
-  </div><!-- /cards geography -->
-</div><!-- /category geography -->
-
-<!-- ── WORDS ─────────────────────────────────────────────────────── -->
-<div>
-  <div class="category-label">Words</div>
-  <div class="cards">
-
-  <!-- ── Word Search ──────────────────────────────────────────── -->
-  <a class="card wordsearch" href="wordsearch.html">
-    <div class="card-header">
-      <div class="card-icon">🔍</div>
-      <div class="card-title">WORDSEARCH</div>
-    </div>
-
-    <!-- Mini preview: tiny letter grid with some highlighted cells -->
-    <div class="preview" style="grid-template-columns: repeat(6, 36px);">
-      <div class="preview-cell" style="font-size:0.7rem;color:#6e7681">W</div>
-      <div class="preview-cell" style="font-size:0.7rem;color:#6e7681">X</div>
-      <div class="preview-cell" style="font-size:0.7rem;background:rgba(251,146,60,0.22);color:#fb923c;font-weight:700">C</div>
-      <div class="preview-cell" style="font-size:0.7rem;color:#6e7681">P</div>
-      <div class="preview-cell" style="font-size:0.7rem;color:#6e7681">A</div>
-      <div class="preview-cell" style="font-size:0.7rem;color:#6e7681">T</div>
-      <div class="preview-cell" style="font-size:0.7rem;color:#6e7681">Z</div>
-      <div class="preview-cell" style="font-size:0.7rem;color:#6e7681">K</div>
-      <div class="preview-cell" style="font-size:0.7rem;background:rgba(251,146,60,0.22);color:#fb923c;font-weight:700">A</div>
-      <div class="preview-cell" style="font-size:0.7rem;color:#6e7681">R</div>
-      <div class="preview-cell" style="font-size:0.7rem;color:#6e7681">Q</div>
-      <div class="preview-cell" style="font-size:0.7rem;color:#6e7681">M</div>
-      <div class="preview-cell" style="font-size:0.7rem;color:#6e7681">L</div>
-      <div class="preview-cell" style="font-size:0.7rem;color:#6e7681">O</div>
-      <div class="preview-cell" style="font-size:0.7rem;background:rgba(251,146,60,0.22);color:#fb923c;font-weight:700">T</div>
-      <div class="preview-cell" style="font-size:0.7rem;color:#6e7681">F</div>
-      <div class="preview-cell" style="font-size:0.7rem;color:#6e7681">B</div>
-      <div class="preview-cell" style="font-size:0.7rem;color:#6e7681">V</div>
-      <div class="preview-cell" style="font-size:0.7rem;color:#6e7681">S</div>
-      <div class="preview-cell" style="font-size:0.7rem;color:#6e7681">H</div>
-      <div class="preview-cell" style="font-size:0.7rem;background:rgba(251,146,60,0.22);color:#fb923c;font-weight:700">?</div>
-      <div class="preview-cell" style="font-size:0.7rem;color:#6e7681">G</div>
-      <div class="preview-cell" style="font-size:0.7rem;color:#6e7681">N</div>
-      <div class="preview-cell" style="font-size:0.7rem;color:#6e7681">E</div>
-    </div>
-
-    <p class="card-tagline">A letter grid hides themed words in every direction — plus one mystery word not shown in the list. Find them all to win.</p>
-
-    <div class="card-rules">
-      <div class="rule"><div class="rule-dot"></div><span>8 hidden words across 4 themed categories</span></div>
-      <div class="rule"><div class="rule-dot"></div><span>Words run in all 8 directions</span></div>
-      <div class="rule"><div class="rule-dot"></div><span>One mystery word is hidden — not shown in the list</span></div>
-      <div class="rule"><div class="rule-dot"></div><span>Available in English and Hebrew</span></div>
-    </div>
-
-    <div class="play-btn">Play Word Search <span class="play-arrow">→</span></div>
-  </a>
-
-  <!-- ── Word Ladder ─────────────────────────────────────────── -->
-  <a class="card wordladder" href="wordladder.html">
-    <div class="card-header">
-      <div class="card-icon">🪜</div>
-      <div class="card-title">WORD LADDER</div>
-    </div>
-
-    <!-- Mini preview: CAT → DOG ladder -->
-    <div class="preview" style="grid-template-columns: 1fr; padding: 14px 20px;">
-      <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
-        <div style="display:flex;gap:4px;">
-          <div style="width:28px;height:32px;border-radius:5px;background:#0d2218;border:2px solid #22c55e;display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:800;color:#22c55e">C</div>
-          <div style="width:28px;height:32px;border-radius:5px;background:#0d2218;border:2px solid #22c55e;display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:800;color:#22c55e">A</div>
-          <div style="width:28px;height:32px;border-radius:5px;background:#0d2218;border:2px solid #22c55e;display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:800;color:#22c55e">T</div>
-        </div>
-        <div style="color:#30363d;font-size:0.7rem">↓</div>
-        <div style="display:flex;gap:4px;">
-          <div style="width:28px;height:32px;border-radius:5px;background:#161b22;border:2px solid #30363d;display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:800;color:#c9d1d9">C</div>
-          <div style="width:28px;height:32px;border-radius:5px;background:#0c2233;border:2px solid #22d3ee;display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:800;color:#22d3ee">O</div>
-          <div style="width:28px;height:32px;border-radius:5px;background:#161b22;border:2px solid #30363d;display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:800;color:#c9d1d9">T</div>
-        </div>
-        <div style="color:#30363d;font-size:0.7rem">↓</div>
-        <div style="display:flex;gap:4px;">
-          <div style="width:28px;height:32px;border-radius:5px;background:#161b22;border:2px solid #30363d;display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:800;color:#c9d1d9">C</div>
-          <div style="width:28px;height:32px;border-radius:5px;background:#161b22;border:2px solid #30363d;display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:800;color:#c9d1d9">O</div>
-          <div style="width:28px;height:32px;border-radius:5px;background:#0c2233;border:2px solid #22d3ee;display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:800;color:#22d3ee">G</div>
-        </div>
-        <div style="color:#30363d;font-size:0.7rem">↓</div>
-        <div style="display:flex;gap:4px;">
-          <div style="width:28px;height:32px;border-radius:5px;background:#0c2233;border:2px solid #22d3ee;display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:800;color:#7dd3fc">D</div>
-          <div style="width:28px;height:32px;border-radius:5px;background:#0c2233;border:2px solid #22d3ee;display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:800;color:#7dd3fc">O</div>
-          <div style="width:28px;height:32px;border-radius:5px;background:#0c2233;border:2px solid #22d3ee;display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:800;color:#7dd3fc">G</div>
-        </div>
-      </div>
-    </div>
-
-    <p class="card-tagline">Transform one word into another — one letter at a time. Every step must be a valid word.</p>
-
-    <div class="card-rules">
-      <div class="rule"><div class="rule-dot"></div><span>Change exactly one letter per step</span></div>
-      <div class="rule"><div class="rule-dot"></div><span>Every word in your chain must be valid</span></div>
-      <div class="rule"><div class="rule-dot"></div><span>8 levels · try to match or beat par</span></div>
-      <div class="rule"><div class="rule-dot"></div><span>Hints reveal the next step if you're stuck</span></div>
-    </div>
-
-    <div class="play-btn">Play Word Ladder <span class="play-arrow">→</span></div>
-  </a>
-
-  </div><!-- /cards words -->
-</div><!-- /category words -->
-
-<!-- ── CODES ──────────────────────────────────────────────────────── -->
-<div>
-  <div class="category-label">Codes</div>
-  <div class="cards">
-
-  <!-- ── Morse Code ──────────────────────────────────────────── -->
-  <a class="card morse" href="morse.html">
-    <div class="card-header">
-      <div class="card-icon">📡</div>
-      <div class="card-title">MORSE CODE</div>
-    </div>
-
-    <!-- Mini preview: lamp + dots/dashes for SOS -->
-    <div class="preview" style="grid-template-columns: 1fr; padding: 16px 12px;">
-      <div style="display:flex; flex-direction:column; align-items:center; gap:12px; width:100%;">
-        <div style="width:52px;height:52px;border-radius:50%;background:#1c1a10;border:2px solid #3a3510;box-shadow:0 0 24px 6px rgba(251,191,36,0.45);background:#fbbf24;"></div>
-        <div style="display:flex;align-items:center;gap:5px;">
-          <!-- S: ... -->
-          <div style="width:8px;height:8px;border-radius:50%;background:#fbbf24;"></div>
-          <div style="width:8px;height:8px;border-radius:50%;background:#fbbf24;"></div>
-          <div style="width:8px;height:8px;border-radius:50%;background:#fbbf24;"></div>
-          <div style="width:10px;"></div>
-          <!-- O: --- -->
-          <div style="width:22px;height:8px;border-radius:4px;background:#fbbf24;"></div>
-          <div style="width:22px;height:8px;border-radius:4px;background:#fbbf24;"></div>
-          <div style="width:22px;height:8px;border-radius:4px;background:#fbbf24;"></div>
-          <div style="width:10px;"></div>
-          <!-- S: ... -->
-          <div style="width:8px;height:8px;border-radius:50%;background:#fbbf24;"></div>
-          <div style="width:8px;height:8px;border-radius:50%;background:#fbbf24;"></div>
-          <div style="width:8px;height:8px;border-radius:50%;background:#fbbf24;"></div>
-        </div>
-      </div>
-    </div>
-
-    <p class="card-tagline">A lamp flashes dots and dashes. Decode the Morse code signal into words using the reference table.</p>
-
-    <div class="card-rules">
-      <div class="rule"><div class="rule-dot"></div><span>Watch the lamp flash — short blinks are dots, long are dashes</span></div>
-      <div class="rule"><div class="rule-dot"></div><span>Use the built-in reference table to decode</span></div>
-      <div class="rule"><div class="rule-dot"></div><span>8 campaign levels · speed control</span></div>
-      <div class="rule"><div class="rule-dot"></div><span>Hints reveal first letter or word count</span></div>
-    </div>
-
-    <div class="play-btn">Play Morse Code <span class="play-arrow">→</span></div>
-  </a>
-
-  <!-- ── Braille ─────────────────────────────────────────────── -->
-  <a class="card braille" href="braille.html">
-    <div class="card-header">
-      <div class="card-icon">⠿</div>
-      <div class="card-title">BRAILLE</div>
-    </div>
-
-    <!-- Mini preview: 2×3 braille cell -->
-    <div class="preview" style="grid-template-columns: 1fr; padding: 14px 20px;">
-      <div style="display:flex;justify-content:center;align-items:center;gap:16px;">
-        <!-- Letter H: dots 1,2,5 -->
-        <div style="display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr 1fr;gap:5px;padding:8px 7px;background:#0d1117;border:1.5px solid #21262d;border-radius:8px;">
-          <div style="width:10px;height:10px;border-radius:50%;background:#a78bfa;border:1.5px solid #c4b5fd;box-shadow:0 0 6px rgba(167,139,250,0.6)"></div>
-          <div style="width:10px;height:10px;border-radius:50%;background:#21262d;border:1.5px solid #30363d"></div>
-          <div style="width:10px;height:10px;border-radius:50%;background:#a78bfa;border:1.5px solid #c4b5fd;box-shadow:0 0 6px rgba(167,139,250,0.6)"></div>
-          <div style="width:10px;height:10px;border-radius:50%;background:#a78bfa;border:1.5px solid #c4b5fd;box-shadow:0 0 6px rgba(167,139,250,0.6)"></div>
-          <div style="width:10px;height:10px;border-radius:50%;background:#21262d;border:1.5px solid #30363d"></div>
-          <div style="width:10px;height:10px;border-radius:50%;background:#21262d;border:1.5px solid #30363d"></div>
-        </div>
-        <div style="font-size:1.4rem;font-weight:800;color:#a78bfa;">H</div>
-        <!-- Letter I: dots 2,4 -->
-        <div style="display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr 1fr;gap:5px;padding:8px 7px;background:#0d1117;border:1.5px solid #21262d;border-radius:8px;">
-          <div style="width:10px;height:10px;border-radius:50%;background:#21262d;border:1.5px solid #30363d"></div>
-          <div style="width:10px;height:10px;border-radius:50%;background:#21262d;border:1.5px solid #30363d"></div>
-          <div style="width:10px;height:10px;border-radius:50%;background:#a78bfa;border:1.5px solid #c4b5fd;box-shadow:0 0 6px rgba(167,139,250,0.6)"></div>
-          <div style="width:10px;height:10px;border-radius:50%;background:#a78bfa;border:1.5px solid #c4b5fd;box-shadow:0 0 6px rgba(167,139,250,0.6)"></div>
-          <div style="width:10px;height:10px;border-radius:50%;background:#21262d;border:1.5px solid #30363d"></div>
-          <div style="width:10px;height:10px;border-radius:50%;background:#21262d;border:1.5px solid #30363d"></div>
-        </div>
-        <div style="font-size:1.4rem;font-weight:800;color:#a78bfa;">I</div>
-      </div>
-    </div>
-
-    <div class="rules">
-      <div class="rule"><div class="rule-dot"></div><span>Watch dots light up · decode the word</span></div>
-      <div class="rule"><div class="rule-dot"></div><span>Easy mode labels each dot 1–6</span></div>
-      <div class="rule"><div class="rule-dot"></div><span>8 campaign levels + unlimited bonus words</span></div>
-    </div>
-
-    <div class="play-btn">Play Braille <span class="play-arrow">→</span></div>
-  </a>
-
-  </div><!-- /cards codes -->
-</div><!-- /category codes -->
-
-<!-- ── CLASSIC GAMES ──────────────────────────────────────────────── -->
-<div>
-  <div class="category-label">Classic Games</div>
-  <div class="cards">
-
-  <!-- ── X O ───────────────────────────────────────────────────── -->
-  <a class="card xo" href="xo.html">
-    <div class="card-header">
-      <div class="card-icon">✕</div>
-      <div class="card-title">X O</div>
-    </div>
-
-    <!-- Mini preview: 3×3 tic-tac-toe board -->
-    <div class="preview" style="grid-template-columns: repeat(3, 36px); gap: 2px; background: #21262d; padding: 2px; border-radius: 8px;">
-      <div class="preview-cell" style="background:#161b22; border-radius:4px; font-size:1.1rem; font-weight:900; color:#f472b6;">✕</div>
-      <div class="preview-cell" style="background:#161b22; border-radius:4px;"></div>
-      <div class="preview-cell" style="background:#161b22; border-radius:4px; font-size:1.1rem; font-weight:900; color:#60a5fa;">○</div>
-      <div class="preview-cell" style="background:#161b22; border-radius:4px;"></div>
-      <div class="preview-cell" style="background:#161b22; border-radius:4px; font-size:1.1rem; font-weight:900; color:#f472b6;">✕</div>
-      <div class="preview-cell" style="background:#161b22; border-radius:4px;"></div>
-      <div class="preview-cell" style="background:#161b22; border-radius:4px; font-size:1.1rem; font-weight:900; color:#60a5fa;">○</div>
-      <div class="preview-cell" style="background:#161b22; border-radius:4px;"></div>
-      <div class="preview-cell" style="background:#1a1624; border-radius:4px; font-size:1.1rem; font-weight:900; color:#fb7185; text-shadow:0 0 8px rgba(244,63,94,0.6)">✕</div>
-    </div>
-
-    <p class="card-tagline">Classic Tic-Tac-Toe in 4 languages. Play against a friend or challenge the computer — Easy or Hard (unbeatable minimax AI).</p>
-
-    <div class="card-rules">
-      <div class="rule"><div class="rule-dot"></div><span>Get three in a row to win</span></div>
-      <div class="rule"><div class="rule-dot"></div><span>2-player mode or vs computer</span></div>
-      <div class="rule"><div class="rule-dot"></div><span>Easy (random) · Medium (blocks & wins) · Hard (unbeatable)</span></div>
-      <div class="rule"><div class="rule-dot"></div><span>Score tracking across games</span></div>
-    </div>
-
-    <div class="play-btn">Play X O <span class="play-arrow">→</span></div>
-  </a>
-
-  <!-- ── Dots & Boxes ─────────────────────────────────────────────── -->
-  <a class="card dotsboxes" href="dotsboxes.html">
-    <div class="card-header">
-      <div class="card-icon">⬛</div>
-      <div class="card-title">DOTS &amp; BOXES</div>
-    </div>
-
-    <div class="preview" style="grid-template-columns:1fr;padding:10px 16px;">
-      <svg viewBox="0 0 120 120" style="width:120px;height:120px;display:block;margin:0 auto;">
-        <!-- boxes -->
-        <rect x="4" y="4" width="52" height="52" rx="3" fill="rgba(244,114,182,0.22)"/>
-        <circle cx="30" cy="30" r="5" fill="#f472b6" opacity="0.7"/>
-        <rect x="64" y="64" width="52" height="52" rx="3" fill="rgba(56,189,248,0.22)"/>
-        <circle cx="90" cy="90" r="5" fill="#38bdf8" opacity="0.7"/>
-        <!-- lines -->
-        <line x1="4" y1="4" x2="56" y2="4" stroke="#f472b6" stroke-width="3" stroke-linecap="round"/>
-        <line x1="4" y1="56" x2="56" y2="56" stroke="#f472b6" stroke-width="3" stroke-linecap="round"/>
-        <line x1="4" y1="4" x2="4" y2="56" stroke="#f472b6" stroke-width="3" stroke-linecap="round"/>
-        <line x1="56" y1="4" x2="56" y2="56" stroke="#f472b6" stroke-width="3" stroke-linecap="round"/>
-        <line x1="64" y1="64" x2="116" y2="64" stroke="#38bdf8" stroke-width="3" stroke-linecap="round"/>
-        <line x1="64" y1="116" x2="116" y2="116" stroke="#38bdf8" stroke-width="3" stroke-linecap="round"/>
-        <line x1="64" y1="64" x2="64" y2="116" stroke="#38bdf8" stroke-width="3" stroke-linecap="round"/>
-        <line x1="116" y1="64" x2="116" y2="116" stroke="#38bdf8" stroke-width="3" stroke-linecap="round"/>
-        <!-- partial lines -->
-        <line x1="56" y1="4" x2="116" y2="4" stroke="#6e7681" stroke-width="2" stroke-linecap="round" opacity="0.4"/>
-        <line x1="4" y1="56" x2="4" y2="116" stroke="#6e7681" stroke-width="2" stroke-linecap="round" opacity="0.4"/>
-        <!-- dots -->
-        <circle cx="4" cy="4" r="4" fill="#c9d1d9"/>
-        <circle cx="60" cy="4" r="4" fill="#c9d1d9"/>
-        <circle cx="116" cy="4" r="4" fill="#c9d1d9"/>
-        <circle cx="4" cy="60" r="4" fill="#c9d1d9"/>
-        <circle cx="60" cy="60" r="4" fill="#c9d1d9"/>
-        <circle cx="116" cy="60" r="4" fill="#c9d1d9"/>
-        <circle cx="4" cy="116" r="4" fill="#c9d1d9"/>
-        <circle cx="60" cy="116" r="4" fill="#c9d1d9"/>
-        <circle cx="116" cy="116" r="4" fill="#c9d1d9"/>
-      </svg>
-    </div>
-
-    <p class="card-tagline">The classic pencil-and-paper game. Connect dots to claim boxes — close the 4th side and score a point, then go again!</p>
-
-    <div class="card-rules">
-      <div class="rule"><div class="rule-dot"></div><span>Draw a line between two adjacent dots</span></div>
-      <div class="rule"><div class="rule-dot"></div><span>Close the 4th side of a box to claim it and take another turn</span></div>
-      <div class="rule"><div class="rule-dot"></div><span>Most boxes at the end wins</span></div>
-      <div class="rule"><div class="rule-dot"></div><span>3×3, 4×4, or 5×5 grid · 2-player or vs computer</span></div>
-    </div>
-
-    <div class="play-btn">Play Dots &amp; Boxes <span class="play-arrow">→</span></div>
-  </a>
-
-  <!-- ── Four in a Row ────────────────────────────────────────────── -->
-  <a class="card fourinrow" href="fourinrow.html">
-    <div class="card-header">
-      <div class="card-icon">🔴</div>
-      <div class="card-title">FOUR IN A ROW</div>
-    </div>
-
-    <div class="preview" style="grid-template-columns:1fr;padding:8px;">
-      <svg viewBox="0 0 124 124" style="width:124px;height:124px;display:block;">
-        <rect width="124" height="124" rx="10" fill="#1d3461"/>
-        <!-- 4×4 grid: cx = 17,45,73,101  cy = 17,45,73,101  r=13 -->
-        <!-- row 0 -->
-        <circle cx="17"  cy="17"  r="13" fill="#0d1117"/>
-        <circle cx="45"  cy="17"  r="13" fill="#0d1117"/>
-        <circle cx="73"  cy="17"  r="13" fill="#0d1117"/>
-        <circle cx="101" cy="17"  r="13" fill="#eab308"/>
-        <!-- row 1 -->
-        <circle cx="17"  cy="45"  r="13" fill="#0d1117"/>
-        <circle cx="45"  cy="45"  r="13" fill="#0d1117"/>
-        <circle cx="73"  cy="45"  r="13" fill="#ef4444"/>
-        <circle cx="101" cy="45"  r="13" fill="#eab308"/>
-        <!-- row 2 -->
-        <circle cx="17"  cy="73"  r="13" fill="#0d1117"/>
-        <circle cx="45"  cy="73"  r="13" fill="#ef4444"/>
-        <circle cx="73"  cy="73"  r="13" fill="#eab308"/>
-        <circle cx="101" cy="73"  r="13" fill="#eab308"/>
-        <!-- row 3 -->
-        <circle cx="17"  cy="101" r="13" fill="#ef4444"/>
-        <circle cx="45"  cy="101" r="13" fill="#eab308"/>
-        <circle cx="73"  cy="101" r="13" fill="#ef4444"/>
-        <circle cx="101" cy="101" r="13" fill="#ef4444"/>
-        <!-- diagonal win highlight ↗ -->
-        <circle cx="17"  cy="101" r="13" fill="none" stroke="#fff" stroke-width="2.5" opacity="0.8"/>
-        <circle cx="45"  cy="73"  r="13" fill="none" stroke="#fff" stroke-width="2.5" opacity="0.8"/>
-        <circle cx="73"  cy="45"  r="13" fill="none" stroke="#fff" stroke-width="2.5" opacity="0.8"/>
-        <circle cx="101" cy="17"  r="13" fill="none" stroke="#fff" stroke-width="2.5" opacity="0.8"/>
-      </svg>
-    </div>
-
-    <p class="card-tagline">Drop pieces into the grid. First to connect four in a row — horizontal, vertical, or diagonal — wins.</p>
-
-    <div class="card-rules">
-      <div class="rule"><div class="rule-dot"></div><span>7 columns × 6 rows — pieces fall by gravity</span></div>
-      <div class="rule"><div class="rule-dot"></div><span>Red vs Yellow — 2 player or vs AI</span></div>
-      <div class="rule"><div class="rule-dot"></div><span>Hard AI uses minimax with alpha-beta pruning</span></div>
-    </div>
-
-    <div class="play-btn">Play Four in a Row <span class="play-arrow">→</span></div>
-  </a>
-
-  <!-- ── Squava ────────────────────────────────────────────────────── -->
-  <a class="card squava" href="squava.html">
-    <div class="card-header">
-      <div class="card-icon">◈</div>
-      <div class="card-title">SQUAVA</div>
-    </div>
-
-    <div class="preview" style="grid-template-columns: repeat(5, 30px); gap:1px; background:#2d333b; padding:1px; border-radius:8px;">
-      <div class="preview-cell" style="background:#0f1419"></div>
-      <div class="preview-cell" style="background:#141c28"></div>
-      <div class="preview-cell" style="background:#0f1419; display:flex;align-items:center;justify-content:center;"><div style="width:14px;height:14px;border-radius:50%;background:#f59e0b"></div></div>
-      <div class="preview-cell" style="background:#141c28"></div>
-      <div class="preview-cell" style="background:#0f1419"></div>
-
-      <div class="preview-cell" style="background:#141c28"></div>
-      <div class="preview-cell" style="background:#0f1419; display:flex;align-items:center;justify-content:center;"><div style="width:14px;height:14px;border-radius:50%;background:#818cf8"></div></div>
-      <div class="preview-cell" style="background:#141c28; display:flex;align-items:center;justify-content:center;"><div style="width:14px;height:14px;border-radius:50%;background:#f59e0b"></div></div>
-      <div class="preview-cell" style="background:#0f1419; display:flex;align-items:center;justify-content:center;"><div style="width:14px;height:14px;border-radius:50%;background:#818cf8"></div></div>
-      <div class="preview-cell" style="background:#141c28"></div>
-
-      <div class="preview-cell" style="background:#0f1419; display:flex;align-items:center;justify-content:center;"><div style="width:14px;height:14px;border-radius:50%;background:#818cf8"></div></div>
-      <div class="preview-cell" style="background:#141c28"></div>
-      <div class="preview-cell" style="background:#0f1419; display:flex;align-items:center;justify-content:center;"><div style="width:14px;height:14px;border-radius:50%;background:#f59e0b;box-shadow:0 0 8px rgba(245,158,11,0.9)"></div></div>
-      <div class="preview-cell" style="background:#141c28"></div>
-      <div class="preview-cell" style="background:#0f1419; display:flex;align-items:center;justify-content:center;"><div style="width:14px;height:14px;border-radius:50%;background:#818cf8"></div></div>
-
-      <div class="preview-cell" style="background:#141c28"></div>
-      <div class="preview-cell" style="background:#0f1419; display:flex;align-items:center;justify-content:center;"><div style="width:14px;height:14px;border-radius:50%;background:#f59e0b"></div></div>
-      <div class="preview-cell" style="background:#141c28; display:flex;align-items:center;justify-content:center;"><div style="width:14px;height:14px;border-radius:50%;background:#818cf8"></div></div>
-      <div class="preview-cell" style="background:#0f1419"></div>
-      <div class="preview-cell" style="background:#141c28"></div>
-
-      <div class="preview-cell" style="background:#0f1419"></div>
-      <div class="preview-cell" style="background:#141c28"></div>
-      <div class="preview-cell" style="background:#0f1419; display:flex;align-items:center;justify-content:center;"><div style="width:14px;height:14px;border-radius:50%;background:#f59e0b"></div></div>
-      <div class="preview-cell" style="background:#141c28"></div>
-      <div class="preview-cell" style="background:#0f1419"></div>
-    </div>
-
-    <p class="card-tagline">A 5×5 strategy game with a twist. Get 4 in a row to win — but get 3 in a row first, and you lose.</p>
-
-    <div class="card-rules">
-      <div class="rule"><div class="rule-dot"></div><span>Place a piece on any empty square each turn</span></div>
-      <div class="rule"><div class="rule-dot"></div><span>4 in a row (orthogonal or diagonal) wins</span></div>
-      <div class="rule"><div class="rule-dot"></div><span>3 in a row first loses — watch your own moves!</span></div>
-      <div class="rule"><div class="rule-dot"></div><span>2-player mode or vs computer (Easy / Hard)</span></div>
-    </div>
-
-    <div class="play-btn">Play Squava <span class="play-arrow">→</span></div>
-  </a>
-
-  <!-- ── Three Men's Morris ───────────────────────────────────────── -->
-  <a class="card morris" href="morris.html">
-    <div class="card-header">
-      <div class="card-icon">⬡</div>
-      <div class="card-title">THREE MEN'S MORRIS</div>
-    </div>
-
-    <div class="preview" style="grid-template-columns: 1fr; padding: 10px 16px;">
-      <svg viewBox="0 0 180 180" style="width:148px;height:148px;display:block;margin:0 auto;">
-        <line x1="30" y1="30" x2="150" y2="30"  stroke="#2d333b" stroke-width="2"/>
-        <line x1="30" y1="90" x2="150" y2="90"  stroke="#2d333b" stroke-width="2"/>
-        <line x1="30" y1="150" x2="150" y2="150" stroke="#2d333b" stroke-width="2"/>
-        <line x1="30"  y1="30" x2="30"  y2="150" stroke="#2d333b" stroke-width="2"/>
-        <line x1="90"  y1="30" x2="90"  y2="150" stroke="#2d333b" stroke-width="2"/>
-        <line x1="150" y1="30" x2="150" y2="150" stroke="#2d333b" stroke-width="2"/>
-        <line x1="30" y1="30" x2="150" y2="150"  stroke="#2d333b" stroke-width="2"/>
-        <line x1="150" y1="30" x2="30"  y2="150" stroke="#2d333b" stroke-width="2"/>
-        <circle cx="30"  cy="30"  r="9" fill="#f97316"/>
-        <circle cx="150" cy="30"  r="9" fill="#f97316"/>
-        <circle cx="90"  cy="150" r="9" fill="#f97316"/>
-        <circle cx="90"  cy="30"  r="6" fill="#21262d" stroke="#30363d" stroke-width="1.5"/>
-        <circle cx="30"  cy="90"  r="9" fill="#8b5cf6"/>
-        <circle cx="150" cy="90"  r="9" fill="#8b5cf6"/>
-        <circle cx="90"  cy="90"  r="9" fill="#8b5cf6"/>
-        <circle cx="30"  cy="150" r="6" fill="#21262d" stroke="#30363d" stroke-width="1.5"/>
-        <circle cx="150" cy="150" r="6" fill="#21262d" stroke="#30363d" stroke-width="1.5"/>
-      </svg>
-    </div>
-
-    <p class="card-tagline">A two-phase strategy classic. Place three pieces, then slide them to form a row — diagonals count!</p>
-
-    <div class="card-rules">
-      <div class="rule"><div class="rule-dot"></div><span>Place 3 pieces each, then slide to adjacent squares</span></div>
-      <div class="rule"><div class="rule-dot"></div><span>Adjacency includes diagonals</span></div>
-      <div class="rule"><div class="rule-dot"></div><span>Get 3 in a row — row, column, or diagonal</span></div>
-      <div class="rule"><div class="rule-dot"></div><span>2-player mode or vs computer (Easy / Hard)</span></div>
-    </div>
-
-    <div class="play-btn">Play Three Men's Morris <span class="play-arrow">→</span></div>
-  </a>
-
-  <!-- ── Reversi ──────────────────────────────────────────────────── -->
-  <a class="card reversi" href="reversi.html">
-    <div class="card-header">
-      <div class="card-icon">⬤</div>
-      <div class="card-title">REVERSI</div>
-    </div>
-
-    <!-- Mini board: 4×4 excerpt showing a mid-game state -->
-    <div class="preview" style="grid-template-columns: repeat(4,36px); gap:1px; background:#1e3a22; border-radius:6px; padding:1px;">
-      <div class="preview-cell" style="background:#0d1f10; border-radius:3px;"><div class="preview-dot" style="background:#1e293b; box-shadow:0 0 0 1.5px #a78bfa; width:20px; height:20px;"></div></div>
-      <div class="preview-cell" style="background:#0d1f10; border-radius:3px;"><div class="preview-dot" style="background:#f8fafc; box-shadow:0 0 0 1.5px #e879f9; width:20px; height:20px;"></div></div>
-      <div class="preview-cell" style="background:#0d1f10; border-radius:3px;"><div class="preview-dot" style="background:#1e293b; box-shadow:0 0 0 1.5px #a78bfa; width:20px; height:20px;"></div></div>
-      <div class="preview-cell" style="background:#0d1f10; border-radius:3px;"></div>
-      <div class="preview-cell" style="background:#0d1f10; border-radius:3px;"><div class="preview-dot" style="background:#f8fafc; box-shadow:0 0 0 1.5px #e879f9; width:20px; height:20px;"></div></div>
-      <div class="preview-cell" style="background:#0d1f10; border-radius:3px;"><div class="preview-dot" style="background:#1e293b; box-shadow:0 0 0 1.5px #a78bfa; width:20px; height:20px;"></div></div>
-      <div class="preview-cell" style="background:#0d1f10; border-radius:3px;"><div class="preview-dot" style="background:#f8fafc; box-shadow:0 0 0 1.5px #e879f9; width:20px; height:20px;"></div></div>
-      <div class="preview-cell" style="background:#0d1f10; border-radius:3px;"><div class="preview-dot" style="background:#1e293b; box-shadow:0 0 0 1.5px #a78bfa; width:20px; height:20px;"></div></div>
-      <div class="preview-cell" style="background:#0d1f10; border-radius:3px;"></div>
-      <div class="preview-cell" style="background:#0d1f10; border-radius:3px;"><div class="preview-dot" style="background:#1e293b; box-shadow:0 0 0 1.5px #a78bfa; width:20px; height:20px;"></div></div>
-      <div class="preview-cell" style="background:#0d1f10; border-radius:3px;"><div class="preview-dot" style="background:#f8fafc; box-shadow:0 0 0 1.5px #e879f9; width:20px; height:20px;"></div></div>
-      <div class="preview-cell" style="background:#0d1f10; border-radius:3px;"><div class="preview-dot" style="background:#1e293b; box-shadow:0 0 0 1.5px #a78bfa; width:20px; height:20px;"></div></div>
-      <div class="preview-cell" style="background:#142a17; border-radius:3px;"><div style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.2);"></div></div>
-      <div class="preview-cell" style="background:#0d1f10; border-radius:3px;"><div class="preview-dot" style="background:#f8fafc; box-shadow:0 0 0 1.5px #e879f9; width:20px; height:20px;"></div></div>
-      <div class="preview-cell" style="background:#0d1f10; border-radius:3px;"></div>
-      <div class="preview-cell" style="background:#0d1f10; border-radius:3px;"><div class="preview-dot" style="background:#f8fafc; box-shadow:0 0 0 1.5px #e879f9; width:20px; height:20px;"></div></div>
-    </div>
-
-    <p class="card-tagline">Place a disc to flip your opponent's pieces. Outflank them on all 8 directions — whoever has more discs when the board fills up wins.</p>
-
-    <div class="card-rules">
-      <div class="rule"><div class="rule-dot"></div><span>Place a disc to sandwich and flip opponent's pieces</span></div>
-      <div class="rule"><div class="rule-dot"></div><span>Flips happen in all 8 directions at once</span></div>
-      <div class="rule"><div class="rule-dot"></div><span>Most discs when no moves remain wins</span></div>
-      <div class="rule"><div class="rule-dot"></div><span>2-player or vs computer (Easy / Hard)</span></div>
-    </div>
-
-    <div class="play-btn">Play Reversi <span class="play-arrow">→</span></div>
-  </a>
-
-  <!-- ── Frogs & Toads ────────────────────────────────────────────── -->
-  <a class="card frogstoads" href="frogstoads.html">
-    <div class="card-header">
-      <div class="card-icon">🐸</div>
-      <div class="card-title">FROGS &amp; TOADS</div>
-    </div>
-
-    <!-- Mini board: 7-cell mid-game state T F F _ T F T -->
-    <div class="preview" style="grid-template-columns: 1fr; padding: 14px 16px;">
-      <div style="display:flex;flex-direction:column;align-items:center;gap:8px;">
-        <div style="display:flex;gap:4px;align-items:center;">
-          <div style="width:30px;height:30px;border-radius:6px;border:1.5px solid rgba(251,146,60,0.4);background:rgba(251,146,60,0.08);display:flex;align-items:center;justify-content:center;font-size:15px">🦎</div>
-          <div style="width:30px;height:30px;border-radius:6px;border:1.5px solid rgba(74,222,128,0.4);background:rgba(74,222,128,0.08);display:flex;align-items:center;justify-content:center;font-size:15px">🐸</div>
-          <div style="width:30px;height:30px;border-radius:6px;border:1.5px solid rgba(74,222,128,0.4);background:rgba(74,222,128,0.08);display:flex;align-items:center;justify-content:center;font-size:15px">🐸</div>
-          <div style="width:30px;height:30px;border-radius:6px;border:1.5px dashed #30363d;background:#0d1117"></div>
-          <div style="width:30px;height:30px;border-radius:6px;border:1.5px solid rgba(251,146,60,0.4);background:rgba(251,146,60,0.08);display:flex;align-items:center;justify-content:center;font-size:15px">🦎</div>
-          <div style="width:30px;height:30px;border-radius:6px;border:1.5px solid rgba(74,222,128,0.4);background:rgba(74,222,128,0.08);display:flex;align-items:center;justify-content:center;font-size:15px">🐸</div>
-          <div style="width:30px;height:30px;border-radius:6px;border:1.5px solid rgba(251,146,60,0.4);background:rgba(251,146,60,0.08);display:flex;align-items:center;justify-content:center;font-size:15px">🦎</div>
-        </div>
-        <div style="display:flex;justify-content:space-between;width:100%;font-size:0.62rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">
-          <span style="color:rgba(251,146,60,0.55)">← toads</span>
-          <span style="color:rgba(74,222,128,0.55)">frogs →</span>
-        </div>
-      </div>
-    </div>
-
-    <p class="card-tagline">Get the frogs past the toads — and the toads past the frogs. One step or one leap at a time, no going back.</p>
-
-    <div class="card-rules">
-      <div class="rule"><div class="rule-dot"></div><span>🐸 Frogs move right, 🦎 toads move left</span></div>
-      <div class="rule"><div class="rule-dot"></div><span>Slide one step or jump over one opponent into the empty space</span></div>
-      <div class="rule"><div class="rule-dot"></div><span>Swap all pieces without getting stuck</span></div>
-      <div class="rule"><div class="rule-dot"></div><span>3 sizes · undo &amp; hints · track your best</span></div>
-    </div>
-
-    <div class="play-btn">Play Frogs &amp; Toads <span class="play-arrow">→</span></div>
-  </a>
-
-  <!-- ── Sprouts ──────────────────────────────────────────────────── -->
-  <a class="card sprouts" href="sprouts.html">
-    <div class="card-header">
-      <div class="card-icon">🌱</div>
-      <div class="card-title">SPROUTS</div>
-    </div>
-
-    <!-- Mini preview: dots connected by curves with a mid-dot -->
-    <div class="preview" style="grid-template-columns: 1fr; padding: 14px 20px;">
-      <svg viewBox="0 0 180 90" style="width:180px;height:90px;display:block;margin:0 auto;">
-        <path d="M 30 45 Q 90 10 150 45" fill="none" stroke="#34d399" stroke-width="2" stroke-opacity="0.8"/>
-        <path d="M 30 45 Q 90 80 150 45" fill="none" stroke="#6ee7b7" stroke-width="2" stroke-opacity="0.6"/>
-        <circle cx="30"  cy="45" r="6" fill="#34d399"/>
-        <circle cx="150" cy="45" r="6" fill="#34d399"/>
-        <circle cx="90"  cy="23" r="5" fill="#6ee7b7" opacity="0.9"/>
-        <circle cx="90"  cy="67" r="5" fill="#a7f3d0" opacity="0.7"/>
-      </svg>
-    </div>
-
-    <p class="card-tagline">A pen-and-paper classic by John Conway. Connect dots with curves, sprouting a new dot on each line — until no move is possible.</p>
-
-    <div class="card-rules">
-      <div class="rule"><div class="rule-dot"></div><span>Draw a curve between any two live dots (or a loop)</span></div>
-      <div class="rule"><div class="rule-dot"></div><span>Place a new dot on every curve you draw</span></div>
-      <div class="rule"><div class="rule-dot"></div><span>A dot dies when it has 3 connections</span></div>
-      <div class="rule"><div class="rule-dot"></div><span>Last player to move wins · 2, 3, or 4 starting dots</span></div>
-    </div>
-
-    <div class="play-btn">Play Sprouts <span class="play-arrow">→</span></div>
-  </a>
-
-  </div><!-- /cards classic -->
-</div><!-- /category classic -->
-
-</div><!-- /categories -->
-
-<footer>
-  Drag shapes · Tap to select · Swipe to rotate
-  &nbsp;·&nbsp; <a href="how-to-play.html" style="color:#6e7681;text-decoration:none;transition:color 0.15s" onmouseover="this.style.color='#c9d1d9'" onmouseout="this.style.color='#6e7681'">How to Play</a>
-  &nbsp;·&nbsp; <span id="ver" style="font-family:monospace"></span>
-</footer>
+  </div>
+
+  <footer>
+    Drag shapes · Tap to select · Swipe to rotate
+    &nbsp;·&nbsp; <a href="how-to-play.html" style="color:#6e7681;text-decoration:none;transition:color .15s" onmouseover="this.style.color='#c9d1d9'" onmouseout="this.style.color='#6e7681'">How to Play</a>
+    &nbsp;·&nbsp; <span id="ver" style="font-family:monospace"></span>
+  </footer>
+</div>
 
 <script>
+const CATEGORIES = [
+  { label: 'Shapes & Colors', games: [] },
+  { label: 'Geography',       games: [] },
+  { label: 'Words',           games: [] },
+  { label: 'Codes',           games: [] },
+  { label: 'Classic Games',   games: [] },
+];
+</script>
+<script src="card-chromino.js"></script>
+<script src="card-tessera.js"></script>
+<script src="card-colorku.js"></script>
+<script src="card-woodoku.js"></script>
+<script src="card-outlines.js"></script>
+<script src="card-wordsearch.js"></script>
+<script src="card-wordladder.js"></script>
+<script src="card-splice.js"></script>
+<script src="card-morse.js"></script>
+<script src="card-braille.js"></script>
+<script src="card-xo.js"></script>
+<script src="card-dotsboxes.js"></script>
+<script src="card-fourinrow.js"></script>
+<script src="card-squava.js"></script>
+<script src="card-morris.js"></script>
+<script src="card-reversi.js"></script>
+<script src="card-frogstoads.js"></script>
+<script src="card-sprouts.js"></script>
+<script>
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
+Vue.createApp({ data: () => ({ CATEGORIES }) }).mount('#app');
 (function(){
   const d = new Date(document.lastModified);
-  const pad = n => String(n).padStart(2,'0');
+  const p = n => String(n).padStart(2,'0');
   document.getElementById('ver').textContent =
-    d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+
-    ' '+pad(d.getHours())+':'+pad(d.getMinutes());
+    d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes());
 })();
 </script>
 </body>
