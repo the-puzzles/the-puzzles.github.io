@@ -105,6 +105,9 @@ h1 {
 .action-btn.primary { background: #0c1d2e; color: #38bdf8; border-color: #38bdf8; }
 .action-btn.primary:hover { background: #112233; }
 .fw-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 999; }
+[dir="rtl"] .current-word { font-family: 'Segoe UI', system-ui, sans-serif; letter-spacing: 0; }
+[dir="rtl"] .found-word   { font-family: 'Segoe UI', system-ui, sans-serif; letter-spacing: 0; }
+[dir="rtl"] .subtitle, [dir="rtl"] .progress { letter-spacing: 0; }
 </style>
 </head>
 <body>
@@ -124,9 +127,9 @@ h1 {
   <div class="status-bar" :class="statusClass">{{ statusMsg }}</div>
 
   <div class="puzzle-nav">
-    <button class="nav-btn" @click="prevPuzzle" :disabled="puzzleIdx === 0">‹</button>
-    <div class="puzzle-num">{{ t('puzzle') }} {{ puzzleIdx + 1 }} / {{ puzzles.length }}</div>
-    <button class="nav-btn" @click="nextPuzzle" :disabled="puzzleIdx === puzzles.length - 1">›</button>
+    <button class="nav-btn" @click="prevPuzzle" :disabled="puzzleIdx === 0">{{ isRTL ? '›' : '‹' }}</button>
+    <div class="puzzle-num">{{ t('puzzle') }} <span dir="ltr">{{ puzzleIdx + 1 }} / {{ puzzles.length }}</span></div>
+    <button class="nav-btn" @click="nextPuzzle" :disabled="puzzleIdx === puzzles.length - 1">{{ isRTL ? '‹' : '›' }}</button>
   </div>
 
   <svg viewBox="0 0 300 300" class="board">
