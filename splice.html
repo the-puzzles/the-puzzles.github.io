@@ -628,6 +628,42 @@ const HE_DEFS = Object.fromEntries(Object.entries({
   'הוליד':'gave birth to', 'ניהול':'management',    'למידה':'learning; study','לידה':'birth; delivery',
   'לימד':'taught',         'ילוד':'newborn',         'לינה':'overnight stay', 'דלות':'poverty',
 }).map(([k, v]) => [normWord(k), v]));
+const ES_DEFS = {
+  'ACNE':'acne',          'ALOE':'aloe',           'ALTO':'tall; high',      'AMEN':'amen',
+  'AMOR':'love',          'ANCA':'haunch; hip',     'ANTE':'before; suede',   'ANTRO':'cave; dive bar',
+  'AORTA':'aorta',        'ARES':'Ares',            'ARTE':'art',             'ARTES':'arts',
+  'ASILO':'asylum',       'ATEO':'atheist',         'ATENAS':'Athens',        'CANA':'grey hair',
+  'CANTO':'song; chant',  'CANTOR':'singer',        'CORNEA':'cornea',        'CORNEAS':'corneas',
+  'CORNETA':'bugle',      'CORTE':'cut; court',     'DOLAR':'dollar',         'DOLARES':'dollars',
+  'DONA':'Mrs; she gives','DONAR':'to donate',      'DORA':'gilded',          'ENROCA':'castles (chess)',
+  'ENTRA':'enter',        'EROS':'Eros',            'ESTA':'this (f)',        'ESTAR':'to be',
+  'ESTO':'this',          'ETANO':'ethane',         'INSTA':'urges',          'INSTAR':'to urge',
+  'IRME':'to leave',      'IRTE':'to leave you',    'ITEM':'item',            'LADO':'side',
+  'LADOS':'sides',        'LAOS':'Laos',            'LARES':'household gods', 'LISO':'smooth; straight',
+  'LOMA':'hill',          'LONA':'canvas; tarp',    'LOSA':'slab; tile',      'MALO':'bad',
+  'MALOS':'bad (pl)',     'MARTE':'Mars',           'MARTES':'Tuesday',       'MARTIN':'Martin',
+  'MATE':'mate; checkmate','MATO':'scrubland',      'MENTA':'mint',           'MENTIR':'to lie',
+  'MENTIRA':'lie; falsehood','META':'goal; meta',   'MORA':'mulberry; delay', 'MORAL':'moral',
+  'MOTA':'speck; knoll',  'MOTIN':'mutiny',         'MOTINES':'mutinies',     'NADO':'swimming',
+  'NARE':'nostril',       'NARES':'nostrils',       'NORTE':'north',          'NOTA':'note; grade',
+  'OCAS':'geese',         'OLAS':'waves',           'ONDA':'wave',            'ORAL':'oral',
+  'ORLA':'border; trim',  'OSAR':'to dare',         'OSERA':'bear den',       'OTRA':'other (f)',
+  'PILA':'pile; battery', 'PILAR':'pillar',         'PILAS':'batteries',      'PIOLA':'cord; (LatAm) cool',
+  'PISA':'Pisa; steps on','PISAR':'to step on',     'PISO':'floor; flat',     'PITO':'whistle',
+  'POLAR':'polar',        'POLIS':'police (inf)',    'POMAR':'apple orchard',  'RADON':'radon',
+  'RAMO':'bouquet; branch','RAMOS':'bouquets',      'RASO':'satin; clear',    'RESOL':'sun glare',
+  'RESTO':'remainder',    'RITMO':'rhythm',         'RITO':'rite',            'ROCA':'rock',
+  'ROCAS':'rocks',        'RODAL':'copse; patch',   'ROMA':'Rome',            'RONDA':'round; patrol',
+  'ROSA':'rose; pink',    'ROSAL':'rosebush',       'ROTA':'broken (f)',      'SACO':'bag; jacket',
+  'SAETA':'arrow; saeta', 'SALTO':'jump',           'SANA':'healthy (f)',     'SANO':'healthy (m)',
+  'SANTA':'saint (f)',    'SANTO':'saint (m)',       'SENA':'Seine; sign',     'SENO':'bosom; sinus',
+  'SENOR':'Mr; sir',      'SENTIR':'to feel',       'SETA':'mushroom',        'SILO':'silo',
+  'SODA':'soda',          'SOLA':'alone (f)',        'SOLAR':'solar; plot',    'SOMA':'soma; body',
+  'SONAR':'to ring',      'SONDA':'probe; catheter','TEMA':'topic; theme',    'TEMO':'I fear',
+  'TENOR':'tenor',        'TENSA':'tense (f)',       'TILA':'linden tea',      'TIPO':'type; guy',
+  'TIPOS':'types; guys',  'TIRA':'strip; pulls',    'TODA':'all (f)',          'TOMA':'intake; take',
+  'TOMAR':'to take',      'TRINEO':'sled',          'TRAMO':'stretch; segment',
+};
 const DICT = {
   en: new Set('ABEL ABET ABETS ABLE ABLEST ACNE AERY AESOP AIRS AIRT AIRTS AITS ALES ALOE ALOES ALPO ANGER ANGERS ANGIE ANIS ANTE ANTES ANTI ANTIS ANTRE ANTS ANTSIER ANUS ARES ARTEL ARTELS ARTS ARYL ARYLS ATEN ATOP ATREUS BALE BALES BANE BANES BANT BANTS BATE BATES BATS BEAN BEAT BEATS BELA BENT BENTO BENTS BESOT BEST BETA BETS BLAT BLATE BLATS BLEAT BLEATS BLEST BLOT BLOTS CANE CANES CANS CARE CARES CARS CARSE CART CAUSE CAUSER CNUT CUES CURE CURES CURS CURSE CURT EARL EARLS EARLY EAST EATS EBAN ELAM ELAN ELBA ENSUE ENSURE ENURE ENURES EPOS ERIN ERIS ERSE ERST ESOL ESTOP ETAS ETNA EURE EYRA FARE FARES FARL FARLEY FARLS FART FATE FATES FEAR FEAT FETA GAEL GALE GALES GATE GATES GATS GERS GIANT GIANTS GINA GIRT GIRTS GIST GITS GMAT GNAT GNATS GOAL GOAS GOAT GOATS GOES GRIN GRIS GRIST GRIT GRITS HAES HARE HARES HARL HARLEY HARLS HART HARTE HATE HATER HATES HEAR HEART HEAT HERA HERAT HERL HERLS HING HINGE HINT HINTS HIRE HIST HITS INGE INTR LANE LANES LASE LAST LATE LATS LEAF LEAH LEAN LEAR LEARY LEAS LEAST LENA LENT LENTO LENTS LEOS LESA LEST LETA LETO LETS LOAM LOEB LOPE LOPES LOSE LOST LOTA LOTS LYRA LYRATE LYRE LYRES MALE MALES MART MARTEL MARTS MAST MATE MATES MATS MOAS MOAT MOATS MOET MOLA MOLAR MOLAS MOLE MOLES MOLEST NAIR NARES NATE NATES NATO NATURE NATURES NEAL NEAT NEST NETS NEUT NIGER NIGH NITA NITS NURSE OAST OATES OATS OLEN OLESTRA OMAR OPEL OPEN OPES OSTEAL PEAL PEAN PEAT PEBA PELOTA PENA PENAL PENT PESO PEST PESTO PETAL PETS PLAN PLANE PLANES PLANET PLANETS PLANT PLANTS PLAT PLATE PLATEN PLATES PLATO PLATS PLEA PLEAT PLEATS PLEB PLENA PLOT PLOTS POET POETS POLE POLENTA POLES POSE POSEN POST POSTAL POTABLE POTABLES POTS RALE RALES RASE RATE RATEL RATELS RATES RATS REGINA REGIS REIGN REIN REIS REIT RELY REUSE RIANT RING RITA RLHF RUES RUNE RUNES RUNS RUSE RUTAN RYLE SAGO SALE SATE SEAL SEAM SEAN SEAR SEAT SEATO SENT SETA SEURAT SHARE SHAT SHEA SHEAF SHEAR SHER SHERYL SIAN SIGH SIGN SING SINGE SINGER SINGH SINH SIRE SITA SLYER SNARE SOLA SOLAN SOLE SOLENT STAB STABLE STAEL STAG STAIN STAIR STALE STAN STANE STANG STAR STEAL STEAM STELA STEP STING STINGER STIR STOEP STOL STOLE STOLEN STOP STOPE STRIA STRING SUER SURA SURAT SURE SUTRA TABLE TABLES TAEL TAIN TAIS TALE TALES TANG TANGIER TANGIERS TANH TANS TARE TARES TARS TAUS TEAL TEAM TEAR TEARY TEAS TESL TESOL TIER TIERS TIGER TIGERS TIGRE TINA TING TINGE TIRE TOEA TOES TOLA TOLAN TOLE TOPE TOPES TRAM TRAN TRANS TRES TREY TRIG TRINA TRUE TRUES TUES TUNA TUNE TUNES TUNS USER YEAH YEAHS YEAR'),
   he: new Set(HE_WORDS.map(normWord)),
@@ -762,7 +798,7 @@ createApp({
         statusClass.value = 'win'; statusMsg.value = t('win');
         launchFireworks();
       } else if (!won.value) {
-        const def = lang.value === 'he' ? HE_DEFS[norm] : null;
+        const def = lang.value === 'he' ? HE_DEFS[norm] : lang.value === 'es' ? ES_DEFS[display] : null;
         statusClass.value = 'correct';
         statusMsg.value = def ? `✓ ${display} — ${def}` : `✓ ${display}`;
         setTimeout(() => { statusClass.value = 'idle'; statusMsg.value = ''; }, def ? 2800 : 1800);
