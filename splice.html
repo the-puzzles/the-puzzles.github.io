@@ -63,16 +63,18 @@ h1 {
 .node { cursor: pointer; }
 .node circle { transition: fill .1s, stroke .1s; }
 .node text   { pointer-events: none; font-weight: 800; font-family: 'Segoe UI', system-ui, sans-serif; }
-.node-default circle { fill: #1c2230; stroke: #30363d; stroke-width: 2; }
-.node-default text   { fill: #6e7681; font-size: 16px; }
-.node-adjacent circle { fill: #1c2230; stroke: #4a5568; stroke-width: 2; }
-.node-adjacent text   { fill: #c9d1d9; font-size: 16px; }
+.node-default circle { fill: #1e2d3d; stroke: #4a6a8a; stroke-width: 2; }
+.node-default text   { fill: #c9d1d9; font-size: 16px; }
+.node-adjacent circle { fill: #1e2d3d; stroke: #6b9dc0; stroke-width: 2; }
+.node-adjacent text   { fill: #e6edf3; font-size: 16px; }
 .node-in-path circle  { fill: #0a1929; stroke: #38bdf8; stroke-width: 2.5; }
 .node-in-path text    { fill: #38bdf8; font-size: 16px; }
 .node-last circle     { fill: #0c1d2e; stroke: #67e8f9; stroke-width: 3.5; }
 .node-last text       { fill: #e0f2fe; font-size: 16px; }
-.node-dim circle      { fill: #13181f; stroke: #1c2230; stroke-width: 1.5; }
+.node-dim circle      { fill: #131a22; stroke: #21262d; stroke-width: 1.5; }
 .node-dim text        { fill: #30363d; font-size: 16px; }
+.node-dead circle     { fill: #0d1117; stroke: #1c2230; stroke-width: 1; opacity: .4; }
+.node-dead text       { fill: #21262d; font-size: 16px; opacity: .4; }
 .node:hover .node-default circle,
 .node:hover .node-adjacent circle { stroke: #38bdf8; }
 .node:hover .node-default text,
@@ -268,11 +270,21 @@ createApp({
              i !== last;
     }
 
+    const exhausted = computed(() => {
+      const remaining = puzzle.value.words.filter(w => !found.value.includes(w));
+      const normRemaining = remaining.map(w => lang.value === 'he' ? normWord(w) : w);
+      return puzzle.value.letters.map(letter => {
+        const nl = lang.value === 'he' ? normLetter(letter) : letter;
+        return !normRemaining.some(w => w.includes(nl));
+      });
+    });
+
     function nodeClass(i) {
       const inPath = path.value.includes(i);
       const isLast = path.value.length && path.value[path.value.length - 1] === i;
       if (isLast)  return 'node-last';
       if (inPath)  return 'node-in-path';
+      if (exhausted.value[i]) return 'node-dead';
       if (path.value.length && adjToLast(i))  return 'node-adjacent';
       if (path.value.length) return 'node-dim';
       return 'node-default';
@@ -280,6 +292,7 @@ createApp({
 
     function tap(i) {
       if (won.value) return;
+      if (exhausted.value[i]) return;
       if (path.value.length && path.value[path.value.length - 1] === i) {
         path.value.pop(); return;
       }
@@ -349,7 +362,7 @@ createApp({
 
     onMounted(loadPuzzle);
 
-    return { lang, isRTL, t, puzzles, puzzleIdx, puzzle, path, found, statusMsg, statusClass, won, fwCanvas, currentWord, allEdges, npos, nodeClass, tap, clearPath, prevPuzzle, nextPuzzle, newGame, setLang };
+    return { lang, isRTL, t, puzzles, puzzleIdx, puzzle, path, found, statusMsg, statusClass, won, fwCanvas, currentWord, allEdges, npos, nodeClass, exhausted, tap, clearPath, prevPuzzle, nextPuzzle, newGame, setLang };
   }
 }).mount('#app');
 </script>
