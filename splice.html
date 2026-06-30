@@ -354,7 +354,24 @@ createApp({
     function prevPuzzle() { if (puzzleIdx.value > 0) { puzzleIdx.value--; loadPuzzle(); } }
     function nextPuzzle() { if (puzzleIdx.value < puzzles.value.length - 1) { puzzleIdx.value++; loadPuzzle(); } }
     function newGame() { puzzleIdx.value = (puzzleIdx.value + 1) % puzzles.value.length; loadPuzzle(); }
-    function setLang(l) { lang.value = l; localStorage.setItem('splice-lang', l); puzzleIdx.value = 0; loadPuzzle(); }
+    const langState = {};
+    function setLang(l) {
+      langState[lang.value] = { idx: puzzleIdx.value, found: [...found.value], won: won.value };
+      lang.value = l;
+      localStorage.setItem('splice-lang', l);
+      path.value = [];
+      const s = langState[l];
+      if (s) {
+        puzzleIdx.value = s.idx;
+        found.value = s.found;
+        won.value = s.won;
+        statusClass.value = s.won ? 'win' : 'idle';
+        statusMsg.value = s.won ? t('win') : '';
+      } else {
+        puzzleIdx.value = 0; found.value = []; won.value = false;
+        statusClass.value = 'idle'; statusMsg.value = '';
+      }
+    }
 
     function launchFireworks() {
       const canvas = fwCanvas.value;
