@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crossword — Clued Puzzle</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0d1117">
+<link rel="apple-touch-icon" href="icon.svg">
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: #0d1117;
+  color: #c9d1d9;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 16px 48px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  background: linear-gradient(135deg, #ec4899, #f472b6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 4px;
+}
+
+.tagline {
+  color: #6e7681;
+  font-size: 0.82rem;
+  margin-bottom: 18px;
+  text-align: center;
+}
+
+/* ── Top bar ─────────────────────────────────────────────────────── */
+.top-bar {
+  display: flex;
+  width: 100%;
+  max-width: 680px;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.back-link {
+  font-size: 0.78rem;
+  color: #6e7681;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.back-link:hover { color: #c9d1d9; }
+
+.lang-toggle { display: flex; gap: 4px; }
+.lang-btn {
+  background: #21262d;
+  border: 1px solid #30363d;
+  color: #6e7681;
+  padding: 5px 11px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-family: inherit;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.lang-btn.active { background: #2a0a1a; border-color: #ec4899; color: #f472b6; }
+
+/* ── Category selector ───────────────────────────────────────────── */
+.cat-bar {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: 10px;
+  max-width: 680px;
+}
+.cat-btn {
+  background: #21262d;
+  border: 1px solid #30363d;
+  color: #6e7681;
+  padding: 5px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-family: inherit;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.cat-btn.active { background: #2a0a1a; border-color: #ec4899; color: #f472b6; }
+
+.progress-line {
+  font-size: 0.76rem;
+  color: #6e7681;
+  margin-bottom: 12px;
+}
+.progress-line b { color: #f472b6; font-weight: 700; }
+
+/* ── Action row ──────────────────────────────────────────────────── */
+.btn-row { display: flex; gap: 10px; margin-bottom: 14px; }
+.new-game-btn {
+  background: #2a0a1a;
+  border: 1px solid #ec4899;
+  color: #f472b6;
+  border-radius: 10px;
+  padding: 9px 26px;
+  font-size: 0.86rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s, box-shadow 0.15s;
+  letter-spacing: 0.02em;
+}
+.new-game-btn:hover  { opacity: 0.85; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(236,72,153,0.25); }
+.new-game-btn:active { transform: translateY(0); box-shadow: none; }
+
+.check-btn {
+  background: none;
+  border: 1px solid #30363d;
+  color: #8b949e;
+  border-radius: 10px;
+  padding: 9px 18px;
+  font-size: 0.86rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.check-btn:hover { color: #c9d1d9; border-color: #6e7681; }
+
+/* ── Status ──────────────────────────────────────────────────────── */
+.status {
+  height: 2.2rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #c9d1d9;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.status.won { color: #4ade80; }
+
+/* ── Clue strip ──────────────────────────────────────────────────── */
+.clue-strip {
+  width: 100%;
+  max-width: 680px;
+  background: #161b22;
+  border: 1px solid #21262d;
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  font-size: 0.9rem;
+  min-height: 1.4rem;
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+}
+.clue-strip-num { color: #f472b6; font-weight: 700; flex-shrink: 0; }
+.clue-strip-text { color: #c9d1d9; }
+
+/* ── Game layout ─────────────────────────────────────────────────── */
+.game-wrap {
+  display: flex;
+  gap: 22px;
+  align-items: flex-start;
+  width: 100%;
+  max-width: 680px;
+}
+
+/* ── Grid — direction flips with language for a true RTL crossword ── */
+.grid-wrap {
+  flex-shrink: 0;
+}
+.grid-row { display: flex; }
+
+.grid-cell {
+  position: relative;
+  border: 1px solid #21262d;
+  background: #161b22;
+}
+.grid-cell.black { background: transparent; border-color: transparent; }
+
+.cell-number {
+  position: absolute;
+  inset-inline-start: 2px;
+  top: 1px;
+  font-size: 0.55rem;
+  color: #6e7681;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.cell-input {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: transparent;
+  color: #c9d1d9;
+  text-align: center;
+  text-transform: uppercase;
+  font-weight: 700;
+  font-family: inherit;
+  outline: none;
+  caret-color: #ec4899;
+  padding: 0;
+}
+.cell-input.active { background: rgba(236,72,153,0.3); }
+.cell-input.in-entry { background: rgba(236,72,153,0.12); }
+.cell-input.wrong { color: #f87171; }
+
+/* ── Clue lists ──────────────────────────────────────────────────── */
+.clue-cols {
+  display: flex;
+  gap: 18px;
+  flex: 1;
+  min-width: 0;
+}
+.clue-col { flex: 1; min-width: 0; }
+.clue-col-title {
+  font-size: 0.72rem;
+  color: #484f58;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 8px;
+}
+.clue-item {
+  font-size: 0.82rem;
+  color: #8b949e;
+  margin-bottom: 7px;
+  line-height: 1.4;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+.clue-item:hover { color: #c9d1d9; }
+.clue-item.active { color: #f472b6; font-weight: 700; }
+.clue-item.done { color: #4ade80; text-decoration: line-through; }
+.clue-item-num { font-weight: 700; margin-inline-end: 4px; }
+
+/* ── Mobile ──────────────────────────────────────────────────────── */
+@media (max-width: 560px) {
+  .game-wrap { flex-direction: column; align-items: center; }
+  .clue-cols { width: 100%; }
+}
+</style>
+</head>
+<body>
+<div id="app">
+<template v-if="puzzle">
+  <div class="top-bar">
+    <a class="back-link" href="index.html">{{ UI.back }}</a>
+    <div class="lang-toggle">
+      <button class="lang-btn" :class="{active: lang==='en'}" @click="setLang('en')">EN</button>
+      <button class="lang-btn" :class="{active: lang==='he'}" @click="setLang('he')">עב</button>
+      <button class="lang-btn" :class="{active: lang==='es'}" @click="setLang('es')">ES</button>
+    </div>
+  </div>
+
+  <h1>{{ UI.title }}</h1>
+  <p class="tagline">{{ UI.tagline }}</p>
+
+  <div class="cat-bar">
+    <button v-for="cat in categories" :key="cat.id" class="cat-btn"
+            :class="{active: category===cat.id}" @click="selectCategory(cat.id)">
+      {{ cat.label[lang] }}
+    </button>
+  </div>
+
+  <div class="progress-line">
+    {{ UI.solvedStat }}: <b>{{ currentStats.completed }}</b> · {{ UI.bestStat }}: <b>{{ formatTime(currentStats.bestTimeSec) }}</b>
+  </div>
+
+  <div class="btn-row">
+    <button class="new-game-btn" @click="onNewPuzzleClick">{{ UI.newPuzzle }}</button>
+    <button class="check-btn" @click="checkPuzzle">{{ UI.checkPuzzle }}</button>
+  </div>
+
+  <div class="status" :class="{ won: phase === 'won' }">
+    <span v-if="phase === 'won'">{{ UI.wonMsg }}</span>
+    <span v-else>⏱ {{ formatTime(elapsedSeconds) }}</span>
+  </div>
+
+  <div class="clue-strip" v-if="activeEntry">
+    <span class="clue-strip-num">{{ activeEntry.number }}. {{ UI[activeEntry.dir] }}</span>
+    <span class="clue-strip-text">{{ activeEntry.clue }}</span>
+  </div>
+
+  <div class="game-wrap">
+    <!-- Grid: no forced direction — inherits document direction, so Hebrew
+         puzzles render as a true right-to-left crossword. -->
+    <div class="grid-wrap">
+      <div v-for="(row, r) in puzzle.cells" :key="r" class="grid-row">
+        <div v-for="(cell, c) in row" :key="c" class="grid-cell"
+             :class="{ black: !cell }"
+             :style="{ width: cellPx + 'px', height: cellPx + 'px' }">
+          <template v-if="cell">
+            <span v-if="cell.number" class="cell-number">{{ cell.number }}</span>
+            <input
+              class="cell-input"
+              :class="{
+                active: activeCell.r === r && activeCell.c === c,
+                'in-entry': isInActiveEntry(r, c),
+                wrong: wrongCells.has(r + ',' + c)
+              }"
+              :style="{ fontSize: Math.floor(cellPx * 0.5) + 'px' }"
+              :data-row="r"
+              :data-col="c"
+              maxlength="1"
+              autocapitalize="characters"
+              spellcheck="false"
+              inputmode="text"
+              :value="userInput[r][c] || ''"
+              :ref="el => setCellRef(r, c, el)"
+              @mousedown="onCellMouseDown(r, c)"
+              @focus="onCellFocus(r, c, $event)"
+              @click="onCellClick(r, c)"
+              @input="onCellInput(r, c, $event)"
+              @keydown="onKeydown($event, r, c)">
+          </template>
+        </div>
+      </div>
+    </div>
+
+    <!-- Clues -->
+    <div class="clue-cols">
+      <div class="clue-col">
+        <div class="clue-col-title">{{ UI.across }}</div>
+        <div v-for="e in puzzle.across" :key="'a' + e.number" class="clue-item"
+             :class="{ active: activeEntry === e, done: isEntryFilled(e) }"
+             @click="selectEntry(e)">
+          <span class="clue-item-num">{{ e.number }}.</span>{{ e.clue }} ({{ e.length }})
+        </div>
+      </div>
+      <div class="clue-col">
+        <div class="clue-col-title">{{ UI.down }}</div>
+        <div v-for="e in puzzle.down" :key="'d' + e.number" class="clue-item"
+             :class="{ active: activeEntry === e, done: isEntryFilled(e) }"
+             @click="selectEntry(e)">
+          <span class="clue-item-num">{{ e.number }}.</span>{{ e.clue }} ({{ e.length }})
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+</div>
+
+<script src="crossword-clues.js"></script>
+<script>
+const { createApp, ref, computed, watchEffect, onMounted, onUnmounted, nextTick } = Vue;
+
+// ── Hebrew final-form normalization (same rule/reason as wordsearch-strings.js) ──
+const HE_FINALS = { 'ם':'מ', 'ן':'נ', 'ף':'פ', 'ך':'כ', 'ץ':'צ' };
+function normalizeChar(ch, lang) {
+  return lang === 'he' ? (HE_FINALS[ch] || ch) : ch.toUpperCase();
+}
+function normalizeAnswer(answer, lang) {
+  return [...answer].map(ch => normalizeChar(ch, lang));
+}
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function dedupeEntries(entries, lang) {
+  const seen = new Set();
+  const out = [];
+  for (const e of entries) {
+    const key = normalizeAnswer(e.answer, lang).join('');
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(e);
+  }
+  return out;
+}
+
+// ── Greedy crossword generator ──────────────────────────────────────────
+// Virtual grid is an unbounded sparse Map ("r,c" -> {letter, across, down});
+// bounding box + numbering happen once at the end in finalize(). A running
+// bounding box (seeded from the first word) caps the grid at ~15×15 —
+// checking each word's own coordinates against a fixed range isn't enough,
+// since the first word alone can be up to 11 letters long.
+const MAX_SPAN = 15;
+
+function wordExtent(row, col, dir, n) {
+  if (dir === 'across') return { minR: row, maxR: row, minC: col, maxC: col + n - 1 };
+  return { minR: row, maxR: row + n - 1, minC: col, maxC: col };
+}
+function mergeExtent(a, b) {
+  return {
+    minR: Math.min(a.minR, b.minR), maxR: Math.max(a.maxR, b.maxR),
+    minC: Math.min(a.minC, b.minC), maxC: Math.max(a.maxC, b.maxC)
+  };
+}
+function extentFits(extent) {
+  return (extent.maxR - extent.minR + 1) <= MAX_SPAN && (extent.maxC - extent.minC + 1) <= MAX_SPAN;
+}
+
+function placeWord(cellsMap, w, row, col, dir) {
+  for (let i = 0; i < w.letters.length; i++) {
+    const r = dir === 'across' ? row : row + i;
+    const c = dir === 'across' ? col + i : col;
+    const k = r + ',' + c;
+    const existing = cellsMap.get(k) || { letter: w.letters[i], across: false, down: false };
+    existing.letter = w.letters[i];
+    if (dir === 'across') existing.across = true; else existing.down = true;
+    cellsMap.set(k, existing);
+  }
+}
+
+// A placement is valid only if it intersects the existing structure (every
+// word after the first must cross a placed letter), which also guarantees
+// the whole puzzle stays one connected component with no extra bookkeeping.
+function isValidPlacement(cellsMap, bounds, letters, row, col, dir) {
+  const n = letters.length;
+  if (!extentFits(mergeExtent(bounds, wordExtent(row, col, dir, n)))) return false;
+  const beforeKey = dir === 'across' ? (row + ',' + (col - 1)) : ((row - 1) + ',' + col);
+  const afterKey   = dir === 'across' ? (row + ',' + (col + n)) : ((row + n) + ',' + col);
+  if (cellsMap.has(beforeKey) || cellsMap.has(afterKey)) return false;
+
+  let hasIntersection = false;
+  for (let i = 0; i < n; i++) {
+    const r = dir === 'across' ? row : row + i;
+    const c = dir === 'across' ? col + i : col;
+    const existing = cellsMap.get(r + ',' + c);
+    if (existing) {
+      if (existing.letter !== letters[i]) return false;
+      if (dir === 'across' && existing.across) return false;
+      if (dir === 'down' && existing.down) return false;
+      hasIntersection = true;
+    } else {
+      const perp1 = dir === 'across' ? ((r - 1) + ',' + c) : (r + ',' + (c - 1));
+      const perp2 = dir === 'across' ? ((r + 1) + ',' + c) : (r + ',' + (c + 1));
+      if (cellsMap.has(perp1) || cellsMap.has(perp2)) return false;
+    }
+  }
+  return hasIntersection;
+}
+
+function scoreCandidate(cellsMap, letters, row, col, dir) {
+  let score = 0;
+  for (let i = 0; i < letters.length; i++) {
+    const r = dir === 'across' ? row : row + i;
+    const c = dir === 'across' ? col + i : col;
+    if (cellsMap.has(r + ',' + c)) score += 10;
+  }
+  score -= (Math.abs(row) + Math.abs(col)) * 0.1;
+  return score;
+}
+
+function findBestSpot(cellsMap, bounds, w) {
+  let best = null;
+  for (let li = 0; li < w.letters.length; li++) {
+    const ch = w.letters[li];
+    for (const [k, cell] of cellsMap) {
+      if (cell.letter !== ch) continue;
+      const [r, c] = k.split(',').map(Number);
+      const candidates = [
+        { row: r, col: c - li, dir: 'across' },
+        { row: r - li, col: c, dir: 'down' }
+      ];
+      for (const cand of candidates) {
+        if (!isValidPlacement(cellsMap, bounds, w.letters, cand.row, cand.col, cand.dir)) continue;
+        const score = scoreCandidate(cellsMap, w.letters, cand.row, cand.col, cand.dir);
+        if (!best || score > best.score) best = { ...cand, score };
+      }
+    }
+  }
+  return best;
+}
+
+function buildOnce(pool) {
+  const cellsMap = new Map();
+  const placed = [];
+  if (!pool.length) return placed;
+  const first = pool[0];
+  placeWord(cellsMap, first, 0, 0, 'across');
+  placed.push({ clue: first.clue, letters: first.letters, row: 0, col: 0, dir: 'across' });
+  let bounds = wordExtent(0, 0, 'across', first.letters.length);
+
+  let remaining = pool.slice(1);
+  for (let pass = 0; pass < 2 && remaining.length; pass++) {
+    const leftover = [];
+    for (const w of remaining) {
+      const spot = findBestSpot(cellsMap, bounds, w);
+      if (spot) {
+        placeWord(cellsMap, w, spot.row, spot.col, spot.dir);
+        placed.push({ clue: w.clue, letters: w.letters, row: spot.row, col: spot.col, dir: spot.dir });
+        bounds = mergeExtent(bounds, wordExtent(spot.row, spot.col, spot.dir, w.letters.length));
+      } else {
+        leftover.push(w);
+      }
+    }
+    remaining = leftover;
+  }
+  return placed;
+}
+
+// Trims to a bounding box, offsets to 0-based coords, then numbers with a
+// standard row-major scan. Column 0 always means "first cell in reading
+// order" — direction-agnostic — so RTL is purely a rendering concern.
+function finalize(placed) {
+  let minR = Infinity, minC = Infinity, maxR = -Infinity, maxC = -Infinity;
+  for (const w of placed) {
+    for (let i = 0; i < w.letters.length; i++) {
+      const r = w.dir === 'across' ? w.row : w.row + i;
+      const c = w.dir === 'across' ? w.col + i : w.col;
+      minR = Math.min(minR, r); maxR = Math.max(maxR, r);
+      minC = Math.min(minC, c); maxC = Math.max(maxC, c);
+    }
+  }
+  const rows = maxR - minR + 1, cols = maxC - minC + 1;
+  const cellsGrid = Array.from({ length: rows }, () => Array(cols).fill(null));
+  const wordLookup = new Map();
+  for (const w of placed) {
+    const row = w.row - minR, col = w.col - minC;
+    wordLookup.set(row + ',' + col + ',' + w.dir, w);
+    for (let i = 0; i < w.letters.length; i++) {
+      const r = w.dir === 'across' ? row : row + i;
+      const c = w.dir === 'across' ? col + i : col;
+      if (!cellsGrid[r][c]) cellsGrid[r][c] = { letter: w.letters[i], number: null, acrossId: null, downId: null };
+    }
+  }
+
+  const across = [], down = [];
+  let num = 1;
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      if (!cellsGrid[r][c]) continue;
+      const startsAcross = (c === 0 || !cellsGrid[r][c - 1]) && c + 1 < cols && cellsGrid[r][c + 1];
+      const startsDown   = (r === 0 || !cellsGrid[r - 1][c]) && r + 1 < rows && cellsGrid[r + 1][c];
+      if (!startsAcross && !startsDown) continue;
+      cellsGrid[r][c].number = num;
+      if (startsAcross) {
+        const meta = wordLookup.get(r + ',' + c + ',across');
+        const cells = [];
+        for (let cc = c; cc < cols && cellsGrid[r][cc]; cc++) cells.push([r, cc]);
+        across.push({ number: num, dir: 'across', row: r, col: c, length: cells.length, cells,
+          answer: cells.map(([rr, ccc]) => cellsGrid[rr][ccc].letter).join(''), clue: meta.clue });
+        cells.forEach(([rr, ccc]) => { cellsGrid[rr][ccc].acrossId = across.length - 1; });
+      }
+      if (startsDown) {
+        const meta = wordLookup.get(r + ',' + c + ',down');
+        const cells = [];
+        for (let rr = r; rr < rows && cellsGrid[rr][c]; rr++) cells.push([rr, c]);
+        down.push({ number: num, dir: 'down', row: r, col: c, length: cells.length, cells,
+          answer: cells.map(([r2, c2]) => cellsGrid[r2][c2].letter).join(''), clue: meta.clue });
+        cells.forEach(([r2, c2]) => { cellsGrid[r2][c2].downId = down.length - 1; });
+      }
+      num++;
+    }
+  }
+  return { rows, cols, cells: cellsGrid, across, down };
+}
+
+function generateCrossword(rawEntries, lang) {
+  const entries = dedupeEntries(rawEntries, lang).map(e => ({
+    clue: e.clue,
+    letters: normalizeAnswer(e.answer, lang)
+  }));
+
+  function attempt() {
+    const chosen = shuffle(entries).slice(0, Math.min(12, entries.length));
+    const pool = chosen.slice().sort((a, b) => b.letters.length - a.letters.length);
+    return buildOnce(pool);
+  }
+
+  let best = [];
+  for (let i = 0; i < 8; i++) {
+    const placed = attempt();
+    if (placed.length > best.length) best = placed;
+    if (placed.length >= Math.min(12, entries.length)) break;
+  }
+  if (best.length < 6) {
+    for (let i = 0; i < 3; i++) {
+      const placed = attempt();
+      if (placed.length > best.length) best = placed;
+    }
+  }
+  return finalize(best);
+}
+
+// ── Fireworks (copied pattern from xo.html, own palette) ────────────────
+const PALETTE = ['#ec4899','#f472b6','#f9a8d4','#fb7185','#fbbf24','#a78bfa'];
+function launchFireworks() {
+  const canvas = document.createElement('canvas');
+  canvas.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:200;';
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  document.body.appendChild(canvas);
+  const ctx = canvas.getContext('2d');
+  const particles = [];
+  function burst(x, y) {
+    for (let i = 0; i < 65; i++) {
+      const angle = Math.PI * 2 * i / 65;
+      const spd = 2 + Math.random() * 6;
+      particles.push({ x, y, vx: Math.cos(angle) * spd, vy: Math.sin(angle) * spd - 2,
+        alpha: 1, color: PALETTE[Math.floor(Math.random() * PALETTE.length)], r: 2 + Math.random() * 3 });
+    }
+  }
+  const end = Date.now() + 3000;
+  let lastBurst = 0;
+  function frame(now) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (now - lastBurst > 420 && Date.now() < end - 500) {
+      burst(canvas.width * (0.2 + Math.random() * 0.6), canvas.height * (0.1 + Math.random() * 0.4));
+      lastBurst = now;
+    }
+    for (const p of particles) {
+      p.x += p.vx; p.y += p.vy; p.vy += 0.12; p.alpha -= 0.016;
+      if (p.alpha <= 0) continue;
+      ctx.globalAlpha = p.alpha;
+      ctx.fillStyle = p.color;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    particles.splice(0, particles.length, ...particles.filter(p => p.alpha > 0));
+    if (Date.now() < end || particles.length > 0) requestAnimationFrame(frame);
+    else document.body.removeChild(canvas);
+  }
+  burst(canvas.width * 0.5, canvas.height * 0.35);
+  requestAnimationFrame(frame);
+}
+
+// ── Persistence ───────────────────────────────────────────────────────
+const LAST_KEY = 'crossword-last';
+function slotKey(l, cat) { return 'crossword-' + l + '-' + cat; }
+const STATS_KEY = 'crossword-stats';
+
+createApp({
+  setup() {
+    const lang     = ref('en');
+    const category = ref(CATEGORIES[0].id);
+    const puzzle   = ref(null);
+    const userInput  = ref([]);
+    const activeCell = ref({ r: 0, c: 0 });
+    const activeDir  = ref('across');
+    const elapsedSeconds = ref(0);
+    const phase = ref('playing'); // 'playing' | 'won'
+    const wrongCells = ref(new Set());
+    const stats = ref({});
+    const windowWidth = ref(window.innerWidth);
+
+    const cellRefs = {};
+    let clickWasAlreadyActive = false;
+    let timerId = null;
+
+    const isRTL = computed(() => lang.value === 'he');
+    const categories = CATEGORIES;
+
+    const UI = computed(() => {
+      const l = lang.value;
+      return Object.fromEntries(Object.entries(STRINGS).map(([k, v]) => [k, v[l] || v.en]));
+    });
+
+    const cellPx = computed(() => {
+      if (!puzzle.value) return 32;
+      const maxWidth = Math.min(windowWidth.value - 32, 420);
+      return Math.max(22, Math.min(38, Math.floor(maxWidth / puzzle.value.cols)));
+    });
+
+    const currentStats = computed(() =>
+      stats.value[lang.value + '-' + category.value] || { completed: 0, bestTimeSec: null });
+
+    function entryAt(r, c, dir) {
+      const list = dir === 'across' ? puzzle.value.across : puzzle.value.down;
+      return list.find(e => e.cells.some(([er, ec]) => er === r && ec === c)) || null;
+    }
+
+    const activeEntry = computed(() => {
+      if (!puzzle.value) return null;
+      return entryAt(activeCell.value.r, activeCell.value.c, activeDir.value);
+    });
+
+    function isInActiveEntry(r, c) {
+      const e = activeEntry.value;
+      return !!e && e.cells.some(([er, ec]) => er === r && ec === c);
+    }
+
+    function isEntryFilled(e) {
+      return e.cells.every(([r, c]) => userInput.value[r][c] === puzzle.value.cells[r][c].letter);
+    }
+
+    function formatTime(sec) {
+      if (sec == null) return '—';
+      const m = Math.floor(sec / 60), s = sec % 60;
+      return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+    }
+
+    function setCellRef(r, c, el) {
+      if (el) cellRefs[r + ',' + c] = el;
+    }
+
+    function focusCell(r, c) {
+      activeCell.value = { r, c };
+      nextTick(() => {
+        const el = cellRefs[r + ',' + c];
+        if (el) el.focus();
+      });
+    }
+
+    function stepInEntry(r, c, delta) {
+      const entry = activeEntry.value;
+      if (!entry) return null;
+      const idx = entry.cells.findIndex(([er, ec]) => er === r && ec === c);
+      if (idx < 0) return null;
+      const target = entry.cells[idx + delta];
+      return target ? { r: target[0], c: target[1] } : null;
+    }
+
+    function setCellValue(r, c, val) {
+      const grid = userInput.value.map(row => row.slice());
+      grid[r][c] = val;
+      userInput.value = grid;
+      if (wrongCells.value.has(r + ',' + c)) {
+        const next = new Set(wrongCells.value);
+        next.delete(r + ',' + c);
+        wrongCells.value = next;
+      }
+    }
+
+    function onCellMouseDown(r, c) {
+      clickWasAlreadyActive = activeCell.value.r === r && activeCell.value.c === c;
+    }
+
+    function onCellFocus(r, c, e) {
+      activeCell.value = { r, c };
+      if (!entryAt(r, c, activeDir.value)) {
+        activeDir.value = entryAt(r, c, 'across') ? 'across' : 'down';
+      }
+      if (e && e.target) e.target.select();
+    }
+
+    function onCellClick(r, c) {
+      if (clickWasAlreadyActive && entryAt(r, c, 'across') && entryAt(r, c, 'down')) {
+        activeDir.value = activeDir.value === 'across' ? 'down' : 'across';
+      }
+    }
+
+    function onCellInput(r, c, e) {
+      const raw = e.target.value.slice(-1);
+      const val = raw ? normalizeChar(raw, lang.value) : '';
+      e.target.value = val;
+      setCellValue(r, c, val);
+      if (val) {
+        const next = stepInEntry(r, c, 1);
+        if (next) focusCell(next.r, next.c);
+      }
+      saveSlot();
+      checkWin();
+    }
+
+    function onKeydown(e, r, c) {
+      const rtl = isRTL.value;
+      if (e.key === 'Backspace') {
+        e.preventDefault();
+        if (userInput.value[r][c]) {
+          setCellValue(r, c, '');
+        } else {
+          const prev = stepInEntry(r, c, -1);
+          if (prev) { setCellValue(prev.r, prev.c, ''); focusCell(prev.r, prev.c); }
+        }
+        saveSlot();
+        return;
+      }
+      let dr = 0, dc = 0;
+      if (e.key === 'ArrowRight') dc = rtl ? -1 : 1;
+      else if (e.key === 'ArrowLeft') dc = rtl ? 1 : -1;
+      else if (e.key === 'ArrowDown') dr = 1;
+      else if (e.key === 'ArrowUp') dr = -1;
+      else return;
+      e.preventDefault();
+      const nr = r + dr, nc = c + dc;
+      if (nr < 0 || nc < 0 || nr >= puzzle.value.rows || nc >= puzzle.value.cols) return;
+      if (!puzzle.value.cells[nr][nc]) return;
+      if (dr !== 0) activeDir.value = 'down'; else activeDir.value = 'across';
+      focusCell(nr, nc);
+    }
+
+    function selectEntry(e) {
+      activeDir.value = e.dir;
+      focusCell(e.cells[0][0], e.cells[0][1]);
+    }
+
+    function checkPuzzle() {
+      const wrong = new Set();
+      for (let r = 0; r < puzzle.value.rows; r++) {
+        for (let c = 0; c < puzzle.value.cols; c++) {
+          const cell = puzzle.value.cells[r][c];
+          if (!cell) continue;
+          const typed = userInput.value[r][c];
+          if (typed && typed !== cell.letter) wrong.add(r + ',' + c);
+        }
+      }
+      wrongCells.value = wrong;
+    }
+
+    function checkWin() {
+      if (!puzzle.value || phase.value === 'won') return;
+      for (let r = 0; r < puzzle.value.rows; r++) {
+        for (let c = 0; c < puzzle.value.cols; c++) {
+          const cell = puzzle.value.cells[r][c];
+          if (!cell) continue;
+          const typed = userInput.value[r][c];
+          if (!typed || typed !== cell.letter) return;
+        }
+      }
+      phase.value = 'won';
+      launchFireworks();
+      const key = lang.value + '-' + category.value;
+      const prev = stats.value[key] || { completed: 0, bestTimeSec: null };
+      const bestTimeSec = prev.bestTimeSec == null ? elapsedSeconds.value : Math.min(prev.bestTimeSec, elapsedSeconds.value);
+      stats.value = { ...stats.value, [key]: { completed: prev.completed + 1, bestTimeSec } };
+      saveStats();
+      saveSlot();
+    }
+
+    function newPuzzle() {
+      puzzle.value = generateCrossword(CLUE_BANK[category.value][lang.value], lang.value);
+      userInput.value = puzzle.value.cells.map(row => row.map(cell => cell ? '' : null));
+      const first = puzzle.value.across[0] || puzzle.value.down[0];
+      activeDir.value = puzzle.value.across[0] ? 'across' : 'down';
+      wrongCells.value = new Set();
+      elapsedSeconds.value = 0;
+      phase.value = 'playing';
+      if (first) focusCell(first.row, first.col); else activeCell.value = { r: 0, c: 0 };
+      saveSlot();
+    }
+
+    function onNewPuzzleClick() {
+      const hasProgress = puzzle.value && userInput.value.some(row => row.some(v => v));
+      if (hasProgress && phase.value === 'playing' && !confirm(UI.value.confirmReset)) return;
+      newPuzzle();
+    }
+
+    function setLang(l) {
+      saveSlot();
+      lang.value = l;
+      if (!loadSlot(l, category.value)) newPuzzle();
+    }
+
+    function selectCategory(id) {
+      saveSlot();
+      category.value = id;
+      if (!loadSlot(lang.value, id)) newPuzzle();
+    }
+
+    function saveSlot() {
+      try {
+        localStorage.setItem(slotKey(lang.value, category.value), JSON.stringify({
+          version: 1,
+          puzzle: puzzle.value,
+          userInput: userInput.value,
+          activeCell: activeCell.value,
+          activeDir: activeDir.value,
+          elapsedSeconds: elapsedSeconds.value,
+          phase: phase.value
+        }));
+        localStorage.setItem(LAST_KEY, JSON.stringify({ lang: lang.value, category: category.value }));
+      } catch {}
+    }
+
+    function loadSlot(l, cat) {
+      try {
+        const raw = localStorage.getItem(slotKey(l, cat));
+        if (!raw) return false;
+        const s = JSON.parse(raw);
+        if (s.version !== 1 || !s.puzzle) return false;
+        puzzle.value = s.puzzle;
+        userInput.value = s.userInput;
+        activeCell.value = s.activeCell || { r: 0, c: 0 };
+        activeDir.value = s.activeDir || 'across';
+        elapsedSeconds.value = s.elapsedSeconds || 0;
+        phase.value = s.phase || 'playing';
+        wrongCells.value = new Set();
+        return true;
+      } catch { return false; }
+    }
+
+    function loadStats() {
+      try { stats.value = JSON.parse(localStorage.getItem(STATS_KEY) || '{}'); } catch { stats.value = {}; }
+    }
+    function saveStats() {
+      try { localStorage.setItem(STATS_KEY, JSON.stringify(stats.value)); } catch {}
+    }
+
+    function onResize() { windowWidth.value = window.innerWidth; }
+    function onVisibilityChange() { if (document.visibilityState === 'hidden') saveSlot(); }
+
+    onMounted(() => {
+      window.addEventListener('resize', onResize);
+      document.addEventListener('visibilitychange', onVisibilityChange);
+      loadStats();
+      try {
+        const last = JSON.parse(localStorage.getItem(LAST_KEY) || '{}');
+        if (last.lang) lang.value = last.lang;
+        if (last.category) category.value = last.category;
+      } catch {}
+      if (!loadSlot(lang.value, category.value)) newPuzzle();
+      timerId = setInterval(() => { if (phase.value === 'playing') elapsedSeconds.value++; }, 1000);
+    });
+    onUnmounted(() => {
+      window.removeEventListener('resize', onResize);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      clearInterval(timerId);
+    });
+
+    watchEffect(() => {
+      document.documentElement.lang = lang.value;
+      document.documentElement.dir = isRTL.value ? 'rtl' : 'ltr';
+    });
+
+    return {
+      lang, category, puzzle, userInput, activeCell, activeDir, elapsedSeconds, phase,
+      wrongCells, categories, UI, isRTL, cellPx, currentStats, activeEntry,
+      isInActiveEntry, isEntryFilled, formatTime, setCellRef,
+      onCellMouseDown, onCellFocus, onCellClick, onCellInput, onKeydown,
+      selectEntry, checkPuzzle, onNewPuzzleClick, setLang, selectCategory
+    };
+  }
+}).mount('#app');
+</script>
+<script>
+(function(){
+  const d=new Date(document.lastModified),p=n=>String(n).padStart(2,"0");
+  const v=document.createElement("div");
+  v.style.cssText="position:fixed;bottom:4px;right:6px;font-size:0.6rem;color:#444c56;pointer-events:none;font-family:monospace;z-index:999";
+  v.textContent=d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())+" "+p(d.getHours())+":"+p(d.getMinutes());
+  document.body.appendChild(v);
+})();
+</script>
+</body>
+</html>
