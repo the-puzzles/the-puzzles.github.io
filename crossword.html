@@ -275,6 +275,7 @@ h1 {
 
   <div class="btn-row">
     <button class="new-game-btn" @click="onNewPuzzleClick">{{ UI.newPuzzle }}</button>
+    <button class="check-btn" @click="onRestartClick">{{ UI.restart }}</button>
     <button class="check-btn" @click="checkPuzzle">{{ UI.checkPuzzle }}</button>
     <button class="check-btn" @click="hintCell">{{ UI.hint }}</button>
   </div>
@@ -863,8 +864,9 @@ createApp({
         cat[l].filter(e => DIFFICULTY_ORDER[e.difficulty] <= maxLevel));
     }
 
-    function newPuzzle() {
-      puzzle.value = generateCrossword(allEntriesForLang(lang.value, difficulty.value), lang.value, difficulty.value);
+    // Shared by newPuzzle (after generating a fresh grid) and restartPuzzle
+    // (keeping the same grid) — clears all session state back to blank.
+    function resetSession() {
       userInput.value = puzzle.value.cells.map(row => row.map(cell => cell ? '' : null));
       const first = puzzle.value.across[0] || puzzle.value.down[0];
       activeDir.value = puzzle.value.across[0] ? 'across' : 'down';
@@ -876,10 +878,25 @@ createApp({
       saveSlot();
     }
 
+    function newPuzzle() {
+      puzzle.value = generateCrossword(allEntriesForLang(lang.value, difficulty.value), lang.value, difficulty.value);
+      resetSession();
+    }
+
+    function restartPuzzle() {
+      if (puzzle.value) resetSession();
+    }
+
     function onNewPuzzleClick() {
       const hasProgress = puzzle.value && userInput.value.some(row => row.some(v => v));
       if (hasProgress && phase.value === 'playing' && !confirm(UI.value.confirmReset)) return;
       newPuzzle();
+    }
+
+    function onRestartClick() {
+      const hasProgress = puzzle.value && userInput.value.some(row => row.some(v => v));
+      if (hasProgress && phase.value === 'playing' && !confirm(UI.value.confirmRestart)) return;
+      restartPuzzle();
     }
 
     function setLang(l) {
@@ -966,7 +983,7 @@ createApp({
       wrongCells, hintedCells, UI, isRTL, cellPx, currentStats, activeEntry,
       isInActiveEntry, isEntryFilled, formatTime, setCellRef,
       onCellMouseDown, onCellFocus, onCellClick, onCellInput, onKeydown,
-      selectEntry, checkPuzzle, hintCell, onNewPuzzleClick, setLang, selectDifficulty
+      selectEntry, checkPuzzle, hintCell, onNewPuzzleClick, onRestartClick, setLang, selectDifficulty
     };
   }
 }).mount('#app');

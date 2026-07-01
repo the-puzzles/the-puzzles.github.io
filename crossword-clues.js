@@ -531,7 +531,8 @@ const STRINGS = {
   back:          { en: '← All Games',            he: 'כל המשחקים →',          es: '← Todos los juegos' },
   title:         { en: 'CROSSWORD',               he: 'תשבץ',                   es: 'CRUCIGRAMA' },
   tagline:       { en: 'Fill the grid using the clues — across and down',              he: 'מלאו את הלוח בעזרת החידות — מאוזן ומאונך',                 es: 'Completa la cuadrícula con las pistas — horizontal y vertical' },
-  newPuzzle:     { en: 'New Puzzle',              he: 'פאזל חדש',               es: 'Nuevo Puzzle' },
+  newPuzzle:     { en: 'New Crossword',           he: 'תשבץ חדש',               es: 'Nuevo Crucigrama' },
+  restart:       { en: 'Restart',                 he: 'התחלה מחדש',             es: 'Reiniciar' },
   easy:          { en: 'Easy',                    he: 'קל',                     es: 'Fácil' },
   medium:        { en: 'Medium',                  he: 'בינוני',                 es: 'Medio' },
   hard:          { en: 'Hard',                    he: 'קשה',                    es: 'Difícil' },
@@ -542,5 +543,6 @@ const STRINGS = {
   solvedStat:    { en: 'Solved',                   he: 'נפתרו',                  es: 'Resueltos' },
   bestStat:      { en: 'Best',                     he: 'שיא',                    es: 'Mejor' },
   wonMsg:        { en: '🎉 Solved! Well done!',    he: '🎉 פתרתם! כל הכבוד!',    es: '🎉 ¡Resuelto! ¡Bien hecho!' },
-  confirmReset:  { en: 'Start a new puzzle? Current progress will be lost.', he: 'להתחיל פאזל חדש? ההתקדמות הנוכחית תאבד.', es: '¿Empezar un nuevo puzzle? Se perderá el progreso actual.' }
+  confirmReset:  { en: 'Start a new crossword? Current progress will be lost.', he: 'להתחיל תשבץ חדש? ההתקדמות הנוכחית תאבד.', es: '¿Empezar un nuevo crucigrama? Se perderá el progreso actual.' },
+  confirmRestart: { en: 'Restart this crossword? Current progress will be lost.', he: 'להתחיל את התשבץ הזה מחדש? ההתקדמות הנוכחית תאבד.', es: '¿Reiniciar este crucigrama? Se perderá el progreso actual.' }
 };
