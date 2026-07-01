@@ -329,15 +329,6 @@ const CLUE_BANK = {
   }
 };
 
-const CATEGORIES = [
-  { id: 'animals',   label: { en: '🐾 Animals',   he: '🐾 חיות',    es: '🐾 Animales' } },
-  { id: 'food',      label: { en: '🍕 Food',      he: '🍕 אוכל',    es: '🍕 Comida' } },
-  { id: 'sports',    label: { en: '🏅 Sports',    he: '🏅 ספורט',   es: '🏅 Deportes' } },
-  { id: 'science',   label: { en: '🔬 Science',   he: '🔬 מדע',     es: '🔬 Ciencia' } },
-  { id: 'geography', label: { en: '🌍 Geography', he: '🌍 גאוגרפיה', es: '🌍 Geografía' } },
-  { id: 'colors',    label: { en: '🎨 Colors',    he: '🎨 צבעים',   es: '🎨 Colores' } }
-];
-
 const STRINGS = {
   back:          { en: '← All Games',            he: 'כל המשחקים →',          es: '← Todos los juegos' },
   title:         { en: 'CROSSWORD',               he: 'תשבץ',                   es: 'CRUCIGRAMA' },

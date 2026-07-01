@@ -73,28 +73,6 @@ h1 {
 }
 .lang-btn.active { background: #2a0a1a; border-color: #ec4899; color: #f472b6; }
 
-/* ── Category selector ───────────────────────────────────────────── */
-.cat-bar {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  justify-content: center;
-  margin-bottom: 10px;
-  max-width: 680px;
-}
-.cat-btn {
-  background: #21262d;
-  border: 1px solid #30363d;
-  color: #6e7681;
-  padding: 5px 12px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 0.78rem;
-  font-family: inherit;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
-}
-.cat-btn.active { background: #2a0a1a; border-color: #ec4899; color: #f472b6; }
-
 .progress-line {
   font-size: 0.76rem;
   color: #6e7681;
@@ -264,13 +242,6 @@ h1 {
 
   <h1>{{ UI.title }}</h1>
   <p class="tagline">{{ UI.tagline }}</p>
-
-  <div class="cat-bar">
-    <button v-for="cat in categories" :key="cat.id" class="cat-btn"
-            :class="{active: category===cat.id}" @click="selectCategory(cat.id)">
-      {{ cat.label[lang] }}
-    </button>
-  </div>
 
   <div class="progress-line">
     {{ UI.solvedStat }}: <b>{{ currentStats.completed }}</b> · {{ UI.bestStat }}: <b>{{ formatTime(currentStats.bestTimeSec) }}</b>
@@ -634,13 +605,12 @@ function launchFireworks() {
 
 // ── Persistence ───────────────────────────────────────────────────────
 const LAST_KEY = 'crossword-last';
-function slotKey(l, cat) { return 'crossword-' + l + '-' + cat; }
+function slotKey(l) { return 'crossword-' + l; }
 const STATS_KEY = 'crossword-stats';
 
 createApp({
   setup() {
     const lang     = ref('en');
-    const category = ref(CATEGORIES[0].id);
     const puzzle   = ref(null);
     const userInput  = ref([]);
     const activeCell = ref({ r: 0, c: 0 });
@@ -656,7 +626,6 @@ createApp({
     let timerId = null;
 
     const isRTL = computed(() => lang.value === 'he');
-    const categories = CATEGORIES;
 
     const UI = computed(() => {
       const l = lang.value;
@@ -670,7 +639,7 @@ createApp({
     });
 
     const currentStats = computed(() =>
-      stats.value[lang.value + '-' + category.value] || { completed: 0, bestTimeSec: null });
+      stats.value[lang.value] || { completed: 0, bestTimeSec: null });
 
     function entryAt(r, c, dir) {
       const list = dir === 'across' ? puzzle.value.across : puzzle.value.down;
@@ -817,7 +786,7 @@ createApp({
       }
       phase.value = 'won';
       launchFireworks();
-      const key = lang.value + '-' + category.value;
+      const key = lang.value;
       const prev = stats.value[key] || { completed: 0, bestTimeSec: null };
       const bestTimeSec = prev.bestTimeSec == null ? elapsedSeconds.value : Math.min(prev.bestTimeSec, elapsedSeconds.value);
       stats.value = { ...stats.value, [key]: { completed: prev.completed + 1, bestTimeSec } };
@@ -825,8 +794,12 @@ createApp({
       saveSlot();
     }
 
+    function allEntriesForLang(l) {
+      return Object.values(CLUE_BANK).flatMap(cat => cat[l]);
+    }
+
     function newPuzzle() {
-      puzzle.value = generateCrossword(CLUE_BANK[category.value][lang.value], lang.value);
+      puzzle.value = generateCrossword(allEntriesForLang(lang.value), lang.value);
       userInput.value = puzzle.value.cells.map(row => row.map(cell => cell ? '' : null));
       const first = puzzle.value.across[0] || puzzle.value.down[0];
       activeDir.value = puzzle.value.across[0] ? 'across' : 'down';
@@ -846,18 +819,12 @@ createApp({
     function setLang(l) {
       saveSlot();
       lang.value = l;
-      if (!loadSlot(l, category.value)) newPuzzle();
-    }
-
-    function selectCategory(id) {
-      saveSlot();
-      category.value = id;
-      if (!loadSlot(lang.value, id)) newPuzzle();
+      if (!loadSlot(l)) newPuzzle();
     }
 
     function saveSlot() {
       try {
-        localStorage.setItem(slotKey(lang.value, category.value), JSON.stringify({
+        localStorage.setItem(slotKey(lang.value), JSON.stringify({
           version: 1,
           puzzle: puzzle.value,
           userInput: userInput.value,
@@ -866,13 +833,13 @@ createApp({
           elapsedSeconds: elapsedSeconds.value,
           phase: phase.value
         }));
-        localStorage.setItem(LAST_KEY, JSON.stringify({ lang: lang.value, category: category.value }));
+        localStorage.setItem(LAST_KEY, JSON.stringify({ lang: lang.value }));
       } catch {}
     }
 
-    function loadSlot(l, cat) {
+    function loadSlot(l) {
       try {
-        const raw = localStorage.getItem(slotKey(l, cat));
+        const raw = localStorage.getItem(slotKey(l));
         if (!raw) return false;
         const s = JSON.parse(raw);
         if (s.version !== 1 || !s.puzzle) return false;
@@ -904,9 +871,8 @@ createApp({
       try {
         const last = JSON.parse(localStorage.getItem(LAST_KEY) || '{}');
         if (last.lang) lang.value = last.lang;
-        if (last.category) category.value = last.category;
       } catch {}
-      if (!loadSlot(lang.value, category.value)) newPuzzle();
+      if (!loadSlot(lang.value)) newPuzzle();
       timerId = setInterval(() => { if (phase.value === 'playing') elapsedSeconds.value++; }, 1000);
     });
     onUnmounted(() => {
@@ -921,11 +887,11 @@ createApp({
     });
 
     return {
-      lang, category, puzzle, userInput, activeCell, activeDir, elapsedSeconds, phase,
-      wrongCells, categories, UI, isRTL, cellPx, currentStats, activeEntry,
+      lang, puzzle, userInput, activeCell, activeDir, elapsedSeconds, phase,
+      wrongCells, UI, isRTL, cellPx, currentStats, activeEntry,
       isInActiveEntry, isEntryFilled, formatTime, setCellRef,
       onCellMouseDown, onCellFocus, onCellClick, onCellInput, onKeydown,
-      selectEntry, checkPuzzle, onNewPuzzleClick, setLang, selectCategory
+      selectEntry, checkPuzzle, onNewPuzzleClick, setLang
     };
   }
 }).mount('#app');
