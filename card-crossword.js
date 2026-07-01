@@ -14,6 +14,7 @@ CATEGORIES.find(c=>c.label==="Words").games.push({
   "rules": [
     "Clued crossword — fill answers using across and down clues",
     "Every puzzle mixes words from 6 categories",
+    "Easy or Hard difficulty — Hard adds tougher vocabulary and a bigger grid",
     "Check button flags wrong letters without revealing answers",
     "Available in English, Hebrew (true right-to-left) and Spanish"
   ],

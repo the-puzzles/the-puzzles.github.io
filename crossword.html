@@ -73,6 +73,25 @@ h1 {
 }
 .lang-btn.active { background: #2a0a1a; border-color: #ec4899; color: #f472b6; }
 
+/* ── Difficulty selector ─────────────────────────────────────────── */
+.diff-bar {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.diff-btn {
+  background: #21262d;
+  border: 1px solid #30363d;
+  color: #6e7681;
+  padding: 5px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-family: inherit;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.diff-btn.active { background: #2a0a1a; border-color: #ec4899; color: #f472b6; }
+
 .progress-line {
   font-size: 0.76rem;
   color: #6e7681;
@@ -243,6 +262,11 @@ h1 {
   <h1>{{ UI.title }}</h1>
   <p class="tagline">{{ UI.tagline }}</p>
 
+  <div class="diff-bar">
+    <button class="diff-btn" :class="{active: difficulty==='easy'}" @click="selectDifficulty('easy')">{{ UI.easy }}</button>
+    <button class="diff-btn" :class="{active: difficulty==='hard'}" @click="selectDifficulty('hard')">{{ UI.hard }}</button>
+  </div>
+
   <div class="progress-line">
     {{ UI.solvedStat }}: <b>{{ currentStats.completed }}</b> · {{ UI.bestStat }}: <b>{{ formatTime(currentStats.bestTimeSec) }}</b>
   </div>
@@ -355,13 +379,21 @@ function dedupeEntries(entries, lang) {
   return out;
 }
 
+// ── Difficulty ────────────────────────────────────────────────────────────
+// Easy pulls only difficulty:'easy' entries; hard pools easy+hard together
+// (hard words never appear alone) and targets a bigger, denser grid.
+const DIFFICULTY_CONFIG = {
+  easy: { targetWords: 8,  maxSpan: 12 },
+  hard: { targetWords: 16, maxSpan: 20 }
+};
+
 // ── Greedy crossword generator ──────────────────────────────────────────
 // Virtual grid is an unbounded sparse Map ("r,c" -> {letter, across, down});
 // bounding box + numbering happen once at the end in finalize(). A running
-// bounding box (seeded from the first word) caps the grid at ~15×15 —
+// bounding box (seeded from the first word) caps the grid at MAX_SPAN —
 // checking each word's own coordinates against a fixed range isn't enough,
 // since the first word alone can be up to 11 letters long.
-const MAX_SPAN = 15;
+let MAX_SPAN = 15; // set per-attempt from DIFFICULTY_CONFIG in generateCrossword()
 
 function wordExtent(row, col, dir, n) {
   if (dir === 'across') return { minR: row, maxR: row, minC: col, maxC: col + n - 1 };
@@ -534,14 +566,17 @@ function finalize(placed) {
   return { rows, cols, cells: cellsGrid, across, down };
 }
 
-function generateCrossword(rawEntries, lang) {
+function generateCrossword(rawEntries, lang, difficulty) {
+  const config = DIFFICULTY_CONFIG[difficulty] || DIFFICULTY_CONFIG.easy;
+  MAX_SPAN = config.maxSpan;
+  const targetWords = config.targetWords;
   const entries = dedupeEntries(rawEntries, lang).map(e => ({
     clue: e.clue,
     letters: normalizeAnswer(e.answer, lang)
   }));
 
   function attempt() {
-    const chosen = shuffle(entries).slice(0, Math.min(12, entries.length));
+    const chosen = shuffle(entries).slice(0, Math.min(targetWords, entries.length));
     const pool = chosen.slice().sort((a, b) => b.letters.length - a.letters.length);
     return buildOnce(pool);
   }
@@ -550,9 +585,10 @@ function generateCrossword(rawEntries, lang) {
   for (let i = 0; i < 8; i++) {
     const placed = attempt();
     if (placed.length > best.length) best = placed;
-    if (placed.length >= Math.min(12, entries.length)) break;
+    if (placed.length >= Math.min(targetWords, entries.length)) break;
   }
-  if (best.length < 6) {
+  const floor = Math.max(6, Math.floor(targetWords * 0.5));
+  if (best.length < floor) {
     for (let i = 0; i < 3; i++) {
       const placed = attempt();
       if (placed.length > best.length) best = placed;
@@ -605,12 +641,13 @@ function launchFireworks() {
 
 // ── Persistence ───────────────────────────────────────────────────────
 const LAST_KEY = 'crossword-last';
-function slotKey(l) { return 'crossword-' + l; }
+function slotKey(l, diff) { return 'crossword-' + l + '-' + diff; }
 const STATS_KEY = 'crossword-stats';
 
 createApp({
   setup() {
-    const lang     = ref('en');
+    const lang       = ref('en');
+    const difficulty = ref('easy');
     const puzzle   = ref(null);
     const userInput  = ref([]);
     const activeCell = ref({ r: 0, c: 0 });
@@ -639,7 +676,7 @@ createApp({
     });
 
     const currentStats = computed(() =>
-      stats.value[lang.value] || { completed: 0, bestTimeSec: null });
+      stats.value[lang.value + '-' + difficulty.value] || { completed: 0, bestTimeSec: null });
 
     function entryAt(r, c, dir) {
       const list = dir === 'across' ? puzzle.value.across : puzzle.value.down;
@@ -786,7 +823,7 @@ createApp({
       }
       phase.value = 'won';
       launchFireworks();
-      const key = lang.value;
+      const key = lang.value + '-' + difficulty.value;
       const prev = stats.value[key] || { completed: 0, bestTimeSec: null };
       const bestTimeSec = prev.bestTimeSec == null ? elapsedSeconds.value : Math.min(prev.bestTimeSec, elapsedSeconds.value);
       stats.value = { ...stats.value, [key]: { completed: prev.completed + 1, bestTimeSec } };
@@ -794,12 +831,15 @@ createApp({
       saveSlot();
     }
 
-    function allEntriesForLang(l) {
-      return Object.values(CLUE_BANK).flatMap(cat => cat[l]);
+    // Hard pools easy+hard together so hard words never appear without the
+    // easier ones to cross against; easy only ever draws from easy words.
+    function allEntriesForLang(l, diff) {
+      return Object.values(CLUE_BANK).flatMap(cat =>
+        cat[l].filter(e => diff === 'hard' || e.difficulty === 'easy'));
     }
 
     function newPuzzle() {
-      puzzle.value = generateCrossword(allEntriesForLang(lang.value), lang.value);
+      puzzle.value = generateCrossword(allEntriesForLang(lang.value, difficulty.value), lang.value, difficulty.value);
       userInput.value = puzzle.value.cells.map(row => row.map(cell => cell ? '' : null));
       const first = puzzle.value.across[0] || puzzle.value.down[0];
       activeDir.value = puzzle.value.across[0] ? 'across' : 'down';
@@ -819,12 +859,18 @@ createApp({
     function setLang(l) {
       saveSlot();
       lang.value = l;
-      if (!loadSlot(l)) newPuzzle();
+      if (!loadSlot(l, difficulty.value)) newPuzzle();
+    }
+
+    function selectDifficulty(d) {
+      saveSlot();
+      difficulty.value = d;
+      if (!loadSlot(lang.value, d)) newPuzzle();
     }
 
     function saveSlot() {
       try {
-        localStorage.setItem(slotKey(lang.value), JSON.stringify({
+        localStorage.setItem(slotKey(lang.value, difficulty.value), JSON.stringify({
           version: 1,
           puzzle: puzzle.value,
           userInput: userInput.value,
@@ -833,13 +879,13 @@ createApp({
           elapsedSeconds: elapsedSeconds.value,
           phase: phase.value
         }));
-        localStorage.setItem(LAST_KEY, JSON.stringify({ lang: lang.value }));
+        localStorage.setItem(LAST_KEY, JSON.stringify({ lang: lang.value, difficulty: difficulty.value }));
       } catch {}
     }
 
-    function loadSlot(l) {
+    function loadSlot(l, diff) {
       try {
-        const raw = localStorage.getItem(slotKey(l));
+        const raw = localStorage.getItem(slotKey(l, diff));
         if (!raw) return false;
         const s = JSON.parse(raw);
         if (s.version !== 1 || !s.puzzle) return false;
@@ -871,8 +917,9 @@ createApp({
       try {
         const last = JSON.parse(localStorage.getItem(LAST_KEY) || '{}');
         if (last.lang) lang.value = last.lang;
+        if (last.difficulty) difficulty.value = last.difficulty;
       } catch {}
-      if (!loadSlot(lang.value)) newPuzzle();
+      if (!loadSlot(lang.value, difficulty.value)) newPuzzle();
       timerId = setInterval(() => { if (phase.value === 'playing') elapsedSeconds.value++; }, 1000);
     });
     onUnmounted(() => {
@@ -887,11 +934,11 @@ createApp({
     });
 
     return {
-      lang, puzzle, userInput, activeCell, activeDir, elapsedSeconds, phase,
+      lang, difficulty, puzzle, userInput, activeCell, activeDir, elapsedSeconds, phase,
       wrongCells, UI, isRTL, cellPx, currentStats, activeEntry,
       isInActiveEntry, isEntryFilled, formatTime, setCellRef,
       onCellMouseDown, onCellFocus, onCellClick, onCellInput, onKeydown,
-      selectEntry, checkPuzzle, onNewPuzzleClick, setLang
+      selectEntry, checkPuzzle, onNewPuzzleClick, setLang, selectDifficulty
     };
   }
 }).mount('#app');
