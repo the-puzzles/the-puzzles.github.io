@@ -31,7 +31,12 @@ const CLUE_BANK = {
       { answer: 'RHINOCEROS', clue: 'Large thick-skinned animal with a horn on its nose', difficulty: 'hard' },
       { answer: 'ARMADILLO', clue: 'Armored mammal that can roll into a ball', difficulty: 'hard' },
       { answer: 'FLAMINGO', clue: 'Pink wading bird that stands on one leg', difficulty: 'hard' },
-      { answer: 'HEDGEHOG', clue: 'Small spiny mammal that curls into a ball', difficulty: 'hard' }
+      { answer: 'HEDGEHOG', clue: 'Small spiny mammal that curls into a ball', difficulty: 'hard' },
+      { answer: 'PANDA', clue: 'Black-and-white bear that eats mostly bamboo', difficulty: 'medium' },
+      { answer: 'GORILLA', clue: 'Large great ape found in African forests', difficulty: 'medium' },
+      { answer: 'OSTRICH', clue: 'Largest bird in the world, cannot fly', difficulty: 'medium' },
+      { answer: 'SQUIRREL', clue: 'Small bushy-tailed rodent that collects nuts', difficulty: 'medium' },
+      { answer: 'BUTTERFLY', clue: 'Insect with colorful wings that starts life as a caterpillar', difficulty: 'medium' }
     ],
     he: [
       { answer: 'אריה', clue: 'מלך החיות', difficulty: 'easy' },
@@ -54,7 +59,12 @@ const CLUE_BANK = {
       { answer: 'קרנף', clue: 'חיה גדולה בעלת עור עבה וקרן על האף', difficulty: 'hard' },
       { answer: 'ארמדילו', clue: 'יונק משוריין שמסוגל להתגלגל לכדור', difficulty: 'hard' },
       { answer: 'פלמינגו', clue: 'עוף ורוד החי במים רדודים ועומד על רגל אחת', difficulty: 'hard' },
-      { answer: 'קיפוד', clue: 'יונק קטן וקוצני שמתכרבל לכדור', difficulty: 'hard' }
+      { answer: 'קיפוד', clue: 'יונק קטן וקוצני שמתכרבל לכדור', difficulty: 'hard' },
+      { answer: 'פנדה', clue: 'דוב שחור-לבן שאוכל בעיקר במבוק', difficulty: 'medium' },
+      { answer: 'גורילה', clue: 'קוף אדם גדול החי ביערות אפריקה', difficulty: 'medium' },
+      { answer: 'יען', clue: 'הציפור הגדולה בעולם, לא יכולה לעוף', difficulty: 'medium' },
+      { answer: 'סנאי', clue: 'מכרסם קטן בעל זנב שעיר שאוסף אגוזים', difficulty: 'medium' },
+      { answer: 'פרפר', clue: 'חרק בעל כנפיים צבעוניות שמתחיל את חייו כזחל', difficulty: 'medium' }
     ],
     es: [
       { answer: 'LEON', clue: 'Rey de la selva', difficulty: 'easy' },
@@ -77,7 +87,12 @@ const CLUE_BANK = {
       { answer: 'RINOCERONTE', clue: 'Animal grande de piel gruesa con un cuerno en la nariz', difficulty: 'hard' },
       { answer: 'ARMADILLO', clue: 'Mamífero acorazado que puede enrollarse en forma de bola', difficulty: 'hard' },
       { answer: 'FLAMENCO', clue: 'Ave rosada que vive en aguas poco profundas y se para en una pata', difficulty: 'hard' },
-      { answer: 'ERIZO', clue: 'Pequeño mamífero espinoso que se enrolla en forma de bola', difficulty: 'hard' }
+      { answer: 'ERIZO', clue: 'Pequeño mamífero espinoso que se enrolla en forma de bola', difficulty: 'hard' },
+      { answer: 'PANDA', clue: 'Oso blanco y negro que come principalmente bambú', difficulty: 'medium' },
+      { answer: 'GORILA', clue: 'Gran simio que vive en los bosques de África', difficulty: 'medium' },
+      { answer: 'AVESTRUZ', clue: 'El ave más grande del mundo, no puede volar', difficulty: 'medium' },
+      { answer: 'ARDILLA', clue: 'Pequeño roedor de cola peluda que recolecta nueces', difficulty: 'medium' },
+      { answer: 'MARIPOSA', clue: 'Insecto de alas coloridas que comienza su vida como oruga', difficulty: 'medium' }
     ]
   },
   food: {
@@ -102,7 +117,12 @@ const CLUE_BANK = {
       { answer: 'ASPARAGUS', clue: 'Green stalk vegetable often grilled or steamed', difficulty: 'hard' },
       { answer: 'CINNAMON', clue: 'Spice made from tree bark, used in baking', difficulty: 'hard' },
       { answer: 'WATERMELON', clue: 'Large green fruit with red juicy flesh and seeds', difficulty: 'hard' },
-      { answer: 'EGGPLANT', clue: 'Purple oblong vegetable used in ratatouille and moussaka', difficulty: 'hard' }
+      { answer: 'EGGPLANT', clue: 'Purple oblong vegetable used in ratatouille and moussaka', difficulty: 'hard' },
+      { answer: 'SPINACH', clue: 'Leafy green vegetable rich in iron', difficulty: 'medium' },
+      { answer: 'MUSHROOM', clue: 'Fungus often sliced as a pizza topping', difficulty: 'medium' },
+      { answer: 'COCONUT', clue: 'Large brown tropical fruit with white flesh and milk inside', difficulty: 'medium' },
+      { answer: 'PINEAPPLE', clue: 'Spiky tropical fruit with a crown of leaves on top', difficulty: 'medium' },
+      { answer: 'PEPPER', clue: 'Vegetable that comes in red, green, and yellow varieties', difficulty: 'medium' }
     ],
     he: [
       { answer: 'לחם', clue: 'מאכל בסיסי אפוי העשוי מקמח', difficulty: 'easy' },
@@ -125,7 +145,12 @@ const CLUE_BANK = {
       { answer: 'אספרגוס', clue: 'ירק גבעולי ירוק שלעיתים קרובות צולים או מאדים', difficulty: 'hard' },
       { answer: 'קינמון', clue: 'תבלין העשוי מקליפת עץ, משמש באפייה', difficulty: 'hard' },
       { answer: 'אבטיח', clue: 'פרי גדול וירוק עם בשר אדום ועסיסי וגרעינים', difficulty: 'hard' },
-      { answer: 'חציל', clue: 'ירק סגול ומוארך המשמש ברטטוי ובמוסקה', difficulty: 'hard' }
+      { answer: 'חציל', clue: 'ירק סגול ומוארך המשמש ברטטוי ובמוסקה', difficulty: 'hard' },
+      { answer: 'תרד', clue: 'ירק עלים ירוק עשיר בברזל', difficulty: 'medium' },
+      { answer: 'פטרייה', clue: 'מאכל הגדל ביערות, לא צמח ולא בעל חיים, נפוץ כתוספת לפיצה', difficulty: 'medium' },
+      { answer: 'קוקוס', clue: 'פרי טרופי חום וגדול עם בשר לבן וחלב בפנים', difficulty: 'medium' },
+      { answer: 'אננס', clue: 'פרי טרופי קוצני עם כתר עלים בראשו', difficulty: 'medium' },
+      { answer: 'פלפל', clue: 'ירק שמגיע בגוונים אדום, ירוק וצהוב', difficulty: 'medium' }
     ],
     es: [
       { answer: 'PAN', clue: 'Alimento básico horneado hecho de harina', difficulty: 'easy' },
@@ -148,7 +173,12 @@ const CLUE_BANK = {
       { answer: 'ESPARRAGO', clue: 'Verdura de tallo verde que suele asarse o cocerse al vapor', difficulty: 'hard' },
       { answer: 'CANELA', clue: 'Especia hecha de corteza de árbol, usada en repostería', difficulty: 'hard' },
       { answer: 'SANDIA', clue: 'Fruta grande y verde con pulpa roja y jugosa y semillas', difficulty: 'hard' },
-      { answer: 'BERENJENA', clue: 'Verdura morada y alargada usada en ratatouille y moussaka', difficulty: 'hard' }
+      { answer: 'BERENJENA', clue: 'Verdura morada y alargada usada en ratatouille y moussaka', difficulty: 'hard' },
+      { answer: 'ESPINACA', clue: 'Verdura de hoja verde rica en hierro', difficulty: 'medium' },
+      { answer: 'HONGO', clue: 'Organismo comestible, ni planta ni animal, usado como ingrediente en pizzas', difficulty: 'medium' },
+      { answer: 'COCO', clue: 'Fruta tropical grande y marrón con pulpa blanca y agua dentro', difficulty: 'medium' },
+      { answer: 'ANANAS', clue: 'Fruta tropical espinosa con una corona de hojas en la parte superior', difficulty: 'medium' },
+      { answer: 'PIMIENTO', clue: 'Verdura que viene en variedades roja, verde y amarilla', difficulty: 'medium' }
     ]
   },
   sports: {
@@ -173,7 +203,12 @@ const CLUE_BANK = {
       { answer: 'TRIATHLON', clue: 'Race combining swimming, cycling, and running', difficulty: 'hard' },
       { answer: 'VOLLEYBALL', clue: 'Team sport played by hitting a ball over a net', difficulty: 'hard' },
       { answer: 'HANDBALL', clue: 'Team sport where players throw a ball into a goal by hand', difficulty: 'hard' },
-      { answer: 'KARATE', clue: 'Japanese martial art of striking with hands and feet', difficulty: 'hard' }
+      { answer: 'KARATE', clue: 'Japanese martial art of striking with hands and feet', difficulty: 'hard' },
+      { answer: 'CRICKET', clue: 'Bat-and-ball sport popular in England and India', difficulty: 'medium' },
+      { answer: 'RUNNING', clue: 'Sport of moving fast on foot, from sprints to marathons', difficulty: 'medium' },
+      { answer: 'SAILING', clue: 'Sport of racing boats powered by wind', difficulty: 'medium' },
+      { answer: 'DIVING', clue: 'Sport of jumping or descending into water', difficulty: 'medium' },
+      { answer: 'BASKETBALL', clue: 'Team sport played by shooting a ball through a hoop', difficulty: 'medium' }
     ],
     he: [
       { answer: 'כדורגל', clue: 'ספורט המשוחק בכדור, בעיקר בלי ידיים', difficulty: 'easy' },
@@ -196,7 +231,12 @@ const CLUE_BANK = {
       { answer: 'טריאתלון', clue: 'תחרות המשלבת שחייה, רכיבה על אופניים וריצה', difficulty: 'hard' },
       { answer: 'כדורעף', clue: 'ספורט קבוצתי המשוחק בהכאת כדור מעל רשת', difficulty: 'hard' },
       { answer: 'כדוריד', clue: 'ספורט קבוצתי שבו שחקנים זורקים כדור לשער בעזרת היד', difficulty: 'hard' },
-      { answer: 'קראטה', clue: 'אמנות לחימה יפנית של הכאה בידיים וברגליים', difficulty: 'hard' }
+      { answer: 'קראטה', clue: 'אמנות לחימה יפנית של הכאה בידיים וברגליים', difficulty: 'hard' },
+      { answer: 'קריקט', clue: 'ספורט מחבט וכדור פופולרי באנגליה ובהודו', difficulty: 'medium' },
+      { answer: 'ריצה', clue: 'ספורט של תנועה מהירה ברגל, מספרינטים ועד מרתונים', difficulty: 'medium' },
+      { answer: 'שייט', clue: 'ספורט של מרוצי סירות המונעות ברוח', difficulty: 'medium' },
+      { answer: 'צלילה', clue: 'ספורט של קפיצה או ירידה למים', difficulty: 'medium' },
+      { answer: 'כדורסל', clue: 'ספורט קבוצתי המשוחק בהכנסת כדור לסל', difficulty: 'medium' }
     ],
     es: [
       { answer: 'FUTBOL', clue: 'Deporte que se juega con un balón, casi sin usar las manos', difficulty: 'easy' },
@@ -219,7 +259,12 @@ const CLUE_BANK = {
       { answer: 'TRIATLON', clue: 'Carrera que combina natación, ciclismo y carrera a pie', difficulty: 'hard' },
       { answer: 'VOLEIBOL', clue: 'Deporte de equipo que se juega golpeando un balón sobre una red', difficulty: 'hard' },
       { answer: 'BALONMANO', clue: 'Deporte de equipo donde los jugadores lanzan un balón a la portería con la mano', difficulty: 'hard' },
-      { answer: 'KARATE', clue: 'Arte marcial japonés de golpear con las manos y los pies', difficulty: 'hard' }
+      { answer: 'KARATE', clue: 'Arte marcial japonés de golpear con las manos y los pies', difficulty: 'hard' },
+      { answer: 'CRICKET', clue: 'Deporte de bate y pelota popular en Inglaterra e India', difficulty: 'medium' },
+      { answer: 'CARRERA', clue: 'Deporte de moverse rápido a pie, desde sprints hasta maratones', difficulty: 'medium' },
+      { answer: 'VELA', clue: 'Deporte de carreras de barcos impulsados por el viento', difficulty: 'medium' },
+      { answer: 'BUCEO', clue: 'Deporte de saltar o descender al agua', difficulty: 'medium' },
+      { answer: 'BALONCESTO', clue: 'Deporte de equipo que se juega lanzando un balón por un aro', difficulty: 'medium' }
     ]
   },
   science: {
@@ -244,7 +289,12 @@ const CLUE_BANK = {
       { answer: 'MOLECULE', clue: 'Smallest unit of a chemical compound', difficulty: 'hard' },
       { answer: 'ECOSYSTEM', clue: 'Community of organisms interacting with their environment', difficulty: 'hard' },
       { answer: 'RADIATION', clue: 'Energy that travels as waves or particles', difficulty: 'hard' },
-      { answer: 'HORMONE', clue: 'Chemical messenger produced by glands in the body', difficulty: 'hard' }
+      { answer: 'HORMONE', clue: 'Chemical messenger produced by glands in the body', difficulty: 'hard' },
+      { answer: 'FRICTION', clue: 'Force that resists motion between two surfaces', difficulty: 'medium' },
+      { answer: 'TELESCOPE', clue: 'Instrument used to observe distant objects in space', difficulty: 'medium' },
+      { answer: 'ORBIT', clue: 'Curved path an object follows around another due to gravity', difficulty: 'medium' },
+      { answer: 'CRYSTAL', clue: 'Solid with atoms arranged in a repeating pattern', difficulty: 'medium' },
+      { answer: 'METEOR', clue: 'Streak of light from a space rock burning in the atmosphere', difficulty: 'medium' }
     ],
     he: [
       { answer: 'אטום', clue: 'היחידה הקטנה ביותר של החומר', difficulty: 'easy' },
@@ -267,7 +317,12 @@ const CLUE_BANK = {
       { answer: 'מולקולה', clue: 'היחידה הקטנה ביותר של תרכובת כימית', difficulty: 'hard' },
       { answer: 'אקוסיסטמה', clue: 'קהילת יצורים המקיימת אינטראקציה עם סביבתה', difficulty: 'hard' },
       { answer: 'קרינה', clue: 'אנרגיה הנעה בצורת גלים או חלקיקים', difficulty: 'hard' },
-      { answer: 'הורמון', clue: 'שליח כימי המיוצר על ידי בלוטות בגוף', difficulty: 'hard' }
+      { answer: 'הורמון', clue: 'שליח כימי המיוצר על ידי בלוטות בגוף', difficulty: 'hard' },
+      { answer: 'חיכוך', clue: 'כוח המתנגד לתנועה בין שתי משטחים', difficulty: 'medium' },
+      { answer: 'טלסקופ', clue: 'מכשיר המשמש לצפייה בעצמים רחוקים בחלל', difficulty: 'medium' },
+      { answer: 'מסלול', clue: 'מסלול מעוקל שגוף עוקב אחריו סביב גוף אחר בגלל הכבידה', difficulty: 'medium' },
+      { answer: 'גביש', clue: 'מוצק שבו האטומים מסודרים בתבנית חוזרת', difficulty: 'medium' },
+      { answer: 'מטאור', clue: 'פס אור הנוצר משביט המתלקח באטמוספרה', difficulty: 'medium' }
     ],
     es: [
       { answer: 'ATOMO', clue: 'La unidad más pequeña de la materia', difficulty: 'easy' },
@@ -290,7 +345,12 @@ const CLUE_BANK = {
       { answer: 'MOLECULA', clue: 'Unidad más pequeña de un compuesto químico', difficulty: 'hard' },
       { answer: 'ECOSISTEMA', clue: 'Comunidad de organismos que interactúan con su entorno', difficulty: 'hard' },
       { answer: 'RADIACION', clue: 'Energía que viaja en forma de ondas o partículas', difficulty: 'hard' },
-      { answer: 'HORMONA', clue: 'Mensajero químico producido por las glándulas del cuerpo', difficulty: 'hard' }
+      { answer: 'HORMONA', clue: 'Mensajero químico producido por las glándulas del cuerpo', difficulty: 'hard' },
+      { answer: 'FRICCION', clue: 'Fuerza que se opone al movimiento entre dos superficies', difficulty: 'medium' },
+      { answer: 'TELESCOPIO', clue: 'Instrumento usado para observar objetos distantes en el espacio', difficulty: 'medium' },
+      { answer: 'ORBITA', clue: 'Trayectoria curva que sigue un objeto alrededor de otro por la gravedad', difficulty: 'medium' },
+      { answer: 'CRISTAL', clue: 'Sólido con átomos organizados en un patrón repetitivo', difficulty: 'medium' },
+      { answer: 'METEORO', clue: 'Rastro de luz de una roca espacial que se quema en la atmósfera', difficulty: 'medium' }
     ]
   },
   geography: {
@@ -315,7 +375,12 @@ const CLUE_BANK = {
       { answer: 'NORWAY', clue: 'Scandinavian country known for fjords and the midnight sun', difficulty: 'hard' },
       { answer: 'THAILAND', clue: 'Southeast Asian country known as the Land of Smiles', difficulty: 'hard' },
       { answer: 'MOROCCO', clue: 'North African country known for its markets and the Sahara', difficulty: 'hard' },
-      { answer: 'ICELAND', clue: 'Nordic island nation of volcanoes and glaciers', difficulty: 'hard' }
+      { answer: 'ICELAND', clue: 'Nordic island nation of volcanoes and glaciers', difficulty: 'hard' },
+      { answer: 'PORTUGAL', clue: 'European country west of Spain, known for Porto and fado music', difficulty: 'medium' },
+      { answer: 'VIETNAM', clue: 'Southeast Asian country known for Ha Long Bay and pho soup', difficulty: 'medium' },
+      { answer: 'KENYA', clue: 'East African country famous for safaris and long-distance runners', difficulty: 'medium' },
+      { answer: 'SWEDEN', clue: 'Scandinavian country known for IKEA and Nobel Prizes', difficulty: 'medium' },
+      { answer: 'COLOMBIA', clue: 'South American country known for coffee and Cartagena', difficulty: 'medium' }
     ],
     he: [
       { answer: 'צרפת', clue: 'מדינה אירופית ידועה במגדל אייפל', difficulty: 'easy' },
@@ -338,7 +403,12 @@ const CLUE_BANK = {
       { answer: 'נורווגיה', clue: 'מדינה סקנדינבית הידועה בפיורדים ובשמש חצות', difficulty: 'hard' },
       { answer: 'תאילנד', clue: 'מדינה בדרום מזרח אסיה המכונה ארץ החיוכים', difficulty: 'hard' },
       { answer: 'מרוקו', clue: 'מדינה בצפון אפריקה הידועה בשווקים שלה ובמדבר סהרה', difficulty: 'hard' },
-      { answer: 'איסלנד', clue: 'מדינת אי נורדית של הרי געש וקרחונים', difficulty: 'hard' }
+      { answer: 'איסלנד', clue: 'מדינת אי נורדית של הרי געש וקרחונים', difficulty: 'hard' },
+      { answer: 'פורטוגל', clue: 'מדינה אירופית ממערב לספרד, ידועה בפורטו ובמוזיקת פאדו', difficulty: 'medium' },
+      { answer: 'וייטנאם', clue: 'מדינה בדרום מזרח אסיה הידועה במפרץ הלונג ובמרק פו', difficulty: 'medium' },
+      { answer: 'קניה', clue: 'מדינה במזרח אפריקה הידועה בספארי וברצי מרחקים ארוכים', difficulty: 'medium' },
+      { answer: 'שוודיה', clue: 'מדינה סקנדינבית הידועה באיקאה ובפרסי נובל', difficulty: 'medium' },
+      { answer: 'קולומביה', clue: 'מדינה בדרום אמריקה הידועה בקפה ובקרטחנה', difficulty: 'medium' }
     ],
     es: [
       { answer: 'FRANCIA', clue: 'País europeo famoso por la Torre Eiffel', difficulty: 'easy' },
@@ -361,7 +431,12 @@ const CLUE_BANK = {
       { answer: 'NORUEGA', clue: 'País escandinavo conocido por sus fiordos y el sol de medianoche', difficulty: 'hard' },
       { answer: 'TAILANDIA', clue: 'País del sudeste asiático conocido como la Tierra de las Sonrisas', difficulty: 'hard' },
       { answer: 'MARRUECOS', clue: 'País del norte de África conocido por sus mercados y el Sahara', difficulty: 'hard' },
-      { answer: 'ISLANDIA', clue: 'Nación insular nórdica de volcanes y glaciares', difficulty: 'hard' }
+      { answer: 'ISLANDIA', clue: 'Nación insular nórdica de volcanes y glaciares', difficulty: 'hard' },
+      { answer: 'PORTUGAL', clue: 'País europeo al oeste de España, conocido por Oporto y el fado', difficulty: 'medium' },
+      { answer: 'VIETNAM', clue: 'País del sudeste asiático conocido por la bahía de Ha Long y la sopa pho', difficulty: 'medium' },
+      { answer: 'KENIA', clue: 'País de África oriental famoso por los safaris y los corredores de fondo', difficulty: 'medium' },
+      { answer: 'SUECIA', clue: 'País escandinavo conocido por IKEA y los premios Nobel', difficulty: 'medium' },
+      { answer: 'COLOMBIA', clue: 'País sudamericano conocido por el café y Cartagena', difficulty: 'medium' }
     ]
   },
   colors: {
@@ -386,7 +461,12 @@ const CLUE_BANK = {
       { answer: 'IVORY', clue: 'Off-white color like elephant tusks', difficulty: 'hard' },
       { answer: 'INDIGO', clue: 'Deep blue-purple color, one of the rainbow colors', difficulty: 'hard' },
       { answer: 'AMBER', clue: 'Orange-brown color like fossilized tree resin', difficulty: 'hard' },
-      { answer: 'LAVENDER', clue: 'Pale purple color of a fragrant garden flower', difficulty: 'hard' }
+      { answer: 'LAVENDER', clue: 'Pale purple color of a fragrant garden flower', difficulty: 'hard' },
+      { answer: 'MAGENTA', clue: 'Vivid pinkish-purple color used in printing', difficulty: 'medium' },
+      { answer: 'CYAN', clue: 'Bright blue-green color used in printing', difficulty: 'medium' },
+      { answer: 'KHAKI', clue: 'Dull yellowish-brown color, often used in military uniforms', difficulty: 'medium' },
+      { answer: 'CHARCOAL', clue: 'Very dark gray color, almost black', difficulty: 'medium' },
+      { answer: 'AQUAMARINE', clue: 'Pale blue-green color like tropical sea water', difficulty: 'medium' }
     ],
     he: [
       { answer: 'אדום', clue: 'צבע הדם או תמרור עצור', difficulty: 'easy' },
@@ -409,7 +489,12 @@ const CLUE_BANK = {
       { answer: 'שנהב', clue: 'צבע לבן-שמנת כמו חטי הפיל', difficulty: 'hard' },
       { answer: 'אינדיגו', clue: 'צבע כחול-סגול עמוק, אחד מצבעי הקשת', difficulty: 'hard' },
       { answer: 'ענבר', clue: 'צבע כתום-חום כמו שרף עץ מאובן', difficulty: 'hard' },
-      { answer: 'לבנדר', clue: 'צבע סגול בהיר של פרח גן ריחני', difficulty: 'hard' }
+      { answer: 'לבנדר', clue: 'צבע סגול בהיר של פרח גן ריחני', difficulty: 'hard' },
+      { answer: 'מגנטה', clue: 'צבע ורוד-סגול עז המשמש בהדפסה', difficulty: 'medium' },
+      { answer: 'ציאן', clue: 'צבע כחול-ירוק בהיר המשמש בהדפסה', difficulty: 'medium' },
+      { answer: 'חאקי', clue: 'צבע חום-צהבהב עמום, נפוץ במדים צבאיים', difficulty: 'medium' },
+      { answer: 'פחם', clue: 'צבע אפור כהה מאוד, כמעט שחור', difficulty: 'medium' },
+      { answer: 'אקוומרין', clue: 'צבע כחול-ירוק בהיר כמו מי ים טרופיים', difficulty: 'medium' }
     ],
     es: [
       { answer: 'ROJO', clue: 'Color de la sangre o una señal de alto', difficulty: 'easy' },
@@ -432,7 +517,12 @@ const CLUE_BANK = {
       { answer: 'MARFIL', clue: 'Color blanco cremoso como los colmillos del elefante', difficulty: 'hard' },
       { answer: 'INDIGO', clue: 'Color azul violáceo profundo, uno de los colores del arcoíris', difficulty: 'hard' },
       { answer: 'AMBAR', clue: 'Color naranja-marrón como la resina de árbol fosilizada', difficulty: 'hard' },
-      { answer: 'LAVANDA', clue: 'Color morado pálido de una flor de jardín aromática', difficulty: 'hard' }
+      { answer: 'LAVANDA', clue: 'Color morado pálido de una flor de jardín aromática', difficulty: 'hard' },
+      { answer: 'MAGENTA', clue: 'Color rosa-morado intenso usado en impresión', difficulty: 'medium' },
+      { answer: 'CIAN', clue: 'Color azul-verdoso brillante usado en impresión', difficulty: 'medium' },
+      { answer: 'CAQUI', clue: 'Color marrón amarillento apagado, usado a menudo en uniformes militares', difficulty: 'medium' },
+      { answer: 'CARBON', clue: 'Color gris muy oscuro, casi negro', difficulty: 'medium' },
+      { answer: 'AGUAMARINA', clue: 'Color azul verdoso pálido como el agua del mar tropical', difficulty: 'medium' }
     ]
   }
 };
@@ -443,6 +533,7 @@ const STRINGS = {
   tagline:       { en: 'Fill the grid using the clues — across and down',              he: 'מלאו את הלוח בעזרת החידות — מאוזן ומאונך',                 es: 'Completa la cuadrícula con las pistas — horizontal y vertical' },
   newPuzzle:     { en: 'New Puzzle',              he: 'פאזל חדש',               es: 'Nuevo Puzzle' },
   easy:          { en: 'Easy',                    he: 'קל',                     es: 'Fácil' },
+  medium:        { en: 'Medium',                  he: 'בינוני',                 es: 'Medio' },
   hard:          { en: 'Hard',                    he: 'קשה',                    es: 'Difícil' },
   checkPuzzle:   { en: 'Check',                   he: 'בדיקה',                  es: 'Revisar' },
   across:        { en: 'ACROSS',                  he: 'מאוזן',                  es: 'HORIZONTAL' },

@@ -264,6 +264,7 @@ h1 {
 
   <div class="diff-bar">
     <button class="diff-btn" :class="{active: difficulty==='easy'}" @click="selectDifficulty('easy')">{{ UI.easy }}</button>
+    <button class="diff-btn" :class="{active: difficulty==='medium'}" @click="selectDifficulty('medium')">{{ UI.medium }}</button>
     <button class="diff-btn" :class="{active: difficulty==='hard'}" @click="selectDifficulty('hard')">{{ UI.hard }}</button>
   </div>
 
@@ -380,11 +381,14 @@ function dedupeEntries(entries, lang) {
 }
 
 // ── Difficulty ────────────────────────────────────────────────────────────
-// Easy pulls only difficulty:'easy' entries; hard pools easy+hard together
-// (hard words never appear alone) and targets a bigger, denser grid.
+// Each tier pools its own words plus every easier tier's (medium = easy+
+// medium, hard = easy+medium+hard) — so harder words never appear without
+// easier ones to cross against, and never leak into an easier puzzle.
+const DIFFICULTY_ORDER = { easy: 0, medium: 1, hard: 2 };
 const DIFFICULTY_CONFIG = {
-  easy: { targetWords: 8,  maxSpan: 12 },
-  hard: { targetWords: 16, maxSpan: 20 }
+  easy:   { targetWords: 8,  maxSpan: 12 },
+  medium: { targetWords: 12, maxSpan: 16 },
+  hard:   { targetWords: 16, maxSpan: 20 }
 };
 
 // ── Greedy crossword generator ──────────────────────────────────────────
@@ -831,11 +835,10 @@ createApp({
       saveSlot();
     }
 
-    // Hard pools easy+hard together so hard words never appear without the
-    // easier ones to cross against; easy only ever draws from easy words.
     function allEntriesForLang(l, diff) {
+      const maxLevel = DIFFICULTY_ORDER[diff] ?? 0;
       return Object.values(CLUE_BANK).flatMap(cat =>
-        cat[l].filter(e => diff === 'hard' || e.difficulty === 'easy'));
+        cat[l].filter(e => DIFFICULTY_ORDER[e.difficulty] <= maxLevel));
     }
 
     function newPuzzle() {
