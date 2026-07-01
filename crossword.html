@@ -211,6 +211,7 @@ h1 {
 .cell-input.active { background: rgba(236,72,153,0.3); }
 .cell-input.in-entry { background: rgba(236,72,153,0.12); }
 .cell-input.wrong { color: #f87171; }
+.cell-input.hint { color: #58a6ff; }
 
 /* ── Clue lists ──────────────────────────────────────────────────── */
 .clue-cols {
@@ -275,6 +276,7 @@ h1 {
   <div class="btn-row">
     <button class="new-game-btn" @click="onNewPuzzleClick">{{ UI.newPuzzle }}</button>
     <button class="check-btn" @click="checkPuzzle">{{ UI.checkPuzzle }}</button>
+    <button class="check-btn" @click="hintCell">{{ UI.hint }}</button>
   </div>
 
   <div class="status" :class="{ won: phase === 'won' }">
@@ -302,7 +304,8 @@ h1 {
               :class="{
                 active: activeCell.r === r && activeCell.c === c,
                 'in-entry': isInActiveEntry(r, c),
-                wrong: wrongCells.has(r + ',' + c)
+                wrong: wrongCells.has(r + ',' + c),
+                hint: hintedCells.has(r + ',' + c)
               }"
               :style="{ fontSize: Math.floor(cellPx * 0.5) + 'px' }"
               :data-row="r"
@@ -659,6 +662,7 @@ createApp({
     const elapsedSeconds = ref(0);
     const phase = ref('playing'); // 'playing' | 'won'
     const wrongCells = ref(new Set());
+    const hintedCells = ref(new Set());
     const stats = ref({});
     const windowWidth = ref(window.innerWidth);
 
@@ -815,6 +819,24 @@ createApp({
       wrongCells.value = wrong;
     }
 
+    // Reveals the next blank/incorrect cell in whichever word the active
+    // cell currently belongs to — scoped to that one word, never elsewhere.
+    function hintCell() {
+      const entry = activeEntry.value;
+      if (!entry) return;
+      for (const [r, c] of entry.cells) {
+        if (userInput.value[r][c] !== puzzle.value.cells[r][c].letter) {
+          setCellValue(r, c, puzzle.value.cells[r][c].letter);
+          const next = new Set(hintedCells.value);
+          next.add(r + ',' + c);
+          hintedCells.value = next;
+          saveSlot();
+          checkWin();
+          return;
+        }
+      }
+    }
+
     function checkWin() {
       if (!puzzle.value || phase.value === 'won') return;
       for (let r = 0; r < puzzle.value.rows; r++) {
@@ -847,6 +869,7 @@ createApp({
       const first = puzzle.value.across[0] || puzzle.value.down[0];
       activeDir.value = puzzle.value.across[0] ? 'across' : 'down';
       wrongCells.value = new Set();
+      hintedCells.value = new Set();
       elapsedSeconds.value = 0;
       phase.value = 'playing';
       if (first) focusCell(first.row, first.col); else activeCell.value = { r: 0, c: 0 };
@@ -880,7 +903,8 @@ createApp({
           activeCell: activeCell.value,
           activeDir: activeDir.value,
           elapsedSeconds: elapsedSeconds.value,
-          phase: phase.value
+          phase: phase.value,
+          hintedCells: [...hintedCells.value]
         }));
         localStorage.setItem(LAST_KEY, JSON.stringify({ lang: lang.value, difficulty: difficulty.value }));
       } catch {}
@@ -899,6 +923,7 @@ createApp({
         elapsedSeconds.value = s.elapsedSeconds || 0;
         phase.value = s.phase || 'playing';
         wrongCells.value = new Set();
+        hintedCells.value = new Set(s.hintedCells || []);
         return true;
       } catch { return false; }
     }
@@ -938,10 +963,10 @@ createApp({
 
     return {
       lang, difficulty, puzzle, userInput, activeCell, activeDir, elapsedSeconds, phase,
-      wrongCells, UI, isRTL, cellPx, currentStats, activeEntry,
+      wrongCells, hintedCells, UI, isRTL, cellPx, currentStats, activeEntry,
       isInActiveEntry, isEntryFilled, formatTime, setCellRef,
       onCellMouseDown, onCellFocus, onCellClick, onCellInput, onKeydown,
-      selectEntry, checkPuzzle, onNewPuzzleClick, setLang, selectDifficulty
+      selectEntry, checkPuzzle, hintCell, onNewPuzzleClick, setLang, selectDifficulty
     };
   }
 }).mount('#app');

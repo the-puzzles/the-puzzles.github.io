@@ -536,6 +536,7 @@ const STRINGS = {
   medium:        { en: 'Medium',                  he: 'בינוני',                 es: 'Medio' },
   hard:          { en: 'Hard',                    he: 'קשה',                    es: 'Difícil' },
   checkPuzzle:   { en: 'Check',                   he: 'בדיקה',                  es: 'Revisar' },
+  hint:          { en: 'Hint',                    he: 'רמז',                    es: 'Pista' },
   across:        { en: 'ACROSS',                  he: 'מאוזן',                  es: 'HORIZONTAL' },
   down:          { en: 'DOWN',                     he: 'מאונך',                  es: 'VERTICAL' },
   solvedStat:    { en: 'Solved',                   he: 'נפתרו',                  es: 'Resueltos' },
