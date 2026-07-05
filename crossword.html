@@ -579,7 +579,7 @@ function generateCrossword(rawEntries, lang, difficulty) {
   MAX_SPAN = config.maxSpan;
   const targetWords = config.targetWords;
   const entries = dedupeEntries(rawEntries, lang).map(e => ({
-    clue: e.clue,
+    clue: e.clues[Math.floor(Math.random() * e.clues.length)],
     letters: normalizeAnswer(e.answer, lang)
   }));
 
