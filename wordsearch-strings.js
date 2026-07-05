@@ -3,16 +3,16 @@
 // generatePuzzle() calls normalizeHebrew() on all he words at runtime.
 const WORD_BANK = {
   animals: {
-    en: ['CAT','DOG','LION','WOLF','BEAR','OWL','DEER','EAGLE','FOX','FROG','DUCK','FISH','LLAMA','CHEETAH','LEOPARD','SHARK','CRAB','BEE','BEETLE','ANT','PANDA','KOALA','BAT'],
-    he: ['חתול','כלב','אריה','זאב','דוב','ינשוף','איל','נשר','שועל','צפרדע','ברווז','דג', 'למה', 'ציטה', 'נמר', 'כריש', 'סרטן', 'דבורה', 'חיפושית', 'נמלה', 'פנדה', 'קואלה', 'עטלף'],
-    es: ['GATO','PERRO','LEON','LOBO','OSO','BUHO','CIERVO','AGUILA','ZORRO','RANA','PATO','PEZ','LLAMA','GUEPARDO','LEOPARDO','TIBURON','CANGREJO','ABEJA','ESCARABAJO','HORMIGA','PANDA','KOALA','MURCIELAGO'],
-    ar: ['قط','كلب','أسد','ذئب','دب','بوم','ظبي','نسر','ثعلب','ضفدع','بطة','سمك','لاما','فهد','نمر','قرش','سرطان','نحلة','خنفساء','نملة','باندا','كوالا','خفاش']
+    en: ['CAT','DOG','LION','WOLF','BEAR','OWL','DEER','EAGLE','FOX','FROG','DUCK','FISH','LLAMA','CHEETAH','LEOPARD','SHARK','CRAB','BEE','BEETLE','ANT','PANDA','KOALA','BAT','TIGER','ELEPHANT','ZEBRA','MONKEY','PENGUIN','DOLPHIN','RABBIT','SNAKE','TURTLE','CAMEL','KANGAROO','HORSE','COW','SHEEP','GOAT','MOUSE','OCTOPUS','CHAMELEON','RHINOCEROS','ARMADILLO','FLAMINGO','HEDGEHOG','GORILLA','OSTRICH','SQUIRREL','BUTTERFLY'],
+    he: ['חתול','כלב','אריה','זאב','דוב','ינשוף','איל','נשר','שועל','צפרדע','ברווז','דג', 'למה', 'ציטה', 'נמר', 'כריש', 'סרטן', 'דבורה', 'חיפושית', 'נמלה', 'פנדה', 'קואלה', 'עטלף','טיגריס','פיל','זברה','קוף','פינגווין','דולפין','ארנב','נחש','צב','גמל','קנגורו','סוס','פרה','כבש','עז','עכבר','תמנון','זיקית','קרנף','ארמדילו','פלמינגו','קיפוד','גורילה','יען','סנאי','פרפר'],
+    es: ['GATO','PERRO','LEON','LOBO','OSO','BUHO','CIERVO','AGUILA','ZORRO','RANA','PATO','PEZ','LLAMA','GUEPARDO','LEOPARDO','TIBURON','CANGREJO','ABEJA','ESCARABAJO','HORMIGA','PANDA','KOALA','MURCIELAGO','TIGRE','ELEFANTE','CEBRA','MONO','PINGUINO','DELFIN','CONEJO','SERPIENTE','TORTUGA','CAMELLO','CANGURO','CABALLO','VACA','OVEJA','CABRA','RATON','PULPO','CAMALEON','RINOCERONTE','ARMADILLO','FLAMENCO','ERIZO','GORILA','AVESTRUZ','ARDILLA','MARIPOSA'],
+    ar: ['قط','كلب','أسد','ذئب','دب','بوم','ظبي','نسر','ثعلب','ضفدع','بطة','سمك','لاما','فهد','نمر','قرش','سرطان','نحلة','خنفساء','نملة','باندا','كوالا','خفاش','فيل','قرد','بطريق','دولفين','أرنب','ثعبان','سلحفاة','جمل','كنغر','حصان','بقرة','خروف','ماعز','فأر','أخطبوط','حرباء','كركدن','أرمديلو','فلامنغو','قنفذ','غوريلا','نعامة','سنجاب','فراشة']
   },
   colors: {
-    en: ['RED','BLUE','GREEN','GOLD','PINK','GREY','TEAL','LIME','RUBY','CYAN','ROSE','NAVY','YELLOW','BLACK','WHITE','SILVER'],
-    he: ['צהוב','שחור','לבן','אפור','כסף','אדום','כחול','ירוק','זהב','ורוד','טורקיז','ליים','רובי','ציאן','ורד','נייבי'],
-    es: ['ROJO','AZUL','VERDE','ORO','ROSA','GRIS','LILA','CIAN','RUBI','CORAL','LIMA','OCRE','AMARILLO','NEGRO','BLANCO','PLATA'],
-    ar: ['أحمر','أزرق','أخضر','ذهبي','وردي','رمادي','أبيض','أسود','أصفر','بني','زيتوني','فيروزي','فضي']
+    en: ['RED','BLUE','GREEN','GOLD','PINK','GREY','TEAL','LIME','RUBY','CYAN','ROSE','NAVY','YELLOW','BLACK','WHITE','SILVER','PURPLE','ORANGE','BROWN','GRAY','VIOLET','CORAL','SCARLET','OCHRE','SAND','JADE','MAROON','CRIMSON','IVORY','INDIGO','AMBER','LAVENDER','MAGENTA','KHAKI','CHARCOAL','AQUAMARINE'],
+    he: ['צהוב','שחור','לבן','אפור','כסף','אדום','כחול','ירוק','זהב','ורוד','טורקיז','ליים','רובי','ציאן','ורד','נייבי','סגול','כתום','חום','תכלת','לילך','ברונזה','שני','שמנת','חול','ירקן','בורדו','ארגמן','שנהב','אינדיגו','ענבר','לבנדר','מגנטה','חאקי','פחם','אקוומרין'],
+    es: ['ROJO','AZUL','VERDE','ORO','ROSA','GRIS','LILA','CIAN','RUBI','CORAL','LIMA','OCRE','AMARILLO','NEGRO','BLANCO','PLATA','MORADO','NARANJA','MARRON','TURQUESA','VIOLETA','ESCARLATA','ARENA','JADE','GRANATE','CARMESI','MARFIL','INDIGO','AMBAR','LAVANDA','MAGENTA','CAQUI','CARBON','AGUAMARINA'],
+    ar: ['أحمر','أزرق','أخضر','ذهبي','وردي','رمادي','أبيض','أسود','أصفر','بني','زيتوني','فيروزي','فضي','بنفسجي','برتقالي','أرجواني','مرجاني','قرمزي','مغرة','رملي','يشمي','كستنائي','عاجي','نيلي','كهرماني','خزامي','ماجنتا','كاكي','فحمي']
   },
   space: {
     en: ['MOON','STAR','MARS','NEPTUNE','SPACESHIP','VENUS','COMET','ORBIT','NEBULA','SATURN','PULSAR','QUASAR','GALAXY','METEOR','SATELLITE','ASTEROID','ECLIPSE','SUPERNOVA','TELESCOPE','JUPITER','ROCKET'],
@@ -21,16 +21,16 @@ const WORD_BANK = {
     ar: ['قمر','نجم','مريخ','زهرة','مذنب','مدار','سديم','زحل','مجرة','كويكب','نيزك','كون','نبتون','مركبة','تابع','أستيرويد','خسوف','مستعر','تلسكوب','مشتري','صاروخ']
   },
   food: {
-    en: ['RICE','CORN','SOUP','CAKE','PLUM','OLIVE','BREAD','MANGO','PIZZA','LEMON','GRAPE','TOFU','SOY','HUMMUS','ORANGE','PEAR','LENTILS','AVOCADO','FALAFEL'],
-    he: ['אורז','תירס','מרק','עוגה','שזיף','זית','לחם','מנגו','פיצה','לימון','ענב','טופו','סויה','חומוס','תפוז','אגס','עדשים','אבוקדו','פלאפל'],
-    es: ['ARROZ','MAIZ','SOPA','PASTEL','CIRUELA','OLIVA','PAN','MANGO','PIZZA','LIMON','UVA','QUESO','TOFU','SOJA','HUMMUS','NARANJA','PERA','LENTEJAS','AGUACATE','FALAFEL'],
-    ar: ['أرز','ذرة','حساء','كعكة','برقوق','زيتون','خبز','مانجو','بيتزا','ليمون','عنب','توفو','صويا','حمص','برتقال','كمثرى','عدس','أفوكادو','فلافل']
+    en: ['RICE','CORN','SOUP','CAKE','PLUM','OLIVE','BREAD','MANGO','PIZZA','LEMON','GRAPE','TOFU','SOY','HUMMUS','ORANGE','PEAR','LENTILS','AVOCADO','FALAFEL','PASTA','LENTIL','GARLIC','ONION','TOMATO','BANANA','CHOCOLATE','SYRUP','SALAD','APPLE','CARROT','CUCUMBER','MELON','STRAWBERRY','BROCCOLI','CELERY','PEANUT','ARTICHOKE','POMEGRANATE','ASPARAGUS','CINNAMON','WATERMELON','EGGPLANT','SPINACH','MUSHROOM','COCONUT','PINEAPPLE','PEPPER'],
+    he: ['אורז','תירס','מרק','עוגה','שזיף','זית','לחם','מנגו','פיצה','לימון','ענב','טופו','סויה','חומוס','תפוז','אגס','עדשים','אבוקדו','פלאפל','פסטה','עדשה','שום','בצל','עגבניה','בננה','שוקולד','סירופ','סלט','תפוח','גזר','מלפפון','מלון','תות','ברוקולי','סלרי','בוטן','ארטישוק','רימון','אספרגוס','קינמון','אבטיח','חציל','תרד','פטרייה','קוקוס','אננס','פלפל'],
+    es: ['ARROZ','MAIZ','SOPA','PASTEL','CIRUELA','OLIVA','PAN','MANGO','PIZZA','LIMON','UVA','QUESO','TOFU','SOJA','HUMMUS','NARANJA','PERA','LENTEJAS','AGUACATE','FALAFEL','PASTA','LENTEJA','AJO','CEBOLLA','TOMATE','PLATANO','CHOCOLATE','JARABE','ENSALADA','MANZANA','ZANAHORIA','PEPINO','MELON','FRESA','BROCOLI','APIO','ACEITUNA','MANI','ALCACHOFA','GRANADA','ESPARRAGO','CANELA','SANDIA','BERENJENA','ESPINACA','HONGO','COCO','ANANAS','PIMIENTO'],
+    ar: ['أرز','ذرة','حساء','كعكة','برقوق','زيتون','خبز','مانجو','بيتزا','ليمون','عنب','توفو','صويا','حمص','برتقال','كمثرى','عدس','أفوكادو','فلافل','معكرونة','ثوم','بصل','طماطم','موز','شوكولاتة','شراب','سلطة','تفاح','جزر','خيار','شمام','فراولة','بروكلي','كرفس','خرشوف','رمان','هليون','قرفة','بطيخ','باذنجان','سبانخ','فطر','أناناس','فلفل']
   },
   sports: {
-    en: ['SOCCER','TENNIS','BOXING','RUGBY','GOLF','SWIMMING','CYCLING','HOCKEY','POLO','CHESS','SURFING','YOGA','CLIMBING'],
-    he: ['כדורגל','טניס','אגרוף','רוגבי','גולף','שחייה','רכיבה','הוקי','פולו','שחמט','גלישה','יוגה','טיפוס'],
-    es: ['FUTBOL','TENIS','BOXEO','RUGBY','GOLF','NATACION','CICLISMO','HOCKEY','POLO','AJEDREZ','SURF','YOGA','ESCALADA'],
-    ar: ['كرة','تنس','ملاكمة','ركبي','غولف','سباحة','دراجة','هوكي','بولو','شطرنج','تزلج','يوغا','تسلق']
+    en: ['SOCCER','TENNIS','BOXING','RUGBY','GOLF','SWIMMING','CYCLING','HOCKEY','POLO','CHESS','SURFING','YOGA','CLIMBING','BOWLING','ARCHERY','FENCING','SKIING','WRESTLING','BASEBALL','SKATING','ROWING','DARTS','SQUASH','MARATHON','TAEKWONDO','SUMO','SNOWBOARDING','BADMINTON','GYMNASTICS','TRIATHLON','VOLLEYBALL','HANDBALL','KARATE','CRICKET','RUNNING','SAILING','DIVING','BASKETBALL'],
+    he: ['כדורגל','טניס','אגרוף','רוגבי','גולף','שחייה','רכיבה','הוקי','פולו','שחמט','גלישה','יוגה','טיפוס','באולינג','קשתות','סייף','סקי','היאבקות','בייסבול','החלקה','חתירה','דארטס','סקווש','מרתון','טאקוונדו','סומו','סנובורד','בדמינטון','התעמלות','טריאתלון','כדורעף','כדוריד','קראטה','קריקט','ריצה','שייט','צלילה','כדורסל'],
+    es: ['FUTBOL','TENIS','BOXEO','RUGBY','GOLF','NATACION','CICLISMO','HOCKEY','POLO','AJEDREZ','SURF','YOGA','ESCALADA','BOLOS','ARQUERIA','ESGRIMA','ESQUI','LUCHA','BEISBOL','PATINAJE','REMO','DARDOS','SQUASH','MARATON','TAEKWONDO','SUMO','SNOWBOARD','BADMINTON','GIMNASIA','TRIATLON','VOLEIBOL','BALONMANO','KARATE','CRICKET','CARRERA','VELA','BUCEO','BALONCESTO'],
+    ar: ['كرة','تنس','ملاكمة','ركبي','غولف','سباحة','دراجة','هوكي','بولو','شطرنج','تزلج','يوغا','تسلق','بولينج','رماية','مبارزة','مصارعة','بيسبول','تجديف','سهام','اسكواش','ماراثون','تايكوندو','سومو','بادمنتون','جمباز','ترياثلون','كاراتيه','كريكيت','جري','إبحار','غوص']
   },
   nature: {
     en: ['RIVER','OCEAN','FOREST','DESERT','LAKE','VOLCANO','CAVE','GLACIER','CANYON','VALLEY','ISLAND','CLIFF'],
