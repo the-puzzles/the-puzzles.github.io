@@ -49,6 +49,24 @@ const WORD_BANK = {
     he: ['ראש','עין','אוזן','אף','פה','יד','רגל','לב','גב','ברך','אצבע','גוף','כתף'],
     es: ['CABEZA','OJO','OREJA','NARIZ','BOCA','BRAZO','PIERNA','MANO','PIE','CORAZON','ESPALDA','RODILLA','HOMBRO','DEDO'],
     ar: ['رأس','عين','أذن','أنف','فم','يد','رجل','قلب','ظهر','ركبة','إصبع','جسم','كتف']
+  },
+  science: {
+    en: ['ATOM','ENERGY','GRAVITY','OXYGEN','CELL','VIRUS','PLANET','GALAXY','MAGNET','VACCINE','CHEMISTRY','BIOLOGY','FOSSIL','BACTERIA','ELECTRON','MOON','STAR','RAINBOW','CLOUD','ICE','DINOSAUR','THUNDER','LIGHTNING','SKELETON','COMET','EVOLUTION','MOLECULE','ECOSYSTEM','RADIATION','HORMONE','FRICTION','TELESCOPE','ORBIT','CRYSTAL','METEOR'],
+    he: ['אטום','אנרגיה','כבידה','חמצן','תא','נגיף','פלנטה','גלקסיה','מגנט','חיסון','כימיה','ביולוגיה','מאובן','חיידק','אלקטרון','ירח','כוכב','קשת','ענן','קרח','דינוזאור','רעם','ברק','שלד','שביט','פוטוסינתזה','אבולוציה','מולקולה','אקוסיסטמה','קרינה','הורמון','חיכוך','טלסקופ','מסלול','גביש','מטאור'],
+    es: ['ATOMO','ENERGIA','GRAVEDAD','OXIGENO','CELULA','VIRUS','PLANETA','GALAXIA','IMAN','VACUNA','QUIMICA','BIOLOGIA','FOSIL','BACTERIA','ELECTRON','LUNA','ESTRELLA','ARCOIRIS','NUBE','HIELO','DINOSAURIO','TRUENO','RAYO','ESQUELETO','COMETA','FOTOSINTESIS','EVOLUCION','MOLECULA','ECOSISTEMA','RADIACION','HORMONA','FRICCION','TELESCOPIO','ORBITA','CRISTAL','METEORO'],
+    ar: ['ذرة','طاقة','جاذبية','أكسجين','خلية','فيروس','كوكب','مجرة','مغناطيس','لقاح','كيمياء','أحياء','أحفورة','بكتيريا','إلكترون','قمر','نجم','سحابة','جليد','ديناصور','رعد','برق','هيكل','مذنب','تطور','جزيء','إشعاع','هرمون','احتكاك','تلسكوب','مدار','بلورة','نيزك']
+  },
+  geography: {
+    en: ['FRANCE','JAPAN','BRAZIL','EGYPT','CANADA','ITALY','MEXICO','RUSSIA','CHINA','INDIA','GREECE','PERU','TURKEY','GERMANY','ISRAEL','SPAIN','ENGLAND','IRELAND','POLAND','HOLLAND','SWITZERLAND','AUSTRIA','DENMARK','FINLAND','SCOTLAND','ARGENTINA','AUSTRALIA','NORWAY','THAILAND','MOROCCO','ICELAND','PORTUGAL','VIETNAM','KENYA','SWEDEN','COLOMBIA'],
+    he: ['צרפת','יפן','ברזיל','מצרים','קנדה','איטליה','מקסיקו','רוסיה','סין','הודו','יוון','פרו','טורקיה','גרמניה','ישראל','ספרד','אנגליה','אירלנד','פולין','הולנד','שוויץ','אוסטריה','דנמרק','פינלנד','סקוטלנד','ארגנטינה','אוסטרליה','נורווגיה','תאילנד','מרוקו','איסלנד','פורטוגל','וייטנאם','קניה','שוודיה','קולומביה'],
+    es: ['FRANCIA','JAPON','BRASIL','EGIPTO','CANADA','ITALIA','MEXICO','RUSIA','CHINA','INDIA','GRECIA','PERU','TURQUIA','ALEMANIA','ISRAEL','ESPANA','INGLATERRA','IRLANDA','POLONIA','HOLANDA','SUIZA','AUSTRIA','DINAMARCA','FINLANDIA','ESCOCIA','ARGENTINA','AUSTRALIA','NORUEGA','TAILANDIA','MARRUECOS','ISLANDIA','PORTUGAL','VIETNAM','KENIA','SUECIA','COLOMBIA'],
+    ar: ['فرنسا','اليابان','البرازيل','مصر','كندا','إيطاليا','المكسيك','روسيا','الصين','الهند','اليونان','بيرو','تركيا','ألمانيا','إسرائيل','إسبانيا','إنجلترا','أيرلندا','بولندا','هولندا','سويسرا','النمسا','الدنمارك','فنلندا','اسكتلندا','الأرجنتين','أستراليا','النرويج','تايلاند','المغرب','آيسلندا','البرتغال','فيتنام','كينيا','السويد','كولومبيا']
+  },
+  music: {
+    en: ['GUITAR','PIANO','DRUM','VIOLIN','FLUTE','TRUMPET','SONG','MELODY','RHYTHM','CHOIR','CONCERT','ORCHESTRA','HARMONY','LYRICS','BAND','SAXOPHONE','CLARINET','HARP','ACCORDION','TAMBOURINE','SYMPHONY','CONDUCTOR','COMPOSER','TROMBONE','XYLOPHONE','SERENADE'],
+    he: ['גיטרה','פסנתר','תוף','כינור','חליל','חצוצרה','שיר','מנגינה','קצב','מקהלה','קונצרט','תזמורת','הרמוניה','מילים','להקה','סקסופון','קלרינט','נבל','אקורדיון','טמבורין','סימפוניה','מנצח','מלחין','טרומבון','קסילופון','סרנדה'],
+    es: ['GUITARRA','PIANO','TAMBOR','VIOLIN','FLAUTA','TROMPETA','CANCION','MELODIA','RITMO','CORO','CONCIERTO','ORQUESTA','ARMONIA','LETRA','BANDA','SAXOFON','CLARINETE','ARPA','ACORDEON','PANDERETA','SINFONIA','DIRECTOR','COMPOSITOR','TROMBON','XILOFONO','SERENATA'],
+    ar: ['جيتار','بيانو','طبل','كمان','ناي','بوق','أغنية','لحن','إيقاع','جوقة','حفلة','أوركسترا','انسجام','كلمات','فرقة','ساكسفون','كلارينيت','قيثارة','أكورديون','دف','سيمفونية','قائد','ملحن','ترومبون','إكسيلوفون','سيرينادة']
   }
 };
 
@@ -60,7 +78,10 @@ const CATEGORIES = [
   { id: 'sports',  label: { en: '🏅 Sports',   he: '🏅 ספורט',  es: '🏅 Deportes',    ar: '🏅 رياضة'   } },
   { id: 'nature',  label: { en: '🌿 Nature',   he: '🌿 טבע',    es: '🌿 Naturaleza',  ar: '🌿 طبيعة'   } },
   { id: 'cities',  label: { en: '🏙️ Cities',  he: '🏙️ ערים',  es: '🏙️ Ciudades',   ar: '🏙️ مدن'    } },
-  { id: 'body',    label: { en: '🫀 Body',     he: '🫀 גוף',    es: '🫀 Cuerpo',      ar: '🫀 جسم'     } }
+  { id: 'body',    label: { en: '🫀 Body',     he: '🫀 גוף',    es: '🫀 Cuerpo',      ar: '🫀 جسم'     } },
+  { id: 'science',   label: { en: '🔬 Science',   he: '🔬 מדע',      es: '🔬 Ciencia',    ar: '🔬 علم' } },
+  { id: 'geography', label: { en: '🌍 Geography', he: '🌍 גאוגרפיה', es: '🌍 Geografía',  ar: '🌍 جغرافيا' } },
+  { id: 'music',     label: { en: '🎵 Music',     he: '🎵 מוזיקה',   es: '🎵 Música',     ar: '🎵 موسيقى' } }
 ];
 
 const STRINGS = {
