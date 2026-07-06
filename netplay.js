@@ -226,74 +226,82 @@ function createNetplay({ gameId, onMove, onReset, onSync } = {}) {
     swapped:   false,
   })
 
-  // SharedWorker is unsupported in Safari (desktop and all iOS/iPadOS) — fail
-  // soft instead of throwing, since this used to crash the whole game's
-  // Vue setup() and blank the entire page, not just Network mode.
-  if (typeof SharedWorker === 'undefined') {
-    ctrl.netStatus = 'unsupported'
-    ctrl.startHost = ctrl.startJoin = ctrl.connectRoom = () => {}
-    ctrl.startHostAdv = ctrl.startJoinAdv = ctrl.connectOfferAdv = ctrl.connectAnswerAdv = () => {}
-    ctrl.send = ctrl.swapRoles = ctrl.close = ctrl.copyCode = ctrl.copyAdv = () => {}
-    ctrl.isMyTurn = () => false
-    return ctrl
-  }
-
-  const worker = new SharedWorker('netplay-worker.js')
-  const port   = worker.port
-  port.start()
+  // SharedWorker lets multiple tabs of the same game on one device share a
+  // connection — it's not required for the core peer-to-peer link itself
+  // (that's plain RTCPeerConnection + the remote signaling server). Several
+  // browsers never implemented it at all: Safari (desktop and all
+  // iOS/iPadOS), and — critically — every Chromium-based browser on Android
+  // (Chrome, Brave, Samsung Internet, etc; only Firefox Android has it).
+  // Calling `new SharedWorker(...)` unconditionally used to throw there and
+  // crash the whole game's Vue setup(), blanking the entire page. Instead,
+  // fall back to single-tab mode: multi-tab sync is unavailable, but hosting
+  // and joining a real cross-device game works exactly the same.
+  const hasWorker = typeof SharedWorker !== 'undefined'
+  const port = hasWorker ? new SharedWorker('netplay-worker.js').port : null
+  if (port) port.start()
 
   let synced = false
 
-  port.onmessage = ({ data }) => {
-    switch (data.type) {
-      case 'status':
-        if (!netPlay) {  // observer tabs follow worker state
-          ctrl.netStatus = data.netStatus
-          ctrl.netRole   = data.role      ?? null
-          ctrl.roomCode  = data.roomCode  ?? ''
-          ctrl.offerText = data.offerText ?? ''
-          ctrl.swapped   = data.swapped   ?? false
-        }
-        if (!synced) { synced = true; onSync?.() }
-        break
-      case 'move':
-        onMove?.(data.data)
-        break
-      case 'connected':
-        if (!netPlay) {
-          ctrl.netStatus = 'connected'; ctrl.netRole = data.role; ctrl.swapped = false
-          onReset?.()
-        }
-        break
-      case 'disconnected':
-        if (!netPlay) {
-          ctrl.netStatus = 'idle'; ctrl.netRole = null; ctrl.roomCode = ''; ctrl.swapped = false
-        }
-        break
-      // Worker asks owner tab to forward a move from another tab via RTC
-      case 'sendToOpponent':
-        netPlay?.send({ gameId: data.gameId, ...data.data })
-        break
-      // Worker asks owner to swap and notify opponent
-      case 'doSwapRoles':
-        if (netPlay) {
-          ctrl.swapped = !ctrl.swapped
-          netPlay.send({ type: 'swapRoles' })
-          report()
-          port.postMessage({ type: 'broadcastNewgame' })
-        }
-        break
-      // Worker asks owner to tear down
-      case 'doClose':
-        _teardown()
-        break
+  if (port) {
+    port.onmessage = ({ data }) => {
+      switch (data.type) {
+        case 'status':
+          if (!netPlay) {  // observer tabs follow worker state
+            ctrl.netStatus = data.netStatus
+            ctrl.netRole   = data.role      ?? null
+            ctrl.roomCode  = data.roomCode  ?? ''
+            ctrl.offerText = data.offerText ?? ''
+            ctrl.swapped   = data.swapped   ?? false
+          }
+          if (!synced) { synced = true; onSync?.() }
+          break
+        case 'move':
+          onMove?.(data.data)
+          break
+        case 'connected':
+          if (!netPlay) {
+            ctrl.netStatus = 'connected'; ctrl.netRole = data.role; ctrl.swapped = false
+            onReset?.()
+          }
+          break
+        case 'disconnected':
+          if (!netPlay) {
+            ctrl.netStatus = 'idle'; ctrl.netRole = null; ctrl.roomCode = ''; ctrl.swapped = false
+          }
+          break
+        // Worker asks owner tab to forward a move from another tab via RTC
+        case 'sendToOpponent':
+          netPlay?.send({ gameId: data.gameId, ...data.data })
+          break
+        // Worker asks owner to swap and notify opponent
+        case 'doSwapRoles':
+          if (netPlay) {
+            ctrl.swapped = !ctrl.swapped
+            netPlay.send({ type: 'swapRoles' })
+            report()
+            port.postMessage({ type: 'broadcastNewgame' })
+          }
+          break
+        // Worker asks owner to tear down
+        case 'doClose':
+          _teardown()
+          break
+      }
     }
+
+    if (gameId) port.postMessage({ type: 'subscribe', gameId })
+    port.postMessage({ type: 'getStatus' })
+  } else {
+    // Defer like the worker path does (which calls onSync async via
+    // port.onmessage) — calling it synchronously here would run before the
+    // caller's `const netCtrl = createNetplay(...)` assignment completes,
+    // and callers' onSync handlers commonly reference netCtrl by that name.
+    synced = true
+    queueMicrotask(() => onSync?.())
   }
 
-  if (gameId) port.postMessage({ type: 'subscribe', gameId })
-  port.postMessage({ type: 'getStatus' })
-
   function report(event) {
+    if (!port) return
     port.postMessage({
       type: 'reportStatus', event,
       netStatus: ctrl.netStatus, role: ctrl.netRole,
@@ -312,12 +320,12 @@ function createNetplay({ gameId, onMove, onReset, onSync } = {}) {
       onMove(msg) {
         if (msg.type === 'swapRoles') {
           ctrl.swapped = !ctrl.swapped; report()
-          port.postMessage({ type: 'broadcastNewgame' }); return
+          if (port) port.postMessage({ type: 'broadcastNewgame' }); return
         }
         const { gameId: gid, ...payload } = msg
         if (!gid) return
         if (gid === gameId) onMove?.(payload)  // local game tab
-        port.postMessage({ type: 'incoming', gameId: gid, data: payload })  // other tabs
+        if (port) port.postMessage({ type: 'incoming', gameId: gid, data: payload })  // other tabs
       },
       onConnected(role) {
         ctrl.netStatus = 'connected'; ctrl.netRole = role; ctrl.swapped = false
@@ -379,16 +387,19 @@ function createNetplay({ gameId, onMove, onReset, onSync } = {}) {
   ctrl.send = function (data) {
     if (netPlay) {
       netPlay.send({ gameId, ...data })     // owner: send directly via RTC
-    } else if (ctrl.netStatus === 'connected') {
+    } else if (port && ctrl.netStatus === 'connected') {
       port.postMessage({ type: 'send', gameId, data })  // observer: relay via worker
     }
   }
 
-  ctrl.swapRoles = function () { port.postMessage({ type: 'swapRoles' }) }
+  ctrl.swapRoles = function () {
+    if (port) { port.postMessage({ type: 'swapRoles' }); return }
+    if (netPlay) { ctrl.swapped = !ctrl.swapped; netPlay.send({ type: 'swapRoles' }) }
+  }
 
   ctrl.close = function () {
     if (netPlay) { _teardown(); report('disconnected') }
-    else { port.postMessage({ type: 'close' }) }
+    else if (port) { port.postMessage({ type: 'close' }) }
   }
 
   ctrl.isMyTurn = function (turn) {
@@ -414,10 +425,7 @@ window.NetPanel = {
   setup() { return { c: Vue.inject('_netplay') } },
   template: `
     <div class="net-panel">
-      <template v-if="c.netStatus === 'unsupported'">
-        <p class="net-label">Network play needs a browser feature (SharedWorker) that isn't available right now — this can happen in Safari, in private/incognito windows, or with strict privacy settings (e.g. Brave Shields). Try a normal window, loosen shields/tracking-protection for this site, or use a different browser.</p>
-      </template>
-      <template v-else-if="c.netStatus === 'connected'">
+      <template v-if="c.netStatus === 'connected'">
         <div class="net-label">Connected — you are
           <strong>{{ c.netRole === 'host' ? (c.swapped ? 'Player 2' : 'Player 1') : (c.swapped ? 'Player 1' : 'Player 2') }}</strong>
         </div>
