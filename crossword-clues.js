@@ -811,7 +811,7 @@ const CLUE_BANK = {
       { answer: 'SERENADE', clues: ['Romantic piece of music performed, often at night, for someone special'], difficulty: 'hard' }
     ],
     he: [
-      { answer: 'גיטרה', clues: ['כלי נגינה במיתרים המנוגן בפריטה או בקטיפה'], difficulty: 'easy' },
+      { answer: 'גיטרה', clues: ['כלי נגינה במיתרים המנוגן בפריטה'], difficulty: 'easy' },
       { answer: 'פסנתר', clues: ['כלי נגינה גדול עם מקלדת בעלת מקשים שחורים ולבנים'], difficulty: 'easy' },
       { answer: 'תוף', clues: ['כלי הקשה המנוגן בהכאה על קרום מתוח'], difficulty: 'easy' },
       { answer: 'כינור', clues: ['כלי נגינה קטן בעל ארבעה מיתרים המנוגן בעזרת קשת'], difficulty: 'easy' },
