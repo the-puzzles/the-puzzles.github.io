@@ -415,7 +415,7 @@ window.NetPanel = {
   template: `
     <div class="net-panel">
       <template v-if="c.netStatus === 'unsupported'">
-        <p class="net-label">Network play isn't supported in this browser (Safari lacks a required API). Try Chrome, Firefox, or Edge instead.</p>
+        <p class="net-label">Network play needs a browser feature (SharedWorker) that isn't available right now — this can happen in Safari, in private/incognito windows, or with strict privacy settings (e.g. Brave Shields). Try a normal window, loosen shields/tracking-protection for this site, or use a different browser.</p>
       </template>
       <template v-else-if="c.netStatus === 'connected'">
         <div class="net-label">Connected — you are
