@@ -13,7 +13,7 @@ CATEGORIES.find(c=>c.label==="Words").games.push({
   "tagline": "A real clued crossword — a numbered grid on one side, clues on the other. Fill in the answers across and down.",
   "rules": [
     "Clued crossword — fill answers using across and down clues",
-    "Every puzzle mixes words from 7 categories, including music",
+    "Every puzzle mixes words from 8 categories, including music",
     "Easy, Medium or Hard — each step up adds tougher words and a bigger grid",
     "Check flags wrong letters; Hint reveals a letter in the current word",
     "Available in English, Hebrew (true right-to-left) and Spanish"

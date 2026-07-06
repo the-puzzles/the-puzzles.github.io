@@ -33,10 +33,10 @@ const WORD_BANK = {
     ar: ['كرة','تنس','ملاكمة','ركبي','غولف','سباحة','دراجة','هوكي','بولو','شطرنج','تزلج','يوغا','تسلق','بولينج','رماية','مبارزة','مصارعة','بيسبول','تجديف','سهام','اسكواش','ماراثون','تايكوندو','سومو','بادمنتون','جمباز','ترياثلون','كاراتيه','كريكيت','جري','إبحار','غوص']
   },
   nature: {
-    en: ['RIVER','OCEAN','FOREST','DESERT','LAKE','VOLCANO','CAVE','GLACIER','CANYON','VALLEY','ISLAND','CLIFF'],
-    he: ['נהר','אוקיינוס','יער','מדבר','אגם','הר','מערה','קרחון','קניון','עמק','אי','מצוק'],
-    es: ['RIO','OCEANO','BOSQUE','DESIERTO','LAGO','VOLCAN','CUEVA','GLACIAR','CANON','VALLE','ISLA','ROCA'],
-    ar: ['نهر','محيط','غابة','صحراء','بحيرة','بركان','كهف','جليد','وادي','جزيرة','جبل','شلال']
+    en: ['RIVER','OCEAN','FOREST','DESERT','LAKE','VOLCANO','CAVE','GLACIER','CANYON','VALLEY','ISLAND','CLIFF','MOUNTAIN','BEACH','HILL','CONTINENT','PLATEAU','WATERFALL','TUNDRA','ARCHIPELAGO','FJORD','SAVANNA','LAGOON','ISTHMUS','DELTA','ATOLL','GEYSER','STEPPE','TAIGA'],
+    he: ['נהר','אוקיינוס','יער','מדבר','אגם','הר','מערה','קרחון','קניון','עמק','אי','מצוק','חוף','גבעה','יבשת','רמה','מפל','טונדרה','ארכיפלג','פיורד','סוואנה','לגונה','איסתמוס','דלתא','אטול','גייזר','ערבה','טאיגה'],
+    es: ['RIO','OCEANO','BOSQUE','DESIERTO','LAGO','VOLCAN','CUEVA','GLACIAR','CANON','VALLE','ISLA','ROCA','MONTE','PLAYA','COLINA','CONTINENTE','MESETA','CASCADA','ACANTILADO','TUNDRA','ARCHIPIELAGO','FIORDO','SABANA','LAGUNA','ISTMO','DELTA','ATOLON','GEISER','ESTEPA','TAIGA'],
+    ar: ['نهر','محيط','غابة','صحراء','بحيرة','بركان','كهف','جليد','وادي','جزيرة','جبل','شلال','شاطئ','تل','قارة','هضبة','توندرا','أرخبيل','فيورد','سافانا','لاغون','برزخ','دلتا','أتول','غيزر','سهوب','تايغا']
   },
   cities: {
     en: ['PARIS','ROME','TOKYO','CAIRO','DELHI','LIMA','OSLO','DUBAI','BERLIN','MIAMI','SYDNEY','SEOUL','JERUSALEM','HAIFA','WASHINGTON','BARCELONA','STOCKHOLM','AQABA'],
@@ -56,7 +56,7 @@ const WORD_BANK = {
     es: ['ATOMO','ENERGIA','GRAVEDAD','OXIGENO','CELULA','VIRUS','PLANETA','GALAXIA','IMAN','VACUNA','QUIMICA','BIOLOGIA','FOSIL','BACTERIA','ELECTRON','LUNA','ESTRELLA','ARCOIRIS','NUBE','HIELO','DINOSAURIO','TRUENO','RAYO','ESQUELETO','COMETA','FOTOSINTESIS','EVOLUCION','MOLECULA','ECOSISTEMA','RADIACION','HORMONA','FRICCION','TELESCOPIO','ORBITA','CRISTAL','METEORO'],
     ar: ['ذرة','طاقة','جاذبية','أكسجين','خلية','فيروس','كوكب','مجرة','مغناطيس','لقاح','كيمياء','أحياء','أحفورة','بكتيريا','إلكترون','قمر','نجم','سحابة','جليد','ديناصور','رعد','برق','هيكل','مذنب','تطور','جزيء','إشعاع','هرمون','احتكاك','تلسكوب','مدار','بلورة','نيزك']
   },
-  geography: {
+  countries: {
     en: ['FRANCE','JAPAN','BRAZIL','EGYPT','CANADA','ITALY','MEXICO','RUSSIA','CHINA','INDIA','GREECE','PERU','TURKEY','GERMANY','ISRAEL','SPAIN','ENGLAND','IRELAND','POLAND','HOLLAND','SWITZERLAND','AUSTRIA','DENMARK','FINLAND','SCOTLAND','ARGENTINA','AUSTRALIA','NORWAY','THAILAND','MOROCCO','ICELAND','PORTUGAL','VIETNAM','KENYA','SWEDEN','COLOMBIA'],
     he: ['צרפת','יפן','ברזיל','מצרים','קנדה','איטליה','מקסיקו','רוסיה','סין','הודו','יוון','פרו','טורקיה','גרמניה','ישראל','ספרד','אנגליה','אירלנד','פולין','הולנד','שוויץ','אוסטריה','דנמרק','פינלנד','סקוטלנד','ארגנטינה','אוסטרליה','נורווגיה','תאילנד','מרוקו','איסלנד','פורטוגל','וייטנאם','קניה','שוודיה','קולומביה'],
     es: ['FRANCIA','JAPON','BRASIL','EGIPTO','CANADA','ITALIA','MEXICO','RUSIA','CHINA','INDIA','GRECIA','PERU','TURQUIA','ALEMANIA','ISRAEL','ESPANA','INGLATERRA','IRLANDA','POLONIA','HOLANDA','SUIZA','AUSTRIA','DINAMARCA','FINLANDIA','ESCOCIA','ARGENTINA','AUSTRALIA','NORUEGA','TAILANDIA','MARRUECOS','ISLANDIA','PORTUGAL','VIETNAM','KENIA','SUECIA','COLOMBIA'],
@@ -80,7 +80,7 @@ const CATEGORIES = [
   { id: 'cities',  label: { en: '🏙️ Cities',  he: '🏙️ ערים',  es: '🏙️ Ciudades',   ar: '🏙️ مدن'    } },
   { id: 'body',    label: { en: '🫀 Body',     he: '🫀 גוף',    es: '🫀 Cuerpo',      ar: '🫀 جسم'     } },
   { id: 'science',   label: { en: '🔬 Science',   he: '🔬 מדע',      es: '🔬 Ciencia',    ar: '🔬 علم' } },
-  { id: 'geography', label: { en: '🌍 Geography', he: '🌍 גאוגרפיה', es: '🌍 Geografía',  ar: '🌍 جغرافيا' } },
+  { id: 'countries', label: { en: '🌍 Countries', he: '🌍 מדינות',   es: '🌍 Países',     ar: '🌍 دول' } },
   { id: 'music',     label: { en: '🎵 Music',     he: '🎵 מוזיקה',   es: '🎵 Música',     ar: '🎵 موسيقى' } }
 ];
 
