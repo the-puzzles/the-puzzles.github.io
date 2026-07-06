@@ -8,12 +8,15 @@
 <meta name="theme-color" content="#0d1117">
 <link rel="apple-touch-icon" href="icon.svg">
 <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<script src="netplay.js"></script>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 [v-cloak] { display: none; }
 
 :root {
   --cell: clamp(38px, calc((100vw - 50px) / 8), 58px);
+  --net-panel-width: calc(var(--cell) * 8 + 14px);
+  --net-btn-bg: #160a2a; --net-btn-border: #a78bfa; --net-btn-color: #c4b5fd;
 }
 
 body {
@@ -259,8 +262,11 @@ h1 {
     </div>
   </div>
 
+  <net-panel v-if="mode === 'net'"></net-panel>
+
   <div class="status" :class="statusClass">
-    <template v-if="phase === 'playing'">
+    <template v-if="mode === 'net' && netCtrl.netStatus !== 'connected'"></template>
+    <template v-else-if="phase === 'playing'">
       <template v-if="skipped !== null">
         <span>{{ skipped === 1 ? UI.p1 : UI.p2 }}</span>
         <span>{{ UI.skippedWord }}</span>
@@ -327,6 +333,7 @@ h1 {
     <button class="mode-btn" :class="{active: mode==='easy'}"   @click="setMode('easy')">{{ UI.modeEasy }}</button>
     <button class="mode-btn" :class="{active: mode==='medium'}" @click="setMode('medium')">{{ UI.modeMedium }}</button>
     <button class="mode-btn" :class="{active: mode==='hard'}"   @click="setMode('hard')">{{ UI.modeHard }}</button>
+    <button class="mode-btn" :class="{active: mode==='net'}"    @click="setMode('net')">{{ UI.modeNet }}</button>
   </div>
 
   <div class="btn-row">
@@ -336,7 +343,7 @@ h1 {
 
 </div>
 <script>
-const { createApp, ref, computed } = Vue;
+const { createApp, ref, computed, provide } = Vue;
 
 const STRINGS = {
   back:        { en: 'All Games',     he: 'כל המשחקים' },
@@ -354,6 +361,7 @@ const STRINGS = {
   modeEasy:    { en: '🤖 Easy',       he: '🤖 קל' },
   modeMedium:  { en: '🤖 Medium',     he: '🤖 בינוני' },
   modeHard:    { en: '🤖 Hard',       he: '🤖 קשה' },
+  modeNet:     { en: '🌐 Network',    he: '🌐 רשת' },
 };
 
 const DIRS = [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]];
@@ -507,6 +515,7 @@ function launchFireworks(player) {
 const SAVE_KEY = 'reversi-save';
 
 createApp({
+  components: { NetPanel },
   setup() {
     const lang    = ref('en');
     const mode    = ref('2p');
@@ -521,8 +530,20 @@ createApp({
 
     const humanScores = ref([0, 0, 0]);
     const aiScores    = ref([0, 0, 0]);
-    function scoresRef() { return mode.value === '2p' ? humanScores : aiScores; }
+    function scoresRef() { return (mode.value === '2p' || mode.value === 'net') ? humanScores : aiScores; }
     const scores = computed(() => scoresRef().value);
+
+    const netCtrl = createNetplay({
+      gameId: 'reversi',
+      onMove(data) {
+        if (mode.value !== 'net') return;
+        if (data.type === 'move' && phase.value === 'playing') makeMove(data.i, board.value, turn.value, true);
+        else if (data.type === 'newgame') resetBoard();
+      },
+      onReset: () => resetBoard(),
+      onSync() { if (netCtrl.netStatus === 'connected') mode.value = 'net'; },
+    });
+    provide('_netplay', netCtrl);
 
     const isRTL = computed(() => lang.value === 'he');
     const UI    = computed(() => {
@@ -544,7 +565,10 @@ createApp({
     function canClick(i) {
       if (phase.value !== 'playing') return false;
       if (aiThink.value) return false;
-      if (mode.value !== '2p' && turn.value === 2) return false;
+      if (mode.value === 'net') {
+        if (netCtrl.netStatus !== 'connected') return false;
+        if (!netCtrl.isMyTurn(turn.value)) return false;
+      } else if (mode.value !== '2p' && turn.value === 2) return false;
       return validSet.value.has(i);
     }
 
@@ -585,7 +609,7 @@ createApp({
     }
 
     function triggerAI(b, player) {
-      if (mode.value === '2p' || player === 1) return;
+      if (mode.value === '2p' || mode.value === 'net' || player === 1) return;
       aiThink.value = true;
       const delay = mode.value === 'hard' ? 380 : mode.value === 'medium' ? 320 : 280;
       setTimeout(() => {
@@ -600,7 +624,7 @@ createApp({
       }, delay);
     }
 
-    function makeMove(i, b, player) {
+    function makeMove(i, b, player, remote = false) {
       const { board: next, flips } = applyMove(b, i, player);
       board.value = next;
       lastMove.value = i;
@@ -609,6 +633,8 @@ createApp({
       // brief flip animation
       flipping.value = new Set(flips);
       setTimeout(() => { flipping.value = new Set(); }, 320);
+
+      if (!remote && mode.value === 'net') netCtrl.send({ type: 'move', i });
 
       advanceTurn(next, player);
       save();
@@ -633,7 +659,8 @@ createApp({
     function newGame() {
       resetBoard();
       save();
-      if (mode.value !== '2p') triggerAI(board.value, 1); // AI never plays first in standard, but handle easy mode
+      if (mode.value === 'net') netCtrl.send({ type: 'newgame' });
+      else if (mode.value !== '2p') triggerAI(board.value, 1); // AI never plays first in standard, but handle easy mode
     }
 
     function setMode(m) { mode.value = m; resetBoard(); save(); }
@@ -644,7 +671,7 @@ createApp({
       try {
         localStorage.setItem(SAVE_KEY, JSON.stringify({
           lang: lang.value,
-          mode: mode.value,
+          mode: mode.value === 'net' ? '2p' : mode.value,
           humanScores: humanScores.value,
           aiScores: aiScores.value,
         }));
@@ -664,7 +691,7 @@ createApp({
     load();
 
     return {
-      lang, mode, board, turn, phase, winner, lastMove, skipped, aiThink, flipping,
+      lang, mode, board, turn, phase, winner, lastMove, skipped, aiThink, flipping, netCtrl,
       scores, validSet, countP1, countP2,
       isRTL, UI, statusClass,
       canClick, clickCell, newGame, setMode, setLang, resetScores,
