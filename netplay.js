@@ -226,6 +226,18 @@ function createNetplay({ gameId, onMove, onReset, onSync } = {}) {
     swapped:   false,
   })
 
+  // SharedWorker is unsupported in Safari (desktop and all iOS/iPadOS) — fail
+  // soft instead of throwing, since this used to crash the whole game's
+  // Vue setup() and blank the entire page, not just Network mode.
+  if (typeof SharedWorker === 'undefined') {
+    ctrl.netStatus = 'unsupported'
+    ctrl.startHost = ctrl.startJoin = ctrl.connectRoom = () => {}
+    ctrl.startHostAdv = ctrl.startJoinAdv = ctrl.connectOfferAdv = ctrl.connectAnswerAdv = () => {}
+    ctrl.send = ctrl.swapRoles = ctrl.close = ctrl.copyCode = ctrl.copyAdv = () => {}
+    ctrl.isMyTurn = () => false
+    return ctrl
+  }
+
   const worker = new SharedWorker('netplay-worker.js')
   const port   = worker.port
   port.start()
@@ -402,7 +414,10 @@ window.NetPanel = {
   setup() { return { c: Vue.inject('_netplay') } },
   template: `
     <div class="net-panel">
-      <template v-if="c.netStatus === 'connected'">
+      <template v-if="c.netStatus === 'unsupported'">
+        <p class="net-label">Network play isn't supported in this browser (Safari lacks a required API). Try Chrome, Firefox, or Edge instead.</p>
+      </template>
+      <template v-else-if="c.netStatus === 'connected'">
         <div class="net-label">Connected — you are
           <strong>{{ c.netRole === 'host' ? (c.swapped ? 'Player 2' : 'Player 1') : (c.swapped ? 'Player 1' : 'Player 2') }}</strong>
         </div>
