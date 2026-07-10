@@ -115,12 +115,13 @@ body {
   40%, 60% { transform: translateX(6px); }
 }
 
-.tiles-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin: 20px 0 8px; }
+.tiles-row { position: relative; width: 210px; height: 210px; margin: 20px auto 8px; }
 .tile {
+  position: absolute;
   width: 52px; height: 52px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   font-size: 1.3rem; font-weight: 800; color: #c9d1d9; background: #21262d;
-  border: 2px solid #30363d; cursor: pointer; transition: all 0.15s; user-select: none;
+  border: 2px solid #30363d; cursor: pointer; transition: opacity 0.15s, border-color 0.15s, transform 0.15s; user-select: none;
 }
 .tile:hover:not(.used) { border-color: #f0b429; }
 .tile:active:not(.used) { transform: scale(0.94); }
@@ -241,9 +242,10 @@ body {
                @click="boxClick(i)">{{ boxChar(i) }}</div>
         </div>
 
-        <div class="tiles-row" :style="isRTL ? 'direction:rtl' : ''">
-          <div v-for="tile in round.tiles" :key="tile.id" class="tile"
+        <div class="tiles-row">
+          <div v-for="(tile, i) in round.tiles" :key="tile.id" class="tile"
                :class="{used: round.tapped.includes(tile.id)}"
+               :style="tilePos(i, round.tiles.length)"
                @click="tapTile(tile.id)">{{ tile.ch }}</div>
         </div>
 
@@ -436,6 +438,17 @@ createApp({
       beginRound();
     }
 
+    // Tiles sit at the vertices of a regular polygon (triangle, square,
+    // pentagon, hexagon, heptagon...) instead of a row, so the shuffled
+    // letters don't read out in a line.
+    function tilePos(i, total) {
+      const cx = 105, cy = 105, r = total <= 4 ? 68 : 78;
+      const angle = -Math.PI / 2 + (i * 2 * Math.PI) / total;
+      const x = cx + r * Math.cos(angle);
+      const y = cy + r * Math.sin(angle);
+      return { left: (x - 26) + 'px', top: (y - 26) + 'px' };
+    }
+
     function tapTile(id) {
       if (phase.value !== 'playing' || round.value.status !== 'pending') return;
       if (round.value.tapped.includes(id)) return;
@@ -549,7 +562,7 @@ createApp({
       lang, phase, homeTab, runMode, rounds, roundIdx, round, timeLeft, hintsLeft,
       shakeFlag, shareCopied, isRTL, todayKey, dailyPuzzleNum, todayStr, todayResult,
       solvedCount, hintsUsedCount, totalTimeSec, archiveDates, boxDisplay,
-      S, setLang, boxChar, startPuzzle, tapTile, boxClick, useHint, pause, resume,
+      S, setLang, boxChar, tilePos, startPuzzle, tapTile, boxClick, useHint, pause, resume,
       restartPuzzle, goHome, formatTime, shareScore,
     };
   }
