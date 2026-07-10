@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>18 Words · Puzzle Games</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0d1117">
+<link rel="apple-touch-icon" href="icon.svg">
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<script src="18words-data.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+[v-cloak] { display: none; }
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: #0d1117; color: #c9d1d9;
+  min-height: 100vh; display: flex; flex-direction: column;
+  align-items: center; padding: 24px 16px 64px;
+}
+.top-bar {
+  width: 100%; max-width: 420px; display: flex;
+  align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px;
+}
+.home-btn {
+  color: #6e7681; text-decoration: none; font-size: 0.82rem;
+  border: 1px solid #30363d; border-radius: 6px; padding: 5px 10px;
+  transition: color 0.15s, border-color 0.15s; flex-shrink: 0;
+}
+.home-btn:hover { color: #c9d1d9; border-color: #6e7681; }
+.lang-toggle { display: flex; gap: 6px; }
+.lang-btn {
+  padding: 5px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 700;
+  cursor: pointer; background: #161b22; color: #6e7681; border: 1px solid #30363d;
+}
+.lang-btn.active { background: #1c1508; color: #f0b429; border-color: #f0b429; }
+
+.title-wrap { text-align: center; margin-bottom: 6px; }
+.page-title {
+  font-size: 1.6rem; font-weight: 900; letter-spacing: 0.06em;
+  background: linear-gradient(135deg, #f0b429, #f97316);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.tagline { font-size: 0.8rem; color: #6e7681; margin-top: 2px; }
+
+.game-wrap { width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 14px; margin-top: 14px; }
+.panel { background: #161b22; border: 2px solid #30363d; border-radius: 14px; padding: 20px; }
+
+/* ── Mode tabs ───────────────────────────────────────────────────── */
+.mode-bar { display: flex; gap: 6px; }
+.mode-btn {
+  flex: 1; padding: 9px 6px; border-radius: 8px; font-size: 0.78rem; font-weight: 700;
+  cursor: pointer; background: #21262d; color: #6e7681;
+  border: 1.5px solid #30363d; transition: all 0.15s;
+}
+.mode-btn:hover:not(.active) { color: #c9d1d9; border-color: #6e7681; }
+.mode-btn.active { background: #1c1508; color: #f0b429; border-color: #f0b429; }
+
+/* ── Intro panel ─────────────────────────────────────────────────── */
+.intro { text-align: center; }
+.intro .puzzle-num { font-size: 0.78rem; color: #6e7681; margin-bottom: 10px; }
+.intro .desc { font-size: 0.85rem; color: #8b949e; line-height: 1.6; margin: 10px 0 16px; }
+.play-btn {
+  padding: 12px 28px; background: #f0b429; color: #0d1117;
+  border: none; border-radius: 10px; font-size: 0.95rem; font-weight: 800;
+  cursor: pointer; letter-spacing: 0.03em; transition: opacity 0.15s, transform 0.1s;
+}
+.play-btn:hover { opacity: 0.85; transform: translateY(-1px); }
+.play-btn:active { transform: translateY(0); }
+.already-done { font-size: 0.82rem; color: #8b949e; margin-bottom: 12px; }
+
+/* ── Archive ─────────────────────────────────────────────────────── */
+.archive-list { display: flex; flex-direction: column; gap: 6px; max-height: 320px; overflow-y: auto; }
+.archive-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 9px 12px; border-radius: 8px; background: #0d1117;
+  border: 1px solid #21262d; cursor: pointer; font-size: 0.82rem;
+}
+.archive-item:hover { border-color: #f0b429; }
+.archive-date { color: #c9d1d9; }
+.archive-score { color: #6e7681; font-size: 0.76rem; }
+.archive-score.done { color: #22c55e; }
+
+/* ── Play screen ─────────────────────────────────────────────────── */
+.play-head {
+  display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;
+}
+.round-label { font-size: 0.76rem; font-weight: 700; color: #6e7681; letter-spacing: 0.08em; }
+.pause-btn {
+  background: none; border: none; color: #6e7681; font-size: 1.1rem; cursor: pointer; padding: 4px 8px;
+}
+.pause-btn:hover { color: #c9d1d9; }
+.timer {
+  text-align: center; font-size: 2.2rem; font-weight: 900; color: #c9d1d9; margin: 6px 0 4px;
+}
+.timer .unit { font-size: 1rem; color: #6e7681; font-weight: 600; }
+.timer.low { color: #ef4444; }
+
+.boxes-row { display: flex; gap: 6px; justify-content: center; margin: 16px 0; flex-wrap: wrap; }
+.letter-box {
+  width: 38px; height: 46px; border: 2px solid #30363d; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.3rem; font-weight: 800; color: #c9d1d9; background: #0d1117;
+  cursor: pointer; transition: all 0.15s;
+}
+.letter-box.filled { border-color: #f0b429; background: #1c1508; }
+.letter-box.hinted { border-color: #22d3ee; background: #0c2233; color: #22d3ee; }
+.boxes-row.shake { animation: shake 0.4s; }
+.boxes-row.solved .letter-box { border-color: #22c55e; background: #0d2218; color: #22c55e; }
+.boxes-row.failed .letter-box { border-color: #ef4444; background: #2b0d0d; color: #ef4444; }
+@keyframes shake {
+  10%, 90% { transform: translateX(-2px); }
+  20%, 80% { transform: translateX(4px); }
+  30%, 50%, 70% { transform: translateX(-6px); }
+  40%, 60% { transform: translateX(6px); }
+}
+
+.tiles-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin: 20px 0 8px; }
+.tile {
+  width: 52px; height: 52px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.3rem; font-weight: 800; color: #c9d1d9; background: #21262d;
+  border: 2px solid #30363d; cursor: pointer; transition: all 0.15s; user-select: none;
+}
+.tile:hover:not(.used) { border-color: #f0b429; }
+.tile:active:not(.used) { transform: scale(0.94); }
+.tile.used { opacity: 0; pointer-events: none; }
+
+.round-controls { display: flex; gap: 8px; margin-top: 10px; }
+.hint-btn {
+  flex: 1; padding: 9px 10px; background: none; color: #6e7681;
+  border: 1.5px solid #30363d; border-radius: 8px; font-size: 0.8rem;
+  font-weight: 600; cursor: pointer; transition: all 0.15s;
+}
+.hint-btn:hover:not(:disabled) { color: #22d3ee; border-color: #22d3ee; }
+.hint-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.pips { display: flex; gap: 4px; justify-content: center; margin-top: 14px; flex-wrap: wrap; }
+.pip { width: 8px; height: 8px; border-radius: 50%; background: #21262d; border: 1.5px solid #30363d; }
+.pip.solved { background: #22c55e; border-color: #22c55e; }
+.pip.failed { background: #ef4444; border-color: #ef4444; }
+.pip.current { border-color: #f0b429; }
+
+/* ── Pause overlay ───────────────────────────────────────────────── */
+.pause-overlay {
+  position: fixed; inset: 0; background: rgba(13,17,23,0.92);
+  display: flex; align-items: center; justify-content: center; z-index: 50;
+}
+.pause-box { text-align: center; }
+.pause-title { font-size: 1.3rem; font-weight: 800; color: #c9d1d9; margin-bottom: 18px; letter-spacing: 0.05em; }
+.pause-buttons { display: flex; flex-direction: column; gap: 10px; width: 220px; }
+.btn { padding: 11px 20px; border-radius: 10px; font-size: 0.9rem; font-weight: 700; cursor: pointer; transition: opacity 0.15s; }
+.btn:hover { opacity: 0.85; }
+.btn-primary { background: #f0b429; color: #0d1117; border: none; }
+.btn-secondary { background: #21262d; color: #c9d1d9; border: 1.5px solid #30363d; }
+
+/* ── Results ─────────────────────────────────────────────────────── */
+.results { text-align: center; }
+.results-icon { font-size: 2.6rem; margin-bottom: 8px; }
+.results-title { font-size: 1.3rem; font-weight: 800; color: #f0b429; margin-bottom: 4px; }
+.results-score { font-size: 2.4rem; font-weight: 900; color: #c9d1d9; margin: 10px 0 4px; }
+.results-score .of { font-size: 1.2rem; color: #6e7681; }
+.results-meta { display: flex; justify-content: center; gap: 18px; font-size: 0.8rem; color: #8b949e; margin-bottom: 18px; }
+.results-buttons { display: flex; flex-direction: column; gap: 10px; }
+
+@media (max-width: 420px) {
+  .letter-box { width: 32px; height: 40px; font-size: 1.1rem; }
+  .tile { width: 46px; height: 46px; font-size: 1.15rem; }
+}
+</style>
+</head>
+<body>
+<div id="app" v-cloak :dir="isRTL ? 'rtl' : 'ltr'">
+
+  <div class="top-bar">
+    <a class="home-btn" href="index.html">{{ isRTL ? '→' : '←' }} {{ S('back') }}</a>
+    <div class="lang-toggle">
+      <button class="lang-btn" :class="{active: lang==='en'}" @click="setLang('en')">EN</button>
+      <button class="lang-btn" :class="{active: lang==='he'}" @click="setLang('he')">עב</button>
+      <button class="lang-btn" :class="{active: lang==='es'}" @click="setLang('es')">ES</button>
+    </div>
+  </div>
+
+  <div class="title-wrap">
+    <div class="page-title">{{ S('title') }}</div>
+    <div class="tagline">{{ S('tagline') }}</div>
+  </div>
+
+  <div class="game-wrap">
+
+    <!-- ── Home / mode select ──────────────────────────────────────── -->
+    <template v-if="phase === 'home'">
+      <div class="panel">
+        <div class="mode-bar">
+          <button class="mode-btn" :class="{active: homeTab==='daily'}" @click="homeTab='daily'">{{ S('today') }}</button>
+          <button class="mode-btn" :class="{active: homeTab==='practice'}" @click="homeTab='practice'">{{ S('practice') }}</button>
+          <button class="mode-btn" :class="{active: homeTab==='archive'}" @click="homeTab='archive'">{{ S('archive') }}</button>
+        </div>
+      </div>
+
+      <div class="panel intro" v-if="homeTab==='daily'">
+        <div class="puzzle-num">{{ S('puzzleNum') }} #{{ dailyPuzzleNum }} · {{ todayStr }}</div>
+        <template v-if="todayResult">
+          <div class="already-done">{{ S('alreadyDone') }}</div>
+          <div class="results-score">{{ todayResult.solved }}<span class="of">/18</span></div>
+        </template>
+        <div class="desc">{{ isRTL ? 'מצא מילה המשתמשת בכל האותיות לפני שהזמן נגמר!' : (lang==='es' ? '¡Encuentra una palabra usando todas las letras antes de que se acabe el tiempo!' : 'Find a word using all the letters before time runs out!') }}</div>
+        <button class="play-btn" @click="startPuzzle('daily', todayKey)">{{ S('playNow') }}</button>
+      </div>
+
+      <div class="panel intro" v-if="homeTab==='practice'">
+        <div class="desc">{{ isRTL ? 'תרגול ללא הגבלה — חידה חדשה בכל פעם.' : (lang==='es' ? 'Práctica ilimitada — un nuevo desafío cada vez.' : 'Unlimited practice — a fresh puzzle every time.') }}</div>
+        <button class="play-btn" @click="startPuzzle('practice', null)">{{ S('playNow') }}</button>
+      </div>
+
+      <div class="panel" v-if="homeTab==='archive'">
+        <div class="desc" style="text-align:center;margin-bottom:12px;">{{ S('archiveTitle') }}</div>
+        <div class="archive-list">
+          <div class="archive-item" v-for="d in archiveDates" :key="d.key" @click="startPuzzle('archive', d.key)">
+            <span class="archive-date">{{ d.label }} · #{{ d.num }}</span>
+            <span class="archive-score" :class="{done: d.result}">{{ d.result ? d.result.solved + '/18' : '—' }}</span>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <!-- ── Playing ──────────────────────────────────────────────────── -->
+    <template v-if="phase === 'playing' && round">
+      <div class="panel">
+        <div class="play-head">
+          <div class="round-label">{{ S('wordProgress') }} {{ roundIdx + 1 }}/{{ rounds.length }}</div>
+          <button class="pause-btn" @click="pause">⏸</button>
+        </div>
+
+        <div class="timer" :class="{low: timeLeft <= 8}">{{ timeLeft }}<span class="unit">s</span></div>
+
+        <div class="boxes-row" :class="{shake: shakeFlag, solved: round.status==='solved', failed: round.status==='failed'}">
+          <div v-for="(box, i) in boxDisplay"
+               :key="i" class="letter-box"
+               :class="{filled: boxChar(i) !== '', hinted: round.hintedIdx.includes(i)}"
+               @click="boxClick(i)">{{ boxChar(i) }}</div>
+        </div>
+
+        <div class="tiles-row">
+          <div v-for="tile in round.tiles" :key="tile.id" class="tile"
+               :class="{used: round.tapped.includes(tile.id)}"
+               @click="tapTile(tile.id)">{{ tile.ch }}</div>
+        </div>
+
+        <div class="round-controls">
+          <button class="hint-btn" :disabled="hintsLeft <= 0 || round.status !== 'pending'" @click="useHint">
+            💡 {{ S('reveal') }} ({{ hintsLeft }})
+          </button>
+        </div>
+
+        <div class="pips">
+          <div v-for="(r, i) in rounds" :key="i" class="pip"
+               :class="[r.status, i === roundIdx ? 'current' : '']"></div>
+        </div>
+      </div>
+    </template>
+
+    <!-- ── Pause overlay ────────────────────────────────────────────── -->
+    <div class="pause-overlay" v-if="phase === 'paused'">
+      <div class="pause-box">
+        <div class="pause-title">{{ S('paused') }}</div>
+        <div class="pause-buttons">
+          <button class="btn btn-primary" @click="resume">{{ S('resume') }}</button>
+          <button class="btn btn-secondary" @click="restartPuzzle">{{ S('restart') }}</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Results ──────────────────────────────────────────────────── -->
+    <template v-if="phase === 'done'">
+      <div class="panel results">
+        <div class="results-icon">{{ solvedCount === rounds.length ? '🏆' : '⏳' }}</div>
+        <div class="results-title">{{ S('results') }}</div>
+        <div class="results-score">{{ solvedCount }}<span class="of">/{{ rounds.length }}</span></div>
+        <div class="results-meta">
+          <span>💡 {{ hintsUsedCount }} {{ S('hintsUsed') }}</span>
+          <span>⏱ {{ formatTime(totalTimeSec) }} {{ S('totalTime') }}</span>
+        </div>
+        <div class="results-buttons">
+          <button class="btn btn-primary" @click="shareScore">{{ shareCopied ? S('copied') : S('shareScore') }}</button>
+          <button class="btn btn-secondary" v-if="runMode === 'practice'" @click="startPuzzle('practice', null)">{{ S('playAgain') }}</button>
+          <button class="btn btn-secondary" @click="goHome">{{ S('backHome') }}</button>
+        </div>
+      </div>
+    </template>
+
+  </div>
+</div>
+
+<script>
+const { createApp, ref, computed, onMounted, onBeforeUnmount } = Vue;
+
+/* ── Seeded RNG (mulberry32) ──────────────────────────────────────── */
+function mulberry32(seed) {
+  return function () {
+    seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function hashStr(s) {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) { h = (Math.imul(h, 31) + s.charCodeAt(i)) | 0; }
+  return h;
+}
+function shuffle(arr, rng) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+const EPOCH = new Date('2026-01-01T00:00:00Z');
+function dateKey(d) { return d.toISOString().slice(0, 10); }
+function puzzleNum(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00Z');
+  return Math.max(1, Math.floor((d - EPOCH) / 86400000) + 1);
+}
+
+function buildPuzzle(lang, seedStr) {
+  const rng = mulberry32(hashStr(seedStr + '|' + lang));
+  const lengths = ROUND_LENGTHS[lang];
+  const usedByLen = {};
+  const rounds = [];
+  for (const len of lengths) {
+    const pool = WORDS[lang][len] || [];
+    usedByLen[len] = usedByLen[len] || new Set();
+    let candidates = pool.filter(w => !usedByLen[len].has(w));
+    if (!candidates.length) candidates = pool; // ran out of unique words — allow reuse
+    const word = candidates[Math.floor(rng() * candidates.length)];
+    usedByLen[len].add(word);
+    const chars = [...word];
+    const tiles = shuffle(chars.map((ch, i) => ({ ch, id: len + '-' + i + '-' + ch })), rng);
+    rounds.push({
+      target: word, length: chars.length, tiles,
+      tapped: [], hintedIdx: [], status: 'pending', timeSpent: 0,
+    });
+  }
+  return rounds;
+}
+
+function timeForLength(len) { return 20 + len * 2; }
+
+const SAVE_KEY = '18words-save';
+function loadSave() { try { return JSON.parse(localStorage.getItem(SAVE_KEY) || '{}'); } catch (_) { return {}; } }
+function saveSave(s) { try { localStorage.setItem(SAVE_KEY, JSON.stringify(s)); } catch (_) {} }
+
+createApp({
+  setup() {
+    const lang = ref('en');
+    const phase = ref('home');       // home | playing | paused | done
+    const homeTab = ref('daily');
+    const runMode = ref('daily');    // daily | practice | archive
+    const runKey = ref(null);        // date string for daily/archive, null for practice
+
+    const rounds = ref([]);
+    const roundIdx = ref(0);
+    const timeLeft = ref(0);
+    const hintsLeft = ref(3);
+    const shakeFlag = ref(false);
+    const shareCopied = ref(false);
+    const results = ref(loadSave().results || {}); // { dateKey: {solved, hints, timeSec} }
+
+    let timerHandle = null;
+    let advanceTimeout = null;
+
+    const isRTL = computed(() => lang.value === 'he');
+    const round = computed(() => rounds.value[roundIdx.value]);
+    const todayKey = computed(() => dateKey(new Date()));
+    const dailyPuzzleNum = computed(() => puzzleNum(todayKey.value));
+    const todayStr = computed(() => todayKey.value);
+    const todayResult = computed(() => results.value[todayKey.value] || null);
+    const solvedCount = computed(() => rounds.value.filter(r => r.status === 'solved').length);
+    const hintsUsedCount = computed(() => 3 - hintsLeft.value);
+    const totalTimeSec = computed(() => rounds.value.reduce((s, r) => s + r.timeSpent, 0));
+
+    const archiveDates = computed(() => {
+      const list = [];
+      const today = new Date();
+      for (let i = 1; i <= 30; i++) {
+        const d = new Date(today); d.setDate(d.getDate() - i);
+        const key = dateKey(d);
+        list.push({ key, label: key, num: puzzleNum(key), result: results.value[key] || null });
+      }
+      return list;
+    });
+
+    function S(key) {
+      const v = STRINGS[key];
+      return v ? (v[lang.value] || v.en) : key;
+    }
+
+    function setLang(l) { lang.value = l; persist(); }
+
+    function boxChar(i) {
+      const id = round.value.tapped[i];
+      if (!id) return '';
+      const tile = round.value.tiles.find(t => t.id === id);
+      return tile ? tile.ch : '';
+    }
+    const boxDisplay = computed(() => round.value ? Array(round.value.target.length).fill(null) : []);
+
+    function clearTimer() { if (timerHandle) { clearInterval(timerHandle); timerHandle = null; } }
+
+    function startTimer() {
+      clearTimer();
+      timerHandle = setInterval(() => {
+        if (phase.value !== 'playing') return;
+        timeLeft.value--;
+        rounds.value[roundIdx.value].timeSpent++;
+        if (timeLeft.value <= 0) { clearTimer(); onTimeUp(); }
+      }, 1000);
+    }
+
+    function beginRound() {
+      timeLeft.value = timeForLength(round.value.length);
+      startTimer();
+    }
+
+    function startPuzzle(mode, key) {
+      runMode.value = mode;
+      runKey.value = key;
+      const seed = mode === 'practice' ? ('practice-' + Date.now() + '-' + Math.random()) : key;
+      rounds.value = buildPuzzle(lang.value, seed);
+      roundIdx.value = 0;
+      hintsLeft.value = 3;
+      phase.value = 'playing';
+      beginRound();
+    }
+
+    function tapTile(id) {
+      if (phase.value !== 'playing' || round.value.status !== 'pending') return;
+      if (round.value.tapped.includes(id)) return;
+      round.value.tapped.push(id);
+      if (round.value.tapped.length === round.value.target.length) checkRound();
+    }
+
+    function boxClick(i) {
+      if (phase.value !== 'playing' || round.value.status !== 'pending') return;
+      if (i >= round.value.tapped.length) return;
+      round.value.tapped = round.value.tapped.slice(0, i);
+    }
+
+    function checkRound() {
+      const answer = round.value.tapped.map(id => round.value.tiles.find(t => t.id === id).ch).join('');
+      if (answer === round.value.target) {
+        round.value.status = 'solved';
+        clearTimer();
+        advanceTimeout = setTimeout(nextRound, 650);
+      } else {
+        shakeFlag.value = true;
+        setTimeout(() => {
+          shakeFlag.value = false;
+          round.value.tapped = [];
+        }, 400);
+      }
+    }
+
+    function onTimeUp() {
+      round.value.status = 'failed';
+      advanceTimeout = setTimeout(nextRound, 1400);
+    }
+
+    function useHint() {
+      if (hintsLeft.value <= 0 || round.value.status !== 'pending') return;
+      const nextIdx = round.value.tapped.length;
+      if (nextIdx >= round.value.target.length) return;
+      const correctCh = round.value.target[nextIdx];
+      const tile = round.value.tiles.find(t => t.ch === correctCh && !round.value.tapped.includes(t.id));
+      if (!tile) return;
+      round.value.tapped.push(tile.id);
+      round.value.hintedIdx.push(nextIdx);
+      hintsLeft.value--;
+      if (round.value.tapped.length === round.value.target.length) checkRound();
+    }
+
+    function nextRound() {
+      if (roundIdx.value + 1 >= rounds.value.length) { finishPuzzle(); return; }
+      roundIdx.value++;
+      beginRound();
+    }
+
+    function finishPuzzle() {
+      clearTimer();
+      phase.value = 'done';
+      if (runMode.value === 'daily' || runMode.value === 'archive') {
+        const key = runKey.value;
+        results.value = { ...results.value, [key]: { solved: solvedCount.value, hints: hintsUsedCount.value, timeSec: totalTimeSec.value } };
+        persist();
+      }
+    }
+
+    function pause() {
+      if (phase.value !== 'playing') return;
+      clearTimer();
+      phase.value = 'paused';
+    }
+    function resume() {
+      if (phase.value !== 'paused') return;
+      phase.value = 'playing';
+      startTimer();
+    }
+    function restartPuzzle() {
+      clearTimer();
+      if (advanceTimeout) clearTimeout(advanceTimeout);
+      startPuzzle(runMode.value, runKey.value);
+    }
+
+    function goHome() {
+      clearTimer();
+      if (advanceTimeout) clearTimeout(advanceTimeout);
+      phase.value = 'home';
+    }
+
+    function formatTime(sec) {
+      const m = Math.floor(sec / 60), s = sec % 60;
+      return m + ':' + String(s).padStart(2, '0');
+    }
+
+    function shareScore() {
+      const emojis = rounds.value.map(r => r.status === 'solved' ? '🟩' : '🟥').join('');
+      const text = `18 Words #${puzzleNum(runKey.value || todayKey.value)}\n${solvedCount.value}/${rounds.value.length}\n${emojis}`;
+      navigator.clipboard?.writeText(text).then(() => {
+        shareCopied.value = true; setTimeout(() => shareCopied.value = false, 1500);
+      }).catch(() => {});
+    }
+
+    function persist() {
+      saveSave({ lang: lang.value, results: results.value });
+    }
+
+    onMounted(() => {
+      const saved = loadSave();
+      if (saved.lang) lang.value = saved.lang;
+      if (saved.results) results.value = saved.results;
+    });
+
+    onBeforeUnmount(() => { clearTimer(); if (advanceTimeout) clearTimeout(advanceTimeout); });
+
+    return {
+      lang, phase, homeTab, runMode, rounds, roundIdx, round, timeLeft, hintsLeft,
+      shakeFlag, shareCopied, isRTL, todayKey, dailyPuzzleNum, todayStr, todayResult,
+      solvedCount, hintsUsedCount, totalTimeSec, archiveDates, boxDisplay,
+      S, setLang, boxChar, startPuzzle, tapTile, boxClick, useHint, pause, resume,
+      restartPuzzle, goHome, formatTime, shareScore,
+    };
+  }
+}).mount('#app');
+
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
+(function(){
+  const d=new Date(document.lastModified),p=n=>String(n).padStart(2,'0');
+  const v=document.createElement('div');
+  v.style.cssText='position:fixed;bottom:4px;right:6px;font-size:0.6rem;color:#444c56;pointer-events:none;font-family:monospace;z-index:999';
+  v.textContent=d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes());
+  document.body.appendChild(v);
+})();
+</script>
+</body>
+</html>
