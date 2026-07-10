@@ -234,14 +234,14 @@ body {
 
         <div class="timer" :class="{low: timeLeft <= 8}">{{ timeLeft }}<span class="unit">s</span></div>
 
-        <div class="boxes-row" :class="{shake: shakeFlag, solved: round.status==='solved', failed: round.status==='failed'}">
+        <div class="boxes-row" :style="isRTL ? 'direction:rtl' : ''" :class="{shake: shakeFlag, solved: round.status==='solved', failed: round.status==='failed'}">
           <div v-for="(box, i) in boxDisplay"
                :key="i" class="letter-box"
                :class="{filled: boxChar(i) !== '', hinted: round.hintedIdx.includes(i)}"
                @click="boxClick(i)">{{ boxChar(i) }}</div>
         </div>
 
-        <div class="tiles-row">
+        <div class="tiles-row" :style="isRTL ? 'direction:rtl' : ''">
           <div v-for="tile in round.tiles" :key="tile.id" class="tile"
                :class="{used: round.tapped.includes(tile.id)}"
                @click="tapTile(tile.id)">{{ tile.ch }}</div>
@@ -253,7 +253,7 @@ body {
           </button>
         </div>
 
-        <div class="pips">
+        <div class="pips" :style="isRTL ? 'direction:rtl' : ''">
           <div v-for="(r, i) in rounds" :key="i" class="pip"
                :class="[r.status, i === roundIdx ? 'current' : '']"></div>
         </div>
