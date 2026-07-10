@@ -125,7 +125,10 @@ body {
 }
 .tile:hover:not(.used) { border-color: #f0b429; }
 .tile:active:not(.used) { transform: scale(0.94); }
-.tile.used { opacity: 0; pointer-events: none; }
+.tile.used { background: #161b22; border-color: #21262d; color: #484f58; }
+.tile.used.removable { cursor: pointer; border-color: #6e7681; }
+.tile.used.removable:hover { border-color: #ef4444; color: #f85149; }
+.tile.used:not(.removable) { cursor: default; }
 
 .round-controls { display: flex; gap: 8px; margin-top: 10px; }
 .hint-btn {
@@ -244,7 +247,7 @@ body {
 
         <div class="tiles-row">
           <div v-for="(tile, i) in round.tiles" :key="tile.id" class="tile"
-               :class="{used: round.tapped.includes(tile.id)}"
+               :class="{used: round.tapped.includes(tile.id), removable: round.tapped[round.tapped.length - 1] === tile.id}"
                :style="tilePos(i, round.tiles.length)"
                @click="tapTile(tile.id)">{{ tile.ch }}</div>
         </div>
@@ -451,7 +454,12 @@ createApp({
 
     function tapTile(id) {
       if (phase.value !== 'playing' || round.value.status !== 'pending') return;
-      if (round.value.tapped.includes(id)) return;
+      const tapped = round.value.tapped;
+      if (tapped.includes(id)) {
+        // an already-used tile only comes back if it's the most recent tap
+        if (tapped[tapped.length - 1] === id) round.value.tapped = tapped.slice(0, -1);
+        return;
+      }
       round.value.tapped.push(id);
       if (round.value.tapped.length === round.value.target.length) checkRound();
     }
