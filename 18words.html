@@ -479,7 +479,13 @@ createApp({
 
     function onTimeUp() {
       round.value.status = 'failed';
-      advanceTimeout = setTimeout(nextRound, 1400);
+      // reveal the answer by filling in whatever wasn't tapped yet
+      const remaining = round.value.target.slice(round.value.tapped.length);
+      for (const ch of remaining) {
+        const tile = round.value.tiles.find(t => t.ch === ch && !round.value.tapped.includes(t.id));
+        if (tile) round.value.tapped.push(tile.id);
+      }
+      advanceTimeout = setTimeout(nextRound, 2000);
     }
 
     function useHint() {
