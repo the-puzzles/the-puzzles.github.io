@@ -18,6 +18,13 @@ body {
   align-items: center; padding: 48px 20px 64px;
 }
 
+.lang-toggle { display: flex; gap: 6px; justify-content: center; margin-bottom: 18px; }
+.lang-btn {
+  padding: 5px 10px; border-radius: 6px; font-size: .75rem; font-weight: 700;
+  cursor: pointer; background: #161b22; color: #6e7681; border: 1px solid #30363d;
+}
+.lang-btn.active { background: #0c2233; color: #58a6ff; border-color: #58a6ff; }
+
 header { text-align: center; margin-bottom: 56px; }
 .site-title { font-size: 3rem; font-weight: 900; letter-spacing: .06em; color: #e6edf3; margin-bottom: 10px; }
 .site-sub { color: #6e7681; font-size: 1rem; max-width: 420px; margin: 0 auto; line-height: 1.6; }
@@ -105,15 +112,21 @@ footer { margin-top: 64px; color: #444c56; font-size: .78rem; text-align: center
 </head>
 <body>
 <div id="app" v-cloak>
+  <div class="lang-toggle">
+    <button class="lang-btn" :class="{active: lang==='en'}" @click="setLang('en')">EN</button>
+    <button class="lang-btn" :class="{active: lang==='he'}" @click="setLang('he')">עב</button>
+    <button class="lang-btn" :class="{active: lang==='es'}" @click="setLang('es')">ES</button>
+  </div>
+
   <header>
-    <div class="site-title">Puzzle Games</div>
-    <p class="site-sub">A growing collection of puzzles and classic games — word, logic, and strategy.</p>
-    <a class="how-link" href="how-to-play.html">How to Play ↗</a>
+    <div class="site-title">{{ T('siteTitle') }}</div>
+    <p class="site-sub">{{ T('siteSub') }}</p>
+    <a class="how-link" href="how-to-play.html">{{ T('howToPlay') }} ↗</a>
   </header>
 
   <div class="categories">
     <div v-for="cat in CATEGORIES" :key="cat.label">
-      <div class="category-label">{{ cat.label }}</div>
+      <div class="category-label">{{ catLabel(cat.label) }}</div>
       <div class="cards">
         <a
           v-for="g in cat.games"
@@ -124,25 +137,25 @@ footer { margin-top: 64px; color: #444c56; font-size: .78rem; text-align: center
         >
           <div class="card-header">
             <div class="card-icon">{{ g.icon }}</div>
-            <div class="card-title">{{ g.title }}</div>
+            <div class="card-title">{{ gField(g, 'title') }}</div>
           </div>
           <div v-html="g.preview"></div>
-          <p class="card-tagline">{{ g.tagline }}</p>
+          <p class="card-tagline">{{ gField(g, 'tagline') }}</p>
           <div class="card-rules">
-            <div v-for="rule in g.rules" class="rule">
+            <div v-for="rule in gRules(g)" class="rule">
               <div class="rule-dot"></div>
               <span v-html="rule"></span>
             </div>
           </div>
-          <div class="play-btn" v-html="g.playLabel + ' <span class=\'play-arrow\'>→</span>'"></div>
+          <div class="play-btn" v-html="T('play') + ' ' + gField(g, 'title') + ' <span class=\'play-arrow\'>→</span>'"></div>
         </a>
       </div>
     </div>
   </div>
 
   <footer>
-    Drag shapes · Tap to select · Swipe to rotate
-    &nbsp;·&nbsp; <a href="how-to-play.html" style="color:#6e7681;text-decoration:none;transition:color .15s" onmouseover="this.style.color='#c9d1d9'" onmouseout="this.style.color='#6e7681'">How to Play</a>
+    {{ T('footerHint') }}
+    &nbsp;·&nbsp; <a href="how-to-play.html" style="color:#6e7681;text-decoration:none;transition:color .15s" onmouseover="this.style.color='#c9d1d9'" onmouseout="this.style.color='#6e7681'">{{ T('howToPlay') }}</a>
     &nbsp;·&nbsp; <span id="ver" style="font-family:monospace"></span>
   </footer>
 </div>
@@ -178,7 +191,45 @@ const CATEGORIES = [
 <script src="card-sprouts.js"></script>
 <script>
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
-Vue.createApp({ data: () => ({ CATEGORIES }) }).mount('#app');
+
+const STRINGS = {
+  siteTitle:  { en: 'Puzzle Games', he: 'משחקי חשיבה', es: 'Juegos de Puzzles' },
+  siteSub:    { en: 'A growing collection of puzzles and classic games — word, logic, and strategy.',
+                he: 'אוסף גדל והולך של חידות ומשחקים קלאסיים — מילים, לוגיקה ואסטרטגיה.',
+                es: 'Una colección creciente de puzzles y juegos clásicos — palabras, lógica y estrategia.' },
+  howToPlay:  { en: 'How to Play', he: 'איך משחקים', es: 'Cómo Jugar' },
+  footerHint: { en: 'Drag shapes · Tap to select · Swipe to rotate',
+                he: 'גררו צורות · הקישו לבחירה · החליקו לסיבוב',
+                es: 'Arrastra formas · Toca para seleccionar · Desliza para girar' },
+  play:       { en: 'Play', he: 'שחק', es: 'Jugar' },
+};
+
+const CATEGORY_LABELS = {
+  'Shapes & Colors': { he: 'צורות וצבעים', es: 'Formas y Colores' },
+  'Geography':       { he: 'גאוגרפיה', es: 'Geografía' },
+  'Words':           { he: 'מילים', es: 'Palabras' },
+  'Codes':           { he: 'קודים', es: 'Códigos' },
+  'Classic Games':   { he: 'משחקים קלאסיים', es: 'Juegos Clásicos' },
+};
+
+const LANG_KEY = 'index-lang';
+
+Vue.createApp({
+  data: () => ({ CATEGORIES, lang: localStorage.getItem(LANG_KEY) || 'en' }),
+  mounted() { this.applyDir(); },
+  methods: {
+    T(key) { const v = STRINGS[key]; return v ? (v[this.lang] || v.en) : key; },
+    catLabel(label) { return (CATEGORY_LABELS[label] && CATEGORY_LABELS[label][this.lang]) || label; },
+    gField(g, field) { return g[field + '_' + this.lang] || g[field]; },
+    gRules(g) { return g['rules_' + this.lang] || g.rules; },
+    applyDir() { document.documentElement.setAttribute('dir', this.lang === 'he' ? 'rtl' : 'ltr'); },
+    setLang(l) {
+      this.lang = l;
+      localStorage.setItem(LANG_KEY, l);
+      this.applyDir();
+    },
+  },
+}).mount('#app');
 (function(){
   const d = new Date(document.lastModified);
   const p = n => String(n).padStart(2,'0');
