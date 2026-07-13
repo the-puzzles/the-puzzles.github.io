@@ -297,7 +297,8 @@ h1 .w2 { color: #fde047; }
     </div>
   </div>
 
-  <h1><span class="w1">WOO</span><span class="w2">DOKU</span></h1>
+  <h1 v-if="lang==='en'"><span class="w1">WOO</span><span class="w2">DOKU</span></h1>
+  <h1 v-else>{{ t('title') }}</h1>
 
   <div class="score-bar">
     <div class="score-item">
@@ -363,8 +364,8 @@ h1 .w2 { color: #fde047; }
 const { createApp, ref, computed, watch, onMounted, onUnmounted } = Vue;
 
 const T = {
-  en: { back:'Back', score:'SCORE', best:'BEST', pick:'Pick a block', place:'Click board to place', over:'Game Over', newGame:'New Game', newBest:'New Best!', viewBoard:'View board' },
-  he: { back:'חזרה', score:'ניקוד', best:'שיא', pick:'בחר קוביה', place:'לחץ להנחה', over:'המשחק נגמר', newGame:'משחק חדש', newBest:'שיא חדש!', viewBoard:'צפה בלוח' },
+  en: { title:'WOODOKU', back:'Back', score:'SCORE', best:'BEST', pick:'Pick a block', place:'Click board to place', over:'Game Over', newGame:'New Game', newBest:'New Best!', viewBoard:'View board' },
+  he: { title:'וודוקו', back:'חזרה', score:'ניקוד', best:'שיא', pick:'בחר קוביה', place:'לחץ להנחה', over:'המשחק נגמר', newGame:'משחק חדש', newBest:'שיא חדש!', viewBoard:'צפה בלוח' },
 };
 
 const SHAPES = [

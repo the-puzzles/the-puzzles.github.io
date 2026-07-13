@@ -122,7 +122,7 @@ h1 {
     </div>
   </div>
 
-  <h1>SPLICE</h1>
+  <h1>{{ t('title') }}</h1>
   <div class="subtitle">{{ t('subtitle') }}</div>
   <div class="status-bar" :class="statusClass">{{ statusMsg }}</div>
 
@@ -321,9 +321,9 @@ const PUZZLES = {
 };
 
 const I18N = {
-  en: { back:'Games', subtitle:'Trace connected letters to find words · 4 letters minimum', puzzle:'Puzzle', words:'words', goal:'find {n} to win', goalReached:'Goal reached! Keep going…', tapNode:'tap a letter to start', clear:'Clear', newGame:'New Puzzle', correct:'✓ Word found!', win:'🎉 Goal reached!' },
-  he: { back:'משחקים', subtitle:'עקבו אחר אותיות מחוברות כדי למצוא מילים · לפחות 4 אותיות', puzzle:'חידה', words:'מילים', goal:'מצא {n} לניצחון', goalReached:'יעד הושג! המשך…', tapNode:'לחץ על אות להתחלה', clear:'נקה', newGame:'חידה חדשה', correct:'✓ מילה נמצאה!', win:'🎉 יעד הושג!' },
-  es: { back:'Juegos', subtitle:'Traza letras conectadas para encontrar palabras · mín. 4 letras', puzzle:'Puzzle', words:'palabras', goal:'encuentra {n} para ganar', goalReached:'¡Meta alcanzada! Sigue…', tapNode:'toca una letra para empezar', clear:'Borrar', newGame:'Nuevo Puzzle', correct:'✓ ¡Palabra encontrada!', win:'🎉 ¡Meta alcanzada!' },
+  en: { title:'SPLICE', back:'Games', subtitle:'Trace connected letters to find words · 4 letters minimum', puzzle:'Puzzle', words:'words', goal:'find {n} to win', goalReached:'Goal reached! Keep going…', tapNode:'tap a letter to start', clear:'Clear', newGame:'New Puzzle', correct:'✓ Word found!', win:'🎉 Goal reached!' },
+  he: { title:'ספרייס', back:'משחקים', subtitle:'עקבו אחר אותיות מחוברות כדי למצוא מילים · לפחות 4 אותיות', puzzle:'חידה', words:'מילים', goal:'מצא {n} לניצחון', goalReached:'יעד הושג! המשך…', tapNode:'לחץ על אות להתחלה', clear:'נקה', newGame:'חידה חדשה', correct:'✓ מילה נמצאה!', win:'🎉 יעד הושג!' },
+  es: { title:'SPLICE', back:'Juegos', subtitle:'Traza letras conectadas para encontrar palabras · mín. 4 letras', puzzle:'Puzzle', words:'palabras', goal:'encuentra {n} para ganar', goalReached:'¡Meta alcanzada! Sigue…', tapNode:'toca una letra para empezar', clear:'Borrar', newGame:'Nuevo Puzzle', correct:'✓ ¡Palabra encontrada!', win:'🎉 ¡Meta alcanzada!' },
 };
 
 createApp({

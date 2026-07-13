@@ -174,7 +174,7 @@ body {
 <div id="app">
   <div class="top-bar">
     <a class="home-btn" href="index.html">← Home</a>
-    <div class="page-title">WORD LADDER</div>
+    <div class="page-title">{{ pageTitle }}</div>
   </div>
 
   <div class="game-wrap">
@@ -451,6 +451,7 @@ createApp({
     const level          = computed(() => levels.value[currentLevelIdx.value] || levels.value[0]);
     const isRTL          = computed(() => lang.value === 'he' || lang.value === 'ar');
     const langLabel      = computed(() => ({ en:'English', es:'Spanish', he:'Hebrew', ar:'Arabic' })[lang.value]);
+    const pageTitle      = computed(() => ({ en:'WORD LADDER', he:'סולם מילים', es:'ESCALERA DE PALABRAS', ar:'سلم الكلمات' })[lang.value]);
     const steps          = computed(() => chain.value.length - 1);
     const solved         = computed(() => chain.value.length > 1 && chain.value[chain.value.length-1] === level.value?.end);
     const slotKey        = computed(() => `${lang.value}-${wordLen.value}`);
@@ -614,7 +615,7 @@ createApp({
 
     return {
       lang, wordLen, availableLens, LANGS,
-      levels, level, langLabel, isRTL,
+      levels, level, langLabel, pageTitle, isRTL,
       currentLevelIdx, slotCompleted, allDone,
       chain, inputWord, fbMsg, fbClass, hintIdx, gaveUp, steps, solved,
       letterInfo, addWord, undo, giveHint, doGiveUp, nextLevel, restartSlot,

@@ -186,7 +186,8 @@ h1 .td { color: #fb923c; }
     </div>
   </div>
 
-  <h1><span class="fg">FROGS</span> <span class="am">&amp;</span> <span class="td">TOADS</span></h1>
+  <h1 v-if="lang==='en'"><span class="fg">FROGS</span> <span class="am">&amp;</span> <span class="td">TOADS</span></h1>
+  <h1 v-else>{{ UI.title }}</h1>
 
   <div class="score-bar" dir="ltr" :style="{ width: boardWidth }">
     <div class="score-item score-solved" :class="{ active: phase === 'solved' }">
@@ -264,6 +265,7 @@ h1 .td { color: #fb923c; }
 const { createApp, ref, computed } = Vue;
 
 const STRINGS = {
+  title:       { en: 'FROGS & TOADS',          he: 'צפרדעים וקרפדות' },
   back:        { en: 'All Games',              he: 'כל המשחקים' },
   solved:      { en: 'Solved',                 he: 'פתור' },
   moves:       { en: 'Moves',                  he: 'מהלכים' },

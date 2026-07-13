@@ -236,7 +236,7 @@ h1 {
     </div>
   </div>
 
-  <h1>SQUAVA</h1>
+  <h1>{{ UI.title }}</h1>
 
   <div class="score-bar" dir="ltr">
     <div class="score-item score-p1" :class="{active: phase==='playing' && turn===1 && !aiThink}">
@@ -334,6 +334,7 @@ h1 {
 const { createApp, ref, computed, provide } = Vue;
 
 const STRINGS = {
+  title:       { en: 'SQUAVA',           he: 'סקוואבה' },
   back:        { en: 'All Games',       he: 'כל המשחקים' },
   p1:          { en: 'Amber',           he: 'כתום' },
   p2:          { en: 'Indigo',          he: 'סגול' },
