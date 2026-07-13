@@ -501,6 +501,8 @@ createApp({
       try {
         const d = JSON.parse(localStorage.getItem(KEY) || '{}');
         if (d.lang)      lang.value      = d.lang;
+        const urlLang = new URLSearchParams(location.search).get('lang');
+        if (urlLang && ["en","he"].includes(urlLang)) lang.value = urlLang;
         if (d.size)      size.value      = d.size;
         if (d.solvedMap) solvedMap.value = d.solvedMap;
         if (d.bestMap)   bestMap.value   = d.bestMap;

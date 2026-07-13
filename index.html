@@ -132,7 +132,7 @@ footer { margin-top: 64px; color: #444c56; font-size: .78rem; text-align: center
           v-for="g in cat.games"
           :key="g.id"
           class="card"
-          :href="g.href"
+          :href="g.href + '?lang=' + lang"
           :style="{ '--accent': g.accent, '--shadow': g.shadow, '--icon-bg': g.iconBg, '--gradient': g.gradient, '--btn-bg': g.btnBg, '--btn-color': g.btnColor }"
         >
           <div class="card-header">

@@ -770,7 +770,10 @@ createApp({
       }catch{}
     }
 
-    load(); newGame();
+    load();
+    const urlLang = new URLSearchParams(location.search).get('lang');
+    if (urlLang && ["en","he","es","ar"].includes(urlLang)) lang.value = urlLang;
+    newGame();
 
     return {
       lang,mode,startDots,dots,edges,selected,current,phase,scores,aiThink,flashMsg,netCtrl,

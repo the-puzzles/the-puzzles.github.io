@@ -567,6 +567,8 @@ createApp({
     onMounted(() => {
       const saved = loadSave();
       if (saved.lang) lang.value = saved.lang;
+      const urlLang = new URLSearchParams(location.search).get('lang');
+      if (urlLang && ["en","he","es"].includes(urlLang)) lang.value = urlLang;
       if (saved.results) results.value = saved.results;
     });
 

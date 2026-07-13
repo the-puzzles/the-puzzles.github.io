@@ -462,6 +462,8 @@ function launchFireworks() {
 createApp({
   setup() {
     const lang = ref(localStorage.getItem('woodoku-lang') || 'en');
+    const urlLang = new URLSearchParams(location.search).get('lang');
+    if (urlLang && ["en","he"].includes(urlLang)) lang.value = urlLang;
     const isRTL = computed(() => lang.value === 'he');
     const t = k => T[lang.value][k];
     watch(lang, v => localStorage.setItem('woodoku-lang', v));

@@ -606,6 +606,8 @@ createApp({
         if (saved.wordLen) wordLen.value = saved.wordLen;
         if (saved.slotState) slotState.value = saved.slotState;
       }
+      const urlLang = new URLSearchParams(location.search).get('lang');
+      if (urlLang && ["en","he","es","ar"].includes(urlLang)) lang.value = urlLang;
       loadSlot();
       initLevel();
     });

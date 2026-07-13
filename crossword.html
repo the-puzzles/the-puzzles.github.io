@@ -962,6 +962,8 @@ createApp({
       try {
         const last = JSON.parse(localStorage.getItem(LAST_KEY) || '{}');
         if (last.lang) lang.value = last.lang;
+        const urlLang = new URLSearchParams(location.search).get('lang');
+        if (urlLang && ["en","he","es"].includes(urlLang)) lang.value = urlLang;
         if (last.difficulty) difficulty.value = last.difficulty;
       } catch {}
       if (!loadSlot(lang.value, difficulty.value)) newPuzzle();

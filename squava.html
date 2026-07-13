@@ -642,6 +642,8 @@ createApp({
       try {
         const d = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}');
         if (d.lang)        lang.value        = d.lang;
+        const urlLang = new URLSearchParams(location.search).get('lang');
+        if (urlLang && ["en","he"].includes(urlLang)) lang.value = urlLang;
         if (d.mode)        mode.value        = d.mode;
         if (d.humanScores) humanScores.value = d.humanScores;
         if (d.aiScores)    aiScores.value    = d.aiScores;

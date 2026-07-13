@@ -618,6 +618,8 @@ createApp({
         if (s.scores && !s.humanScores) humanScores.value = s.scores;
         if (s.mode) mode.value = s.mode;
       } catch {}
+      const urlLang = new URLSearchParams(location.search).get('lang');
+      if (urlLang && ["en","he"].includes(urlLang)) lang.value = urlLang;
     });
 
     // ── i18n ──

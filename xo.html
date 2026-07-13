@@ -667,6 +667,8 @@ createApp({
     }
 
     load();
+    const urlLang = new URLSearchParams(location.search).get('lang');
+    if (urlLang && ["en","he","es","ar"].includes(urlLang)) lang.value = urlLang;
 
     return {
       lang, mode, board, current, phase, winLine, scores, aiThink, netCtrl,

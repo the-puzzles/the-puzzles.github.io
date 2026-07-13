@@ -890,6 +890,8 @@ createApp({
       try {
         const last = JSON.parse(localStorage.getItem(LAST_KEY) || '{}');
         if (last.lang)       lang.value       = last.lang;
+        const urlLang = new URLSearchParams(location.search).get('lang');
+        if (urlLang && ["en","he","es","ar"].includes(urlLang)) lang.value = urlLang;
         if (last.category)   category.value   = last.category;
         if (last.difficulty) difficulty.value = last.difficulty;
       } catch {}

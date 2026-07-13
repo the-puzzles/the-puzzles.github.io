@@ -674,6 +674,8 @@ createApp({
       loading.value = false;
       if (worldData.value) {
         if (!loadSavedRound()) startRound();
+        const urlLang = new URLSearchParams(location.search).get('lang');
+        if (urlLang && ["en","he"].includes(urlLang)) lang.value = urlLang;
       } else {
         loadError.value = 'Could not load map data — check your connection and try again.';
       }

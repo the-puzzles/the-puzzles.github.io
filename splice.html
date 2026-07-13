@@ -329,6 +329,8 @@ const I18N = {
 createApp({
   setup() {
     const lang = ref(localStorage.getItem('splice-lang') || 'en');
+    const urlLang = new URLSearchParams(location.search).get('lang');
+    if (urlLang && ["en","he","es"].includes(urlLang)) lang.value = urlLang;
     const isRTL = computed(() => lang.value === 'he');
     const t = k => I18N[lang.value][k] || k;
 
