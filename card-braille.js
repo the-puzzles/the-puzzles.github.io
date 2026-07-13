@@ -1,6 +1,8 @@
 CATEGORIES.find(c=>c.label==="Codes").games.push({
   "id": "braille",
   "title": "BRAILLE",
+  "title_he": "ברייל",
+  "title_es": "BRAILLE",
   "icon": "⠿",
   "href": "braille.html",
   "accent": "#a78bfa",
@@ -11,10 +13,22 @@ CATEGORIES.find(c=>c.label==="Codes").games.push({
   "btnColor": "#a78bfa",
   "playLabel": "Play Braille",
   "tagline": "Dot patterns light up — decode the Braille letters into words using your memory or the built-in reference.",
+  "tagline_he": "דפוסי נקודות נדלקים — פענחו את אותיות הברייל למילים בעזרת הזיכרון או טבלת העזר המובנית.",
+  "tagline_es": "Patrones de puntos se iluminan — decodifica las letras Braille en palabras usando tu memoria o la referencia incorporada.",
   "rules": [
     "Watch dots light up · decode the word",
     "Easy mode labels each dot 1–6",
     "8 campaign levels + unlimited bonus words"
+  ],
+  "rules_he": [
+    "צפו בנקודות הנדלקות ופענחו את המילה",
+    "מצב קל מתייג כל נקודה 1–6",
+    "8 שלבי קמפיין + מילות בונוס ללא הגבלה"
+  ],
+  "rules_es": [
+    "Observa los puntos iluminarse y decodifica la palabra",
+    "El modo fácil etiqueta cada punto del 1 al 6",
+    "8 niveles de campaña + palabras de bonificación ilimitadas"
   ],
   "preview": "<div class=\"preview\" style=\"grid-template-columns:1fr;padding:14px 20px\">\n          <div style=\"display:flex;justify-content:center;align-items:center;gap:16px\">\n            <div style=\"display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr 1fr;gap:5px;padding:8px 7px;background:#0d1117;border:1.5px solid #21262d;border-radius:8px\">\n              <div style=\"width:10px;height:10px;border-radius:50%;background:#a78bfa;border:1.5px solid #c4b5fd;box-shadow:0 0 6px rgba(167,139,250,.6)\"></div>\n              <div style=\"width:10px;height:10px;border-radius:50%;background:#21262d;border:1.5px solid #30363d\"></div>\n              <div style=\"width:10px;height:10px;border-radius:50%;background:#a78bfa;border:1.5px solid #c4b5fd;box-shadow:0 0 6px rgba(167,139,250,.6)\"></div>\n              <div style=\"width:10px;height:10px;border-radius:50%;background:#a78bfa;border:1.5px solid #c4b5fd;box-shadow:0 0 6px rgba(167,139,250,.6)\"></div>\n              <div style=\"width:10px;height:10px;border-radius:50%;background:#21262d;border:1.5px solid #30363d\"></div>\n              <div style=\"width:10px;height:10px;border-radius:50%;background:#21262d;border:1.5px solid #30363d\"></div>\n            </div>\n            <div style=\"font-size:1.4rem;font-weight:800;color:#a78bfa\">H</div>\n            <div style=\"display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr 1fr;gap:5px;padding:8px 7px;background:#0d1117;border:1.5px solid #21262d;border-radius:8px\">\n              <div style=\"width:10px;height:10px;border-radius:50%;background:#21262d;border:1.5px solid #30363d\"></div>\n              <div style=\"width:10px;height:10px;border-radius:50%;background:#21262d;border:1.5px solid #30363d\"></div>\n              <div style=\"width:10px;height:10px;border-radius:50%;background:#a78bfa;border:1.5px solid #c4b5fd;box-shadow:0 0 6px rgba(167,139,250,.6)\"></div>\n              <div style=\"width:10px;height:10px;border-radius:50%;background:#a78bfa;border:1.5px solid #c4b5fd;box-shadow:0 0 6px rgba(167,139,250,.6)\"></div>\n              <div style=\"width:10px;height:10px;border-radius:50%;background:#21262d;border:1.5px solid #30363d\"></div>\n              <div style=\"width:10px;height:10px;border-radius:50%;background:#21262d;border:1.5px solid #30363d\"></div>\n            </div>\n            <div style=\"font-size:1.4rem;font-weight:800;color:#a78bfa\">I</div>\n          </div>\n        </div>"
 });

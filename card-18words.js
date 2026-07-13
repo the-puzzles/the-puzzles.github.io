@@ -1,6 +1,8 @@
 CATEGORIES.find(c=>c.label==="Words").games.push({
   "id": "18words",
   "title": "18 WORDS",
+  "title_he": "18 מילים",
+  "title_es": "18 PALABRAS",
   "icon": "🔤",
   "href": "18words.html",
   "accent": "#f0b429",
@@ -11,11 +13,25 @@ CATEGORIES.find(c=>c.label==="Words").games.push({
   "btnColor": "#f0b429",
   "playLabel": "Play 18 Words",
   "tagline": "A daily word challenge — anagram the letters into a word before time runs out, 18 rounds in a row.",
+  "tagline_he": "אתגר מילים יומי — הרכיבו מילה מכל האותיות לפני שהזמן נגמר, 18 סיבובים ברצף.",
+  "tagline_es": "Un desafío diario de palabras — forma una palabra con todas las letras antes de que se acabe el tiempo, 18 rondas seguidas.",
   "rules": [
     "Tap letters to spell a word using all of them",
     "18 rounds, each against a countdown timer",
     "3 letter-reveal hints for the whole puzzle",
     "One puzzle a day, or play Practice for unlimited rounds"
+  ],
+  "rules_he": [
+    "הקישו על אותיות כדי להרכיב מילה המשתמשת בכולן",
+    "18 סיבובים, כל אחד מול טיימר יורד",
+    "3 רמזים לחשיפת אות לכל החידה",
+    "חידה אחת ביום, או שחקו תרגול ללא הגבלה"
+  ],
+  "rules_es": [
+    "Toca las letras para formar una palabra usando todas ellas",
+    "18 rondas, cada una contra un cronómetro",
+    "3 pistas para revelar una letra en todo el desafío",
+    "Un desafío por día, o juega en modo Práctica sin límite"
   ],
   "preview": "<div class=\"preview\" style=\"grid-template-columns:1fr;padding:14px 20px\">\n          <div style=\"display:flex;flex-direction:column;align-items:center;gap:10px\">\n            <div style=\"display:flex;gap:5px\">\n              <div style=\"width:26px;height:32px;border-radius:6px;background:#1c1508;border:2px solid #f0b429;display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:800;color:#f0b429\">D</div>\n              <div style=\"width:26px;height:32px;border-radius:6px;background:#1c1508;border:2px solid #f0b429;display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:800;color:#f0b429\">A</div>\n              <div style=\"width:26px;height:32px;border-radius:6px;background:#0d1117;border:2px solid #30363d;display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:800;color:#c9d1d9\"></div>\n              <div style=\"width:26px;height:32px;border-radius:6px;background:#0d1117;border:2px solid #30363d;display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:800;color:#c9d1d9\"></div>\n            </div>\n            <div style=\"display:flex;gap:8px\">\n              <div style=\"width:34px;height:34px;border-radius:50%;background:#21262d;border:2px solid #30363d;display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:800;color:#c9d1d9\">R</div>\n              <div style=\"width:34px;height:34px;border-radius:50%;background:#21262d;border:2px solid #30363d;display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:800;color:#c9d1d9\">K</div>\n            </div>\n          </div>\n        </div>"
 });

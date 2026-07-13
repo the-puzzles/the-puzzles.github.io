@@ -1,15 +1,29 @@
 CATEGORIES.find(c=>c.label==='Words').games.push({
-  id: 'splice', title: 'SPLICE', icon: '🔤', href: 'splice.html',
+  id: 'splice', title: 'SPLICE', title_he: 'ספרייס', title_es: 'SPLICE', icon: '🔤', href: 'splice.html',
   accent: '#38bdf8', shadow: 'rgba(56,189,248,0.15)', iconBg: '#0c1d2e',
   gradient: 'linear-gradient(135deg,#38bdf8,#818cf8)',
   btnBg: '#0c1d2e', btnColor: '#7dd3fc',
   playLabel: 'Play Splice',
   tagline: 'Letters sit in a connected grid. Trace a path through adjacent nodes to spell hidden words — no clues, just connections.',
+  tagline_he: 'אותיות יושבות ברשת מחוברת. סמנו נתיב דרך צמתים סמוכים כדי לאיית מילים חבויות — בלי הגדרות, רק חיבורים.',
+  tagline_es: 'Las letras están en una cuadrícula conectada. Traza un camino por nodos adyacentes para deletrear palabras ocultas — sin pistas, solo conexiones.',
   rules: [
     'Tap a letter node to start your path',
     'Continue tapping adjacent nodes to spell a word',
     'Tap the last node again to backtrack',
     'Find all hidden words to win — English · Hebrew · Spanish',
+  ],
+  rules_he: [
+    'הקישו על צומת אות כדי להתחיל את הנתיב',
+    'המשיכו להקיש על צמתים סמוכים כדי לאיית מילה',
+    'הקישו שוב על הצומת האחרון כדי לחזור אחורה',
+    'מצאו את כל המילים החבויות כדי לנצח — אנגלית · עברית · ספרדית',
+  ],
+  rules_es: [
+    'Toca un nodo de letra para empezar tu camino',
+    'Sigue tocando nodos adyacentes para deletrear una palabra',
+    'Toca el último nodo de nuevo para retroceder',
+    'Encuentra todas las palabras ocultas para ganar — inglés · hebreo · español',
   ],
   preview: `<svg viewBox="0 0 130 100" width="130" height="100" style="display:block;margin:0 auto">
     <line x1="25" y1="25" x2="65" y2="25" stroke="#21262d" stroke-width="2"/>
