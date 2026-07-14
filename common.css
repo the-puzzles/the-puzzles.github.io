@@ -18,9 +18,12 @@ body {
 }
 
 /* ── Top bar ─────────────────────────────────────────────────────── */
+/* Chrome, not content — stays LTR-ordered even when the page is RTL,
+   so the back link and language switcher don't swap sides or reorder. */
 .top-bar {
   width: 100%;
   display: flex;
+  direction: ltr;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
