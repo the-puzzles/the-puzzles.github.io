@@ -243,7 +243,7 @@ h1 {
 </style>
 </head>
 <body>
-<div id="app" v-cloak :dir="isRTL ? 'rtl' : 'ltr'">
+<div id="app" v-cloak>
 
   <!-- Top bar -->
   <div class="top-bar">
@@ -384,7 +384,7 @@ h1 {
 </div>
 
 <script>
-const { createApp, ref, computed, provide } = Vue;
+const { createApp, ref, computed, provide, watchEffect } = Vue;
 
 const STRINGS = {
   back:       { en: 'All Games',         he: 'כל המשחקים' },
@@ -827,6 +827,11 @@ createApp({
     }
 
     load();
+
+    watchEffect(() => {
+      document.documentElement.lang = lang.value;
+      document.documentElement.dir = isRTL.value ? 'rtl' : 'ltr';
+    });
 
     return {
       lang, mode, board, placed, turn, selected, gamePhase, winner, winLine,

@@ -240,7 +240,7 @@ h1 .w2 { color: #fde047; }
 </style>
 </head>
 <body>
-<div id="app" :dir="isRTL ? 'rtl' : 'ltr'">
+<div id="app">
 
   <div class="top-bar">
     <a class="back-link" href="index.html">{{ t('back') }}</a>
@@ -314,7 +314,7 @@ h1 .w2 { color: #fde047; }
 
 </div>
 <script>
-const { createApp, ref, computed, watch, onMounted, onUnmounted } = Vue;
+const { createApp, ref, computed, watch, onMounted, onUnmounted, watchEffect } = Vue;
 
 const T = {
   en: { title:'WOODOKU', back:'Back', score:'SCORE', best:'BEST', pick:'Pick a block', place:'Click board to place', over:'Game Over', newGame:'New Game', newBest:'New Best!', viewBoard:'View board' },
@@ -642,6 +642,11 @@ createApp({
           g.push(cells.some(([dr, dc]) => dr===r && dc===c));
       return g;
     }
+
+    watchEffect(() => {
+      document.documentElement.lang = lang.value;
+      document.documentElement.dir = isRTL.value ? 'rtl' : 'ltr';
+    });
 
     return {
       lang, isRTL, t, board, queue, selected, hoverCell,

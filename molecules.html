@@ -304,7 +304,7 @@ svg.board {
 </style>
 </head>
 <body>
-<div id="app" :dir="isRTL ? 'rtl' : 'ltr'">
+<div id="app">
 
   <div class="top-bar">
     <a class="back-link" href="index.html">{{ t('back') }}</a>
@@ -514,7 +514,7 @@ svg.board {
 </div>
 
 <script>
-const { createApp, ref, computed, watch, onMounted } = Vue;
+const { createApp, ref, computed, watch, onMounted, watchEffect } = Vue;
 
 const SVG_W = 520;
 const SVG_H = 400;
@@ -1323,6 +1323,11 @@ createApp({
       }
       requestAnimationFrame(draw);
     }
+
+    watchEffect(() => {
+      document.documentElement.lang = lang.value;
+      document.documentElement.dir = isRTL.value ? 'rtl' : 'ltr';
+    });
 
     return {
       lang, isRTL, t, levels, levelIdx, currentLevel,

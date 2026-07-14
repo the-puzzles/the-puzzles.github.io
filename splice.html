@@ -92,7 +92,7 @@ h1 {
 </style>
 </head>
 <body>
-<div id="app" v-cloak :dir="isRTL ? 'rtl' : 'ltr'">
+<div id="app" v-cloak>
 
   <div class="top-bar">
     <a class="back-link" href="index.html">{{ t('back') }}</a>
@@ -149,7 +149,7 @@ h1 {
 </div>
 
 <script>
-const { createApp, ref, computed, onMounted } = Vue;
+const { createApp, ref, computed, onMounted, watchEffect } = Vue;
 
 const HE_FINALS = {'ם':'מ','ן':'נ','ף':'פ','ך':'כ','ץ':'צ'};
 function normLetter(c) { return HE_FINALS[c] || c; }
@@ -473,6 +473,11 @@ createApp({
       const min = puzzle.value.min;
       const suffix = won.value ? t('goalReached') : t('goal').replace('{n}', min);
       return `${n} ${t('words')} · ${suffix}`;
+    });
+
+    watchEffect(() => {
+      document.documentElement.lang = lang.value;
+      document.documentElement.dir = isRTL.value ? 'rtl' : 'ltr';
     });
 
     return { lang, isRTL, t, puzzles, puzzleIdx, puzzle, path, found, statusMsg, statusClass, won, fwCanvas, currentWord, allEdges, npos, nodeR, nodeFontSize, nodeClass, tap, clearPath, prevPuzzle, nextPuzzle, newGame, setLang, progressLine };

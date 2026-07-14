@@ -161,7 +161,7 @@ body {
 </style>
 </head>
 <body>
-<div id="app" v-cloak :dir="isRTL ? 'rtl' : 'ltr'">
+<div id="app" v-cloak>
 
   <div class="top-bar">
     <a class="home-btn" href="index.html">{{ isRTL ? '→' : '←' }} {{ S('back') }}</a>
@@ -286,7 +286,7 @@ body {
 </div>
 
 <script>
-const { createApp, ref, computed, onMounted, onBeforeUnmount } = Vue;
+const { createApp, ref, computed, onMounted, onBeforeUnmount, watchEffect } = Vue;
 
 /* ── Seeded RNG (mulberry32) ──────────────────────────────────────── */
 function mulberry32(seed) {
@@ -560,6 +560,11 @@ createApp({
     });
 
     onBeforeUnmount(() => { clearTimer(); if (advanceTimeout) clearTimeout(advanceTimeout); });
+
+    watchEffect(() => {
+      document.documentElement.lang = lang.value;
+      document.documentElement.dir = isRTL.value ? 'rtl' : 'ltr';
+    });
 
     return {
       lang, phase, homeTab, runMode, rounds, roundIdx, round, timeLeft, hintsLeft,

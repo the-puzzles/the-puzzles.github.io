@@ -232,7 +232,7 @@ h1 .o { color: #60a5fa; }
 </style>
 </head>
 <body>
-<div id="app" v-cloak :dir="isRTL ? 'rtl' : 'ltr'">
+<div id="app" v-cloak>
 
   <!-- Top bar -->
   <div class="top-bar">
@@ -326,7 +326,7 @@ h1 .o { color: #60a5fa; }
 </div>
 
 <script>
-const { createApp, ref, computed, provide } = Vue;
+const { createApp, ref, computed, provide, watchEffect } = Vue;
 
 const STRINGS = {
   back:        { en: 'All Games',      he: 'כל המשחקים',     es: 'Todos los juegos',      ar: 'كل الألعاب' },
@@ -621,6 +621,11 @@ createApp({
     load();
     const urlLang = new URLSearchParams(location.search).get('lang');
     if (urlLang && ["en","he","es","ar"].includes(urlLang)) lang.value = urlLang;
+
+    watchEffect(() => {
+      document.documentElement.lang = lang.value;
+      document.documentElement.dir = isRTL.value ? 'rtl' : 'ltr';
+    });
 
     return {
       lang, mode, board, current, phase, winLine, scores, aiThink, netCtrl,
