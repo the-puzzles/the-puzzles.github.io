@@ -32,6 +32,7 @@ body {
 .lang-btn {
   padding: 5px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 700;
   cursor: pointer; background: #161b22; color: #6e7681; border: 1px solid #30363d;
+  touch-action: manipulation;
 }
 .lang-btn.active { background: #1c1508; color: #f0b429; border-color: #f0b429; }
 
@@ -51,7 +52,7 @@ body {
 .mode-btn {
   flex: 1; padding: 9px 6px; border-radius: 8px; font-size: 0.78rem; font-weight: 700;
   cursor: pointer; background: #21262d; color: #6e7681;
-  border: 1.5px solid #30363d; transition: all 0.15s;
+  border: 1.5px solid #30363d; transition: all 0.15s; touch-action: manipulation;
 }
 .mode-btn:hover:not(.active) { color: #c9d1d9; border-color: #6e7681; }
 .mode-btn.active { background: #1c1508; color: #f0b429; border-color: #f0b429; }
@@ -64,6 +65,7 @@ body {
   padding: 12px 28px; background: #f0b429; color: #0d1117;
   border: none; border-radius: 10px; font-size: 0.95rem; font-weight: 800;
   cursor: pointer; letter-spacing: 0.03em; transition: opacity 0.15s, transform 0.1s;
+  touch-action: manipulation;
 }
 .play-btn:hover { opacity: 0.85; transform: translateY(-1px); }
 .play-btn:active { transform: translateY(0); }
@@ -74,7 +76,7 @@ body {
 .archive-item {
   display: flex; justify-content: space-between; align-items: center;
   padding: 9px 12px; border-radius: 8px; background: #0d1117;
-  border: 1px solid #21262d; cursor: pointer; font-size: 0.82rem;
+  border: 1px solid #21262d; cursor: pointer; font-size: 0.82rem; touch-action: manipulation;
 }
 .archive-item:hover { border-color: #f0b429; }
 .archive-date { color: #c9d1d9; }
@@ -88,6 +90,7 @@ body {
 .round-label { font-size: 0.76rem; font-weight: 700; color: #6e7681; letter-spacing: 0.08em; }
 .pause-btn {
   background: none; border: none; color: #6e7681; font-size: 1.1rem; cursor: pointer; padding: 4px 8px;
+  touch-action: manipulation;
 }
 .pause-btn:hover { color: #c9d1d9; }
 .timer {
@@ -102,7 +105,7 @@ body {
   border: 2px solid #30363d; border-radius: 10px;
   display: flex; align-items: center; justify-content: center;
   font-size: clamp(1.1rem, 5.5vw, 1.8rem); font-weight: 800; color: #c9d1d9; background: #0d1117;
-  cursor: pointer; transition: all 0.15s;
+  cursor: pointer; transition: all 0.15s; touch-action: manipulation;
 }
 .letter-box.filled { border-color: #f0b429; background: #1c1508; }
 .letter-box.hinted { border-color: #22d3ee; background: #0c2233; color: #22d3ee; }
@@ -123,6 +126,7 @@ body {
   display: flex; align-items: center; justify-content: center;
   font-size: clamp(1.1rem, 5vw, 1.7rem); font-weight: 800; color: #c9d1d9; background: #21262d;
   border: 2px solid #30363d; cursor: pointer; transition: opacity 0.15s, border-color 0.15s, transform 0.15s; user-select: none;
+  touch-action: manipulation;
 }
 .tile:hover:not(.used) { border-color: #f0b429; }
 .tile:active:not(.used) { transform: scale(0.94); }
@@ -135,7 +139,7 @@ body {
 .hint-btn {
   flex: 1; padding: 12px 10px; background: none; color: #6e7681;
   border: 1.5px solid #30363d; border-radius: 10px; font-size: 0.92rem;
-  font-weight: 600; cursor: pointer; transition: all 0.15s;
+  font-weight: 600; cursor: pointer; transition: all 0.15s; touch-action: manipulation;
 }
 .hint-btn:hover:not(:disabled) { color: #22d3ee; border-color: #22d3ee; }
 .hint-btn:disabled { opacity: 0.35; cursor: not-allowed; }
@@ -154,7 +158,7 @@ body {
 .pause-box { text-align: center; }
 .pause-title { font-size: 1.3rem; font-weight: 800; color: #c9d1d9; margin-bottom: 18px; letter-spacing: 0.05em; }
 .pause-buttons { display: flex; flex-direction: column; gap: 10px; width: 220px; }
-.btn { padding: 11px 20px; border-radius: 10px; font-size: 0.9rem; font-weight: 700; cursor: pointer; transition: opacity 0.15s; }
+.btn { padding: 11px 20px; border-radius: 10px; font-size: 0.9rem; font-weight: 700; cursor: pointer; transition: opacity 0.15s; touch-action: manipulation; }
 .btn:hover { opacity: 0.85; }
 .btn-primary { background: #f0b429; color: #0d1117; border: none; }
 .btn-secondary { background: #21262d; color: #c9d1d9; border: 1.5px solid #30363d; }
