@@ -6,28 +6,15 @@
 <title>Word Ladder · Puzzle Games</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0d1117">
+<link rel="stylesheet" href="common.css">
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
 body {
-  font-family: 'Segoe UI', system-ui, sans-serif;
-  background: #0d1117; color: #c9d1d9;
-  min-height: 100vh; display: flex; flex-direction: column;
-  align-items: center; padding: 24px 16px 64px;
+  padding: 24px 16px 64px;
 }
-.top-bar {
-  width: 100%; max-width: 560px; display: flex;
-  align-items: center; gap: 12px; margin-bottom: 20px;
-}
-.home-btn {
-  color: #6e7681; text-decoration: none; font-size: 0.82rem;
-  border: 1px solid #30363d; border-radius: 6px; padding: 5px 10px;
-  transition: color 0.15s, border-color 0.15s; flex-shrink: 0;
-}
-.home-btn:hover { color: #c9d1d9; border-color: #6e7681; }
+.top-bar { max-width: 560px; justify-content: flex-start; gap: 12px; margin-bottom: 20px; }
+.home-btn { flex-shrink: 0; }
 .page-title {
-  font-size: 1.5rem; font-weight: 900; letter-spacing: 0.08em;
-  background: linear-gradient(135deg, #22d3ee, #0ea5e9);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  background-image: linear-gradient(135deg, #22d3ee, #0ea5e9);
 }
 .game-wrap { width: 100%; max-width: 560px; display: flex; flex-direction: column; gap: 14px; }
 .panel { background: #161b22; border: 2px solid #30363d; border-radius: 14px; padding: 18px 20px; }

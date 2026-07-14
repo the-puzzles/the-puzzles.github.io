@@ -869,7 +869,7 @@ const CLUE_BANK = {
 };
 
 const STRINGS = {
-  back:          { en: '← All Games',            he: 'כל המשחקים →',          es: '← Todos los juegos' },
+  back:          { en: 'All Games',            he: 'כל המשחקים',          es: 'Todos los juegos' },
   title:         { en: 'CROSSWORD',               he: 'תשבץ',                   es: 'CRUCIGRAMA' },
   tagline:       { en: 'Fill the grid using the clues — across and down',              he: 'מלאו את הלוח בעזרת החידות — מאוזן ומאונך',                 es: 'Completa la cuadrícula con las pistas — horizontal y vertical' },
   newPuzzle:     { en: 'New Crossword',           he: 'תשבץ חדש',               es: 'Nuevo Crucigrama' },

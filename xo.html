@@ -7,12 +7,10 @@
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0d1117">
 <link rel="apple-touch-icon" href="icon.svg">
+<link rel="stylesheet" href="common.css">
 <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
 <script src="netplay.js"></script>
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-[v-cloak] { display: none; }
-
 :root {
   --cell: clamp(92px, calc((100vw - 48px) / 3), 124px);
   --net-panel-width: calc(var(--cell) * 3);
@@ -20,54 +18,12 @@
 }
 
 body {
-  font-family: 'Segoe UI', system-ui, sans-serif;
-  background: #0d1117;
-  color: #c9d1d9;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
   padding: 16px 16px 48px;
   user-select: none;
   -webkit-user-select: none;
 }
 
-/* ── Top bar ─────────────────────────────────────────────────────── */
-.top-bar {
-  width: 100%;
-  max-width: 480px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-.back-link {
-  color: #6e7681;
-  text-decoration: none;
-  font-size: 0.85rem;
-  transition: color 0.15s;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-.back-link:hover { color: #c9d1d9; }
-[dir="ltr"] .back-link::before { content: '←'; }
-[dir="rtl"] .back-link::after  { content: '→'; }
-.lang-toggle { display: flex; gap: 4px; }
-.lang-btn {
-  background: none;
-  border: 1px solid #30363d;
-  color: #6e7681;
-  border-radius: 6px;
-  padding: 4px 8px;
-  font-size: 0.78rem;
-  font-weight: 700;
-  font-family: inherit;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-.lang-btn.active  { background: #1a0d0f; border-color: #f43f5e; color: #f472b6; }
-.lang-btn:hover:not(.active) { color: #c9d1d9; border-color: #6e7681; }
+.top-bar { max-width: 480px; }
 
 /* ── Title ───────────────────────────────────────────────────────── */
 h1 {
@@ -136,14 +92,10 @@ h1 .o { color: #60a5fa; }
 
 /* ── Status ──────────────────────────────────────────────────────── */
 .status {
-  height: 2.2rem;
   font-size: 1.1rem;
   font-weight: 700;
   color: #c9d1d9;
   margin-bottom: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   gap: 6px;
   letter-spacing: 0.01em;
 }

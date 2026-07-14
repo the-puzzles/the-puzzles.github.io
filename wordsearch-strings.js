@@ -85,7 +85,7 @@ const CATEGORIES = [
 ];
 
 const STRINGS = {
-  back:         { en:'← All Games', he:'כל המשחקים →', es:'← Todos los juegos', ar:'كل الألعاب →' },
+  back:         { en:'All Games', he:'כל המשחקים', es:'Todos los juegos', ar:'كل الألعاب' },
   reset:        { en:'reset', he:'איפוס', es:'reiniciar', ar:'إعادة' },
   title:        { en:'WORDSEARCH', he:'מצאו מילים', es:'BUSCA PALABRAS', ar:'بحث الكلمات' },
   tagline:      { en:'Find hidden words — one word hides in secret', he:'מצאו את המילים הנסתרות — ומילה אחת מסתתרת בצורה חשאית', es:'Encuentra las palabras ocultas — una se esconde en secreto', ar:'ابحث عن الكلمات المخفية — وكلمة واحدة تختبئ سراً' },

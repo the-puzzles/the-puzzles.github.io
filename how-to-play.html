@@ -7,29 +7,13 @@
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0d1117">
 <link rel="apple-touch-icon" href="icon.svg">
+<link rel="stylesheet" href="common.css">
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-
 body {
-  font-family: 'Segoe UI', system-ui, sans-serif;
-  background: #0d1117;
-  color: #c9d1d9;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
   padding: 32px 20px 64px;
 }
 
-.back {
-  align-self: flex-start;
-  font-size: 0.78rem;
-  color: #6e7681;
-  text-decoration: none;
-  margin-bottom: 24px;
-  transition: color 0.15s;
-}
-.back:hover { color: #c9d1d9; }
+.back-link { align-self: flex-start; font-size: 0.78rem; margin-bottom: 24px; }
 
 header {
   text-align: center;
@@ -425,7 +409,7 @@ kbd {
 </head>
 <body>
 
-<a class="back" href="index.html">← All Games</a>
+<a class="back-link" href="index.html">← All Games</a>
 
 <header>
   <h1>How to Play</h1>

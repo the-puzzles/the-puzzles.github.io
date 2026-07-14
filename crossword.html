@@ -7,18 +7,10 @@
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0d1117">
 <link rel="apple-touch-icon" href="icon.svg">
+<link rel="stylesheet" href="common.css">
 <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-
 body {
-  font-family: 'Segoe UI', system-ui, sans-serif;
-  background: #0d1117;
-  color: #c9d1d9;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
   padding: 20px 16px 48px;
   user-select: none;
   -webkit-user-select: none;
@@ -43,35 +35,7 @@ h1 {
 }
 
 /* ── Top bar ─────────────────────────────────────────────────────── */
-.top-bar {
-  display: flex;
-  width: 100%;
-  max-width: 680px;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 6px;
-}
-.back-link {
-  font-size: 0.78rem;
-  color: #6e7681;
-  text-decoration: none;
-  transition: color 0.15s;
-}
-.back-link:hover { color: #c9d1d9; }
-
-.lang-toggle { display: flex; gap: 4px; }
-.lang-btn {
-  background: #21262d;
-  border: 1px solid #30363d;
-  color: #6e7681;
-  padding: 5px 11px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 0.78rem;
-  font-family: inherit;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
-}
-.lang-btn.active { background: #2a0a1a; border-color: #ec4899; color: #f472b6; }
+.top-bar { max-width: 680px; margin-bottom: 6px; }
 
 /* ── Difficulty selector ─────────────────────────────────────────── */
 .diff-bar {
@@ -132,14 +96,10 @@ h1 {
 
 /* ── Status ──────────────────────────────────────────────────────── */
 .status {
-  height: 2.2rem;
   font-size: 1rem;
   font-weight: 700;
   color: #c9d1d9;
   margin-bottom: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   gap: 6px;
 }
 .status.won { color: #4ade80; }

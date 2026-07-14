@@ -6,47 +6,21 @@
 <title>Braille · Puzzle Games</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0d1117">
+<link rel="stylesheet" href="common.css">
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-
 body {
-  font-family: 'Segoe UI', system-ui, sans-serif;
-  background: #0d1117;
-  color: #c9d1d9;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
   padding: 24px 16px 64px;
 }
 
 /* ── Header ─────────────────────────────────────────────────────── */
 .top-bar {
-  width: 100%;
   max-width: 640px;
-  display: flex;
-  align-items: center;
+  justify-content: flex-start;
   gap: 12px;
   margin-bottom: 28px;
 }
-.home-btn {
-  color: #6e7681;
-  text-decoration: none;
-  font-size: 0.82rem;
-  border: 1px solid #30363d;
-  border-radius: 6px;
-  padding: 5px 10px;
-  transition: color 0.15s, border-color 0.15s;
-}
-.home-btn:hover { color: #c9d1d9; border-color: #6e7681; }
 .page-title {
-  font-size: 1.5rem;
-  font-weight: 900;
-  letter-spacing: 0.08em;
-  background: linear-gradient(135deg, #a78bfa, #7c3aed);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  background-image: linear-gradient(135deg, #a78bfa, #7c3aed);
 }
 
 /* ── Main container ──────────────────────────────────────────────── */

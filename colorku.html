@@ -7,22 +7,16 @@
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0d1117">
 <link rel="apple-touch-icon" href="icon.svg">
+<link rel="stylesheet" href="common.css">
 <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-
 body {
-  font-family: 'Segoe UI', system-ui, sans-serif;
-  background: #0d1117;
-  color: #c9d1d9;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
   padding: 20px 16px 48px;
   user-select: none;
   -webkit-user-select: none;
 }
+
+.back-link { margin-bottom: 8px; display: inline-block; font-size: 0.78rem; }
 
 h1 {
   font-size: 2.2rem;
@@ -236,7 +230,7 @@ h1 {
     </div>
   </transition>
 
-  <a href="index.html" style="font-size:0.78rem;color:#6e7681;text-decoration:none;margin-bottom:8px;display:inline-block;transition:color 0.15s" onmouseover="this.style.color='#c9d1d9'" onmouseout="this.style.color='#6e7681'">← All Games</a>
+  <a class="back-link" href="index.html">← All Games</a>
   <h1>COLORKU</h1>
   <p class="tagline">Fill each row{{ level.boxRows ? ', column and box' : ' and column' }} with every color exactly once</p>
 
