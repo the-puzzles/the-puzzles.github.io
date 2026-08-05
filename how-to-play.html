@@ -294,6 +294,13 @@ kbd {
 .morse    .step-num { background: #3d1f00; color: #fbbf24; }
 .wordladder .step-num { background: #082f49; color: #22d3ee; }
 .braille    .step-num { background: #1e1065; color: #a78bfa; }
+.mancala    .step-num { background: #2a1705; color: #fbbf24; }
+
+.mancala .section-title {
+  background: linear-gradient(135deg, #d97706, #0d9488);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.mancala .play-link { background: #2a1705; color: #fbbf24; border: 1px solid #d97706; }
 
 /* ── Morse lamp demo ──────────────────────────────────────────────── */
 .lamp-demo {
@@ -882,6 +889,43 @@ kbd {
     </div>
   </div>
 
+  <!-- ── MANCALA ──────────────────────────────────────────────────── -->
+  <div class="section mancala">
+    <div class="section-header">
+      <div class="section-icon">🌰</div>
+      <div class="section-title">MANCALA</div>
+    </div>
+    <div class="section-body">
+      <p class="tagline">A classic sowing game. Scoop up the seeds from one of your pits and drop them one by one around the board — land in the right spot and you can earn an extra turn or capture your opponent's seeds.</p>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-text">Click any pit on <em>your</em> row (the bottom row is yours; the top row belongs to your opponent).</div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-text">Its seeds are sown one at a time into each following pit, moving counter-clockwise — including your own store, but <em>skipping</em> your opponent's store.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-text">Land your last seed in your own store and you <em>go again</em> immediately.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-text">Land your last seed in an <em>empty</em> pit on your own side, and the pit directly opposite has seeds — you <em>capture</em> both into your store.</div>
+        </div>
+      </div>
+
+      <div class="rule-block">
+        <strong>Game over:</strong> once a player's row is completely empty, the other player sweeps all their remaining seeds into their own store. Whoever's store holds more seeds wins.<br>
+        <strong>Modes:</strong> 2 Player, or Easy / Medium / Hard vs. the computer — Hard uses minimax with alpha-beta pruning — plus online Network play.
+      </div>
+
+      <a class="play-link" href="mancala.html">Play Mancala →</a>
+    </div>
+  </div>
+
   <!-- ── CONTROLS ────────────────────────────────────────────────── -->
   <div class="section controls">
     <div class="section-header">
@@ -982,6 +1026,20 @@ kbd {
         <div class="ctrl-desc">Submit your decoded word</div>
         <div class="ctrl-label">Show a hint</div>
         <div class="ctrl-desc">Reveal the first letter or total letter count</div>
+      </div>
+
+      <div class="divider" style="height:1px;background:#21262d"></div>
+
+      <div style="font-size:0.8rem;color:#6e7681;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px">Mancala</div>
+      <div class="controls-grid">
+        <div class="ctrl-label">Click a pit</div>
+        <div class="ctrl-desc">Sow that pit's seeds around the board (only your own pits are clickable on your turn)</div>
+        <div class="ctrl-label">2 Players / Easy / Medium / Hard / Network</div>
+        <div class="ctrl-desc">Switch game mode — Hard uses minimax with alpha-beta pruning</div>
+        <div class="ctrl-label">New Game</div>
+        <div class="ctrl-desc">Reset the board and start a new round</div>
+        <div class="ctrl-label">↺</div>
+        <div class="ctrl-desc">Reset the win/loss/draw tally</div>
       </div>
 
       <div class="divider" style="height:1px;background:#21262d"></div>

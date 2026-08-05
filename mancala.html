@@ -12,9 +12,9 @@
 <script src="netplay.js"></script>
 <style>
 :root {
-  --pit: clamp(46px, calc((100vw - 160px) / 6), 66px);
-  --store-w: clamp(40px, calc(var(--pit) * 0.9), 60px);
-  --net-panel-width: calc(var(--pit) * 6 + var(--store-w) * 2 + 34px);
+  --pit: clamp(58px, calc((100vw - 64px) / 2), 84px);
+  --store-h: clamp(46px, calc(var(--pit) * 0.78), 64px);
+  --board-w: calc(var(--pit) * 2 + 8px);
   --net-btn-bg: #2a1705; --net-btn-border: #d97706; --net-btn-color: #fbbf24;
 }
 
@@ -37,7 +37,7 @@ h1 {
 /* ── Score bar ───────────────────────────────────────────────────── */
 .score-bar {
   display: flex;
-  width: calc(var(--pit) * 6 + var(--store-w) * 2 + 34px);
+  width: min(var(--board-w) + 120px, 92vw);
   background: #161b22; border: 1px solid #21262d;
   border-radius: 14px; overflow: hidden; margin-bottom: 14px;
 }
@@ -87,22 +87,24 @@ h1 {
 /* ── Board ───────────────────────────────────────────────────────── */
 .board {
   display: flex;
-  align-items: stretch;
+  flex-direction: column;
+  align-items: center;
   gap: 10px;
   margin-bottom: 22px;
 }
 
 .store {
-  width: var(--store-w);
-  border-radius: calc(var(--store-w) / 2);
+  width: var(--board-w);
+  height: var(--store-h);
+  border-radius: calc(var(--store-h) / 2);
   background: linear-gradient(180deg, #241206, #1a0d04);
   border: 2px solid #3a2410;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  padding: 8px 4px;
+  gap: 8px;
+  padding: 4px 8px;
   transition: box-shadow 0.2s, border-color 0.2s;
 }
 .store-p1 { border-color: #7c4a10; }
@@ -117,8 +119,8 @@ h1 {
 
 .pits {
   display: grid;
-  grid-template-columns: repeat(6, var(--pit));
-  grid-template-rows: repeat(2, var(--pit));
+  grid-template-columns: repeat(2, var(--pit));
+  grid-template-rows: repeat(6, var(--pit));
   gap: 8px;
 }
 
@@ -159,7 +161,7 @@ h1 {
 /* ── Mode bar ────────────────────────────────────────────────────── */
 .mode-bar {
   display: flex; gap: 6px; margin-bottom: 20px; justify-content: center;
-  width: calc(var(--pit) * 6 + var(--store-w) * 2 + 34px); flex-wrap: wrap;
+  width: min(var(--board-w) + 120px, 92vw); flex-wrap: wrap;
 }
 .mode-btn {
   background: #161b22; border: 1px solid #30363d; color: #8b949e;
@@ -256,40 +258,30 @@ h1 {
 
   <div class="board" dir="ltr" :class="phase !== 'playing' ? statusClass : ''">
     <div class="store store-p2" :class="{'active-store': phase==='playing' && turn===2 && !aiThink}">
-      <div class="store-arrow">◀</div>
+      <div class="store-arrow">▲</div>
       <div class="store-val">{{ board[13] }}</div>
     </div>
 
     <div class="pits">
       <div
-        v-for="i in topRow"
-        :key="'t'+i"
-        class="pit row-p2"
-        :class="{
-          clickable: canClick(i),
-          empty: board[i] === 0,
-          sowing: sowingSet.has(i),
-          'last-landed': lastLanded === i,
-        }"
-        @click="clickPit(i)"
-      >{{ board[i] }}</div>
-
-      <div
-        v-for="i in bottomRow"
-        :key="'b'+i"
-        class="pit row-p1"
-        :class="{
-          clickable: canClick(i),
-          empty: board[i] === 0,
-          sowing: sowingSet.has(i),
-          'last-landed': lastLanded === i,
-        }"
+        v-for="i in boardOrder"
+        :key="i"
+        class="pit"
+        :class="[
+          i <= 5 ? 'row-p1' : 'row-p2',
+          {
+            clickable: canClick(i),
+            empty: board[i] === 0,
+            sowing: sowingSet.has(i),
+            'last-landed': lastLanded === i,
+          },
+        ]"
         @click="clickPit(i)"
       >{{ board[i] }}</div>
     </div>
 
     <div class="store store-p1" :class="{'active-store': phase==='playing' && turn===1 && !aiThink}">
-      <div class="store-arrow">▶</div>
+      <div class="store-arrow">▼</div>
       <div class="store-val">{{ board[6] }}</div>
     </div>
   </div>
@@ -512,8 +504,8 @@ createApp({
     function scoresRef() { return (mode.value === '2p' || mode.value === 'net') ? humanScores : aiScores; }
     const scores = computed(() => scoresRef().value);
 
-    const topRow    = [12, 11, 10, 9, 8, 7];
-    const bottomRow = [0, 1, 2, 3, 4, 5];
+    // Interleaved [p1 pit, opposite p2 pit] per row so captures land side by side.
+    const boardOrder = [0, 12, 1, 11, 2, 10, 3, 9, 4, 8, 5, 7];
 
     const netCtrl = createNetplay({
       gameId: 'mancala',
@@ -676,7 +668,7 @@ createApp({
 
     return {
       lang, mode, board, turn, phase, winner, aiThink, animating, sowingSet, lastLanded, extraTurnFlash,
-      netCtrl, scores, topRow, bottomRow,
+      netCtrl, scores, boardOrder,
       isRTL, UI, statusClass,
       canClick, clickPit, newGame, setMode, setLang, resetScores,
     };
