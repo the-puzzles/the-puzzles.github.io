@@ -12,7 +12,7 @@ CATEGORIES.find(c=>c.label==="Classic Games").games.push({
   "btnColor": "#fbbf24",
   "playLabel": "Play Mancala",
   "tagline": "Sow seeds pit by pit around the board. Land your last seed in your store for an extra turn, or in an empty pit to capture your opponent's seeds.",
-  "tagline_he": "זרעו גרעינים בור אחר בור סביב הלוח. סיימו באוצר שלכם לתור נוסף, או בבור ריק כדי לתפוס את גרעיני היריב.",
+  "tagline_he": "זרעו גרעינים מבור לבור סביב הלוח. אם הגרעין האחרון נוחת באוצר שלכם תזכו בתור נוסף, ואם הוא נוחת בבור ריק שלכם — תתפסו את גרעיני היריב שממול.",
   "rules": [
     "6 pits and a store per side, 4 seeds per pit",
     "Last seed in your own store earns another turn",
@@ -22,8 +22,8 @@ CATEGORIES.find(c=>c.label==="Classic Games").games.push({
   ],
   "rules_he": [
     "6 בורות ואוצר לכל צד, 4 גרעינים בכל בור",
-    "גרעין אחרון באוצר שלכם מזכה בתור נוסף",
-    "גרעין אחרון בבור ריק שלכם תופס את הבור שממול",
+    "אם הגרעין האחרון נוחת באוצר שלכם, מקבלים תור נוסף",
+    "אם הגרעין האחרון נוחת בבור ריק שלכם, תופסים גם אותו וגם את הבור שממול",
     "מי שיש לו הכי הרבה גרעינים באוצר כשצד מתרוקן מנצח",
     "שני שחקנים או נגד מחשב (קל / בינוני / קשה)"
   ],
