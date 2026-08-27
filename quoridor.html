@@ -99,7 +99,7 @@ h1 {
 .pawn-ring { fill: none; stroke: rgba(0,0,0,0.5); stroke-width: 1; }
 
 .wall-hit { fill: transparent; cursor: pointer; }
-.wall-hit:hover + .wall-preview { opacity: 0.55; }
+.wall-hit:hover ~ .wall-preview { opacity: 0.55; }
 .wall-preview {
   fill: #6e7681; opacity: 0; pointer-events: none; transition: opacity 0.12s;
   rx: 4;
@@ -232,8 +232,10 @@ h1 {
 
       <!-- Wall hit targets + previews (only structurally & path-legal) -->
       <template v-for="w in wallSlots" :key="'w'+w.r+'-'+w.c+'-'+w.orient">
+        <rect v-for="(arm, ai) in w.hitArms" :key="ai"
+          :x="arm.x" :y="arm.y" :width="arm.w" :height="arm.h"
+          class="wall-hit" @click="clickWall(w.r, w.c, w.orient)"/>
         <rect :x="w.x" :y="w.y" :width="w.w" :height="w.h" rx="4" class="wall-preview"/>
-        <rect :x="w.x" :y="w.y" :width="w.w" :height="w.h" class="wall-hit" @click="clickWall(w.r, w.c, w.orient)"/>
       </template>
 
       <!-- Placed walls -->
@@ -592,13 +594,20 @@ createApp({
 
     const wallSlots = computed(() => {
       if (!canAct.value || wallsLeft.value[turn.value-1] <= 0) return [];
-      return legalWallsInBox(wallGrid.value, pos.value, 0, N-2, 0, N-2).map(w => ({
-        r: w.r, c: w.c, orient: w.orient,
-        x: w.orient === 'h' ? cellX(w.c) : cellX(w.c) + CS,
-        y: w.orient === 'h' ? cellY(w.r) + CS : cellY(w.r),
-        w: w.orient === 'h' ? 2*CS + GS : GS,
-        h: w.orient === 'h' ? GS : 2*CS + GS,
-      }));
+      return legalWallsInBox(wallGrid.value, pos.value, 0, N-2, 0, N-2).map(w => {
+        const x = w.orient === 'h' ? cellX(w.c) : cellX(w.c) + CS;
+        const y = w.orient === 'h' ? cellY(w.r) + CS : cellY(w.r);
+        const width  = w.orient === 'h' ? 2*CS + GS : GS;
+        const height = w.orient === 'h' ? GS : 2*CS + GS;
+        // Split the hit area into two arms that skip the shared crossing
+        // square at the anchor's center — otherwise a click there is
+        // ambiguous between this wall and the perpendicular one at the
+        // same anchor, and whichever is painted on top always wins.
+        const hitArms = w.orient === 'h'
+          ? [{ x, y, w: CS, h: GS }, { x: x + CS + GS, y, w: CS, h: GS }]
+          : [{ x, y, w: GS, h: CS }, { x, y: y + CS + GS, w: GS, h: CS }];
+        return { r: w.r, c: w.c, orient: w.orient, x, y, w: width, h: height, hitArms };
+      });
     });
 
     const placedWalls = computed(() => {
