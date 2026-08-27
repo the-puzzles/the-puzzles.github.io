@@ -94,10 +94,13 @@ h1 {
   padding: 16px 14px;
   border-radius: 24px;
   background:
-    radial-gradient(120% 60% at 50% 0%, rgba(255,255,255,0.035), transparent 60%),
-    linear-gradient(160deg, #1c1108, #120b04 55%, #180f06);
+    repeating-linear-gradient(4deg, rgba(0,0,0,0.18) 0px, rgba(0,0,0,0.18) 1px, transparent 1px, transparent 5px),
+    repeating-linear-gradient(4deg, rgba(255,196,130,0.045) 0px, rgba(255,196,130,0.045) 1px, transparent 1px, transparent 13px),
+    repeating-linear-gradient(-3deg, rgba(0,0,0,0.1) 0px, rgba(0,0,0,0.1) 2px, transparent 2px, transparent 21px),
+    radial-gradient(120% 60% at 50% 0%, rgba(255,255,255,0.045), transparent 60%),
+    linear-gradient(170deg, #3a2011, #23140a 55%, #2c1a0c);
   border: 1px solid #2a1a0c;
-  box-shadow: 0 12px 32px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.03);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.04);
 }
 
 .store {
@@ -121,10 +124,17 @@ h1 {
 .store.active-store { box-shadow: 0 0 0 2px currentColor inset; }
 .store-p1.active-store { color: #f59e0b; }
 .store-p2.active-store { color: #2dd4bf; }
-.store-val { font-size: 1.5rem; font-weight: 800; position: relative; z-index: 1; }
+.store-info {
+  display: flex; align-items: center; gap: 8px;
+  position: relative; z-index: 1;
+  background: rgba(8,5,2,0.72);
+  border-radius: 999px;
+  padding: 3px 12px;
+}
+.store-val { font-size: 1.5rem; font-weight: 800; }
 .store-p1 .store-val { color: #f59e0b; }
 .store-p2 .store-val { color: #2dd4bf; }
-.store-arrow { font-size: 0.8rem; color: #6e7681; position: relative; z-index: 1; }
+.store-arrow { font-size: 0.8rem; color: #6e7681; }
 
 .store-beads {
   position: absolute; inset: 0; pointer-events: none;
@@ -309,8 +319,10 @@ h1 {
       <div class="store-beads">
         <span v-for="(pos, bi) in storeSeedPositions(board[13])" :key="bi" class="bead" :style="{ left: pos.x + '%', top: pos.y + '%' }"></span>
       </div>
-      <div class="store-arrow">▲</div>
-      <div class="store-val">{{ board[13] }}</div>
+      <div class="store-info">
+        <div class="store-arrow">▲</div>
+        <div class="store-val">{{ board[13] }}</div>
+      </div>
     </div>
 
     <div class="pits">
@@ -340,8 +352,10 @@ h1 {
       <div class="store-beads">
         <span v-for="(pos, bi) in storeSeedPositions(board[6])" :key="bi" class="bead" :style="{ left: pos.x + '%', top: pos.y + '%' }"></span>
       </div>
-      <div class="store-arrow">▼</div>
-      <div class="store-val">{{ board[6] }}</div>
+      <div class="store-info">
+        <div class="store-arrow">▼</div>
+        <div class="store-val">{{ board[6] }}</div>
+      </div>
     </div>
   </div>
 
