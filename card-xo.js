@@ -1,4 +1,4 @@
-CATEGORIES.find(c=>c.label==="Classic Games").games.push({
+CATEGORIES.find(c=>c.label==="Pen & Paper").games.push({
   "id": "xo",
   "title": "X O",
   "title_he": "איקס עיגול",

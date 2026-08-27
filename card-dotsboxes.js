@@ -1,4 +1,4 @@
-CATEGORIES.find(c=>c.label==="Classic Games").games.push({
+CATEGORIES.find(c=>c.label==="Pen & Paper").games.push({
   "id": "dotsboxes",
   "title": "DOTS & BOXES",
   "title_he": "נקודות ומשבצות",
