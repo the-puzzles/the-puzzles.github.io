@@ -91,6 +91,13 @@ h1 {
   align-items: center;
   gap: 10px;
   margin-bottom: 22px;
+  padding: 16px 14px;
+  border-radius: 24px;
+  background:
+    radial-gradient(120% 60% at 50% 0%, rgba(255,255,255,0.035), transparent 60%),
+    linear-gradient(160deg, #1c1108, #120b04 55%, #180f06);
+  border: 1px solid #2a1a0c;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.03);
 }
 
 .store {
@@ -105,6 +112,8 @@ h1 {
   justify-content: center;
   gap: 8px;
   padding: 4px 8px;
+  position: relative;
+  overflow: hidden;
   transition: box-shadow 0.2s, border-color 0.2s;
 }
 .store-p1 { border-color: #7c4a10; }
@@ -112,10 +121,24 @@ h1 {
 .store.active-store { box-shadow: 0 0 0 2px currentColor inset; }
 .store-p1.active-store { color: #f59e0b; }
 .store-p2.active-store { color: #2dd4bf; }
-.store-val { font-size: 1.5rem; font-weight: 800; }
+.store-val { font-size: 1.5rem; font-weight: 800; position: relative; z-index: 1; }
 .store-p1 .store-val { color: #f59e0b; }
 .store-p2 .store-val { color: #2dd4bf; }
-.store-arrow { font-size: 0.8rem; color: #6e7681; }
+.store-arrow { font-size: 0.8rem; color: #6e7681; position: relative; z-index: 1; }
+
+.store-beads {
+  position: absolute; inset: 0; pointer-events: none;
+}
+.store-beads .bead {
+  position: absolute;
+  width: calc(var(--store-h) * 0.17); height: calc(var(--store-h) * 0.17);
+  margin: calc(var(--store-h) * -0.085);
+  border-radius: 50%;
+  opacity: 0.8;
+  transition: left 0.25s ease, top 0.25s ease;
+}
+.store-p1 .store-beads .bead { background: radial-gradient(circle at 30% 25%, #ffe4b5, #f59e0b 55%, #92400e 100%); }
+.store-p2 .store-beads .bead { background: radial-gradient(circle at 30% 25%, #cffafe, #2dd4bf 55%, #0f5c52 100%); }
 
 .pits {
   display: grid;
@@ -150,6 +173,31 @@ h1 {
   0%   { transform: scale(1); }
   50%  { transform: scale(1.22); }
   100% { transform: scale(1); }
+}
+
+.beads {
+  position: absolute; inset: 8%;
+  border-radius: 50%;
+  overflow: hidden;
+  pointer-events: none;
+}
+.bead {
+  position: absolute;
+  width: 0.62em; height: 0.62em;
+  margin: -0.31em;
+  border-radius: 50%;
+  box-shadow: 0 1px 1.5px rgba(0,0,0,0.5);
+  transition: left 0.25s ease, top 0.25s ease;
+}
+.pit.row-p1 .bead { background: radial-gradient(circle at 30% 25%, #ffe4b5, #f59e0b 55%, #92400e 100%); }
+.pit.row-p2 .bead { background: radial-gradient(circle at 30% 25%, #cffafe, #2dd4bf 55%, #0f5c52 100%); }
+
+.pit-count {
+  position: absolute; bottom: 5%; right: 8%;
+  font-size: calc(var(--pit) * 0.22); font-weight: 800; color: #f0e6d2;
+  background: rgba(10,6,2,0.6);
+  border-radius: 6px; padding: 0 0.3em; line-height: 1.5;
+  pointer-events: none;
 }
 
 .pit.last-landed.row-p1 { box-shadow: 0 0 0 2px #f59e0b, 0 0 14px 2px rgba(245,158,11,0.5); }
@@ -258,6 +306,9 @@ h1 {
 
   <div class="board" dir="ltr" :class="phase !== 'playing' ? statusClass : ''">
     <div class="store store-p2" :class="{'active-store': phase==='playing' && turn===2 && !aiThink}">
+      <div class="store-beads">
+        <span v-for="(pos, bi) in storeSeedPositions(board[13])" :key="bi" class="bead" :style="{ left: pos.x + '%', top: pos.y + '%' }"></span>
+      </div>
       <div class="store-arrow">▲</div>
       <div class="store-val">{{ board[13] }}</div>
     </div>
@@ -277,10 +328,18 @@ h1 {
           },
         ]"
         @click="clickPit(i)"
-      >{{ board[i] }}</div>
+      >
+        <div class="beads">
+          <span v-for="(pos, bi) in seedPositions(board[i])" :key="bi" class="bead" :style="{ left: pos.x + '%', top: pos.y + '%' }"></span>
+        </div>
+        <span class="pit-count" v-if="board[i] > 0">{{ board[i] }}</span>
+      </div>
     </div>
 
     <div class="store store-p1" :class="{'active-store': phase==='playing' && turn===1 && !aiThink}">
+      <div class="store-beads">
+        <span v-for="(pos, bi) in storeSeedPositions(board[6])" :key="bi" class="bead" :style="{ left: pos.x + '%', top: pos.y + '%' }"></span>
+      </div>
       <div class="store-arrow">▼</div>
       <div class="store-val">{{ board[6] }}</div>
     </div>
@@ -482,6 +541,29 @@ function launchFireworks(player) {
   requestAnimationFrame(frame);
 }
 
+// Sunflower (phyllotaxis) packing so seed counts of any size fill a pit evenly.
+const GOLDEN_ANGLE = 137.508 * Math.PI / 180;
+function seedPositions(n) {
+  const cap = Math.min(n, 40);
+  const pts = [];
+  for (let i = 0; i < cap; i++) {
+    const r = Math.sqrt((i + 0.5) / cap) * 38;
+    const theta = i * GOLDEN_ANGLE;
+    pts.push({ x: 50 + r * Math.cos(theta), y: 50 + r * Math.sin(theta) });
+  }
+  return pts;
+}
+function storeSeedPositions(n) {
+  const cap = Math.min(n, 24);
+  const pts = [];
+  for (let i = 0; i < cap; i++) {
+    const r = Math.sqrt((i + 0.5) / cap);
+    const theta = i * GOLDEN_ANGLE;
+    pts.push({ x: 50 + r * Math.cos(theta) * 40, y: 50 + r * Math.sin(theta) * 30 });
+  }
+  return pts;
+}
+
 const SAVE_KEY = 'mancala-save';
 
 createApp({
@@ -671,6 +753,7 @@ createApp({
       netCtrl, scores, boardOrder,
       isRTL, UI, statusClass,
       canClick, clickPit, newGame, setMode, setLang, resetScores,
+      seedPositions, storeSeedPositions,
     };
   }
 }).mount('#app');
