@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quoridor</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0d1117">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="stylesheet" href="common.css">
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<script src="netplay.js"></script>
+<style>
+:root {
+  --board: min(380px, calc(100vw - 32px));
+  --net-panel-width: var(--board);
+  --net-btn-bg: #2a1710; --net-btn-border: #fb7a52; --net-btn-color: #fca589;
+}
+
+body {
+  padding: 16px 16px 48px;
+  user-select: none; -webkit-user-select: none;
+}
+
+.top-bar { max-width: 480px; }
+
+/* ── Title ────────────────────────────────────────────────────────── */
+h1 {
+  font-size: 2.2rem; font-weight: 900; letter-spacing: 0.1em;
+  margin-bottom: 24px; text-align: center; line-height: 1.2;
+  background: linear-gradient(135deg, #fb7a52, #93b4d9);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+
+/* ── Score bar ────────────────────────────────────────────────────── */
+.score-bar {
+  display: flex; width: var(--board);
+  background: #161b22; border: 1px solid #21262d;
+  border-radius: 14px; overflow: hidden; margin-bottom: 14px;
+}
+.score-item {
+  flex: 1; padding: 12px 8px 14px;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  position: relative; transition: background 0.2s;
+}
+.score-item + .score-item { border-inline-start: 1px solid #21262d; }
+.score-item::after {
+  content: ''; position: absolute; bottom: 0; left: 12px; right: 12px;
+  height: 3px; border-radius: 2px 2px 0 0;
+  transform: scaleX(0); transition: transform 0.25s ease;
+}
+.score-p1.active  { background: rgba(251,122,82,0.08); }
+.score-p1.active::after { background: #fb7a52; transform: scaleX(1); }
+.score-p2.active  { background: rgba(147,180,217,0.08); }
+.score-p2.active::after { background: #93b4d9; transform: scaleX(1); }
+
+.score-label { font-size: 0.68rem; color: #6e7681; text-transform: uppercase; letter-spacing: 0.12em; font-weight: 700; }
+.score-val   { font-size: 2rem; font-weight: 800; line-height: 1; min-width: 1.2ch; text-align: center; }
+.score-p1 .score-val { color: #fb7a52; }
+.score-p2 .score-val { color: #93b4d9; }
+
+/* ── Status ───────────────────────────────────────────────────────── */
+.status {
+  font-size: 1.05rem; font-weight: 700; color: #c9d1d9;
+  margin-bottom: 4px; gap: 6px;
+}
+.status.won-p1 { color: #fb7a52; }
+.status.won-p2 { color: #93b4d9; }
+.turn-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; animation: pulse 1.4s ease infinite; }
+.turn-dot.dot-p1 { background: #fb7a52; }
+.turn-dot.dot-p2 { background: #93b4d9; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.65)} }
+
+/* walls-remaining row */
+.walls-row {
+  font-size: 0.82rem; color: #8b949e; margin-bottom: 12px; height: 1.1rem;
+  display: flex; align-items: center; justify-content: center; gap: 18px;
+}
+.walls-row span { font-weight: 700; }
+.walls-row .w1 { color: #fb7a52; }
+.walls-row .w2 { color: #93b4d9; }
+
+/* ── Board ────────────────────────────────────────────────────────── */
+.board-wrap { width: var(--board); height: var(--board); margin-bottom: 20px; }
+.board-svg { width: 100%; height: 100%; display: block; overflow: visible; }
+
+.cell { fill: #161b22; stroke: #21262d; stroke-width: 1; }
+.cell.goal-p1 { fill: rgba(251,122,82,0.07); }
+.cell.goal-p2 { fill: rgba(147,180,217,0.07); }
+.cell.legal { cursor: pointer; }
+.cell.legal:hover { fill: rgba(255,255,255,0.06); }
+.cell-ring { fill: none; stroke-width: 2.5; stroke-dasharray: 4 3; opacity: 0.85; pointer-events: none; }
+.cell-ring.ring-p1 { stroke: #fb7a52; }
+.cell-ring.ring-p2 { stroke: #93b4d9; }
+
+.pawn { transition: cx 0.22s ease, cy 0.22s ease; }
+.pawn-p1 { fill: url(#quoP1); }
+.pawn-p2 { fill: url(#quoP2); }
+.pawn-ring { fill: none; stroke: rgba(0,0,0,0.5); stroke-width: 1; }
+
+.wall-hit { fill: transparent; cursor: pointer; }
+.wall-hit:hover + .wall-preview { opacity: 0.55; }
+.wall-preview {
+  fill: #6e7681; opacity: 0; pointer-events: none; transition: opacity 0.12s;
+  rx: 4;
+}
+.wall-piece {
+  fill: #c68a52; stroke: #8a5a30; stroke-width: 1; rx: 4;
+  animation: wallPop 0.22s ease;
+}
+@keyframes wallPop { 0% { transform: scale(0.4); opacity: 0.3; } 100% { transform: scale(1); opacity: 1; } }
+
+.won-p1 .pawn-ring, .won-p1 .score-p1 { box-shadow: none; }
+
+/* ── Mode bar ─────────────────────────────────────────────────────── */
+.mode-bar {
+  display: flex; gap: 6px; margin-bottom: 20px;
+  flex-wrap: wrap; justify-content: center; width: var(--board);
+}
+.mode-btn {
+  background: #161b22; border: 1px solid #30363d; color: #8b949e;
+  border-radius: 20px; padding: 6px 14px; font-size: 0.82rem;
+  font-weight: 600; font-family: inherit; cursor: pointer; transition: all 0.15s;
+}
+.mode-btn:hover:not(.active) { border-color: #6e7681; color: #c9d1d9; }
+.mode-btn.active { background: #2a1710; border-color: #fb7a52; color: #fca589; }
+
+/* ── Buttons ──────────────────────────────────────────────────────── */
+.btn-row { display: flex; gap: 10px; }
+.new-game-btn {
+  background: #2a1710; border: 1px solid #fb7a52; color: #fca589;
+  border-radius: 10px; padding: 11px 40px; font-size: 0.92rem; font-weight: 700;
+  font-family: inherit; cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s, box-shadow 0.15s; letter-spacing: 0.04em;
+}
+.new-game-btn:hover  { opacity: 0.85; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(251,122,82,0.25); }
+.new-game-btn:active { transform: translateY(0); box-shadow: none; }
+.reset-scores-btn {
+  background: none; border: 1px solid #30363d; color: #6e7681;
+  border-radius: 10px; padding: 11px 14px; font-size: 0.9rem;
+  font-family: inherit; cursor: pointer; transition: color 0.15s, border-color 0.15s;
+}
+.reset-scores-btn:hover { color: #c9d1d9; border-color: #6e7681; }
+
+@media (max-width: 480px) {
+  h1 { font-size: 1.8rem; }
+}
+</style>
+</head>
+<body>
+<div id="app" v-cloak>
+
+  <div class="top-bar">
+    <a class="back-link" href="index.html">{{ UI.back }}</a>
+    <div class="lang-toggle">
+      <button class="lang-btn" :class="{active: lang==='en'}" @click="setLang('en')">EN</button>
+      <button class="lang-btn" :class="{active: lang==='he'}" @click="setLang('he')">עב</button>
+    </div>
+  </div>
+
+  <h1>{{ UI.title }}</h1>
+
+  <div class="score-bar" dir="ltr">
+    <div class="score-item score-p1" :class="{active: phase==='playing' && turn===1 && !aiThink}">
+      <div class="score-label">{{ UI.p1 }}</div>
+      <div class="score-val">{{ scores[0] }}</div>
+    </div>
+    <div class="score-item score-p2" :class="{active: phase==='playing' && turn===2 && !aiThink}">
+      <div class="score-label">{{ UI.p2 }}</div>
+      <div class="score-val">{{ scores[1] }}</div>
+    </div>
+  </div>
+
+  <net-panel v-if="mode === 'net'"></net-panel>
+
+  <div class="status" :class="statusClass">
+    <template v-if="mode === 'net' && netCtrl.netStatus !== 'connected'"></template>
+    <template v-else-if="phase === 'over'">
+      <template v-if="isRTL">
+        <span>{{ UI.wonVerb }}</span>
+        <span :style="{color: winner===1?'#fb7a52':'#93b4d9'}">{{ winner===1?UI.p1:UI.p2 }}</span>
+        <span>🎉</span>
+      </template>
+      <template v-else>
+        <span :style="{color: winner===1?'#fb7a52':'#93b4d9'}">{{ winner===1?UI.p1:UI.p2 }}</span>
+        <span>{{ UI.wonVerb }}</span>
+        <span>🎉</span>
+      </template>
+    </template>
+    <template v-else-if="isRTL">
+      <span v-if="!aiThink" class="turn-dot" :class="turn===1?'dot-p1':'dot-p2'"></span>
+      <span>{{ aiThink ? UI.thinking : UI.turnWord }}</span>
+      <span :style="{color: turn===1?'#fb7a52':'#93b4d9'}">{{ turn===1?UI.p1:UI.p2 }}</span>
+    </template>
+    <template v-else>
+      <span v-if="!aiThink" class="turn-dot" :class="turn===1?'dot-p1':'dot-p2'"></span>
+      <span :style="{color: turn===1?'#fb7a52':'#93b4d9'}">{{ turn===1?UI.p1:UI.p2 }}</span>
+      <span>{{ aiThink ? UI.thinking : UI.turnWord }}</span>
+    </template>
+  </div>
+
+  <div class="walls-row" v-if="phase==='playing' || phase==='over'" :title="UI.wallsLeft">
+    <span class="w1">🧱 {{ wallsLeft[0] }}</span>
+    <span class="w2">🧱 {{ wallsLeft[1] }}</span>
+  </div>
+
+  <div class="board-wrap" dir="ltr">
+    <svg class="board-svg" :viewBox="'0 0 ' + BOARD_PX + ' ' + BOARD_PX">
+      <defs>
+        <radialGradient id="quoP1" cx="30%" cy="25%" r="75%">
+          <stop offset="0%" stop-color="#ffd7c2"/><stop offset="55%" stop-color="#fb7a52"/><stop offset="100%" stop-color="#c2410c"/>
+        </radialGradient>
+        <radialGradient id="quoP2" cx="30%" cy="25%" r="75%">
+          <stop offset="0%" stop-color="#eaf4ff"/><stop offset="55%" stop-color="#93b4d9"/><stop offset="100%" stop-color="#3b5c85"/>
+        </radialGradient>
+      </defs>
+
+      <!-- Cells -->
+      <template v-for="cell in cellList" :key="'c'+cell.r+'-'+cell.c">
+        <rect
+          :x="cell.x" :y="cell.y" :width="CS" :height="CS" rx="3"
+          class="cell"
+          :class="[cell.goal ? ('goal-'+cell.goal) : '', { legal: cell.legal }]"
+          @click="clickCell(cell.r, cell.c)"
+        />
+      </template>
+
+      <!-- Legal-move rings -->
+      <circle v-for="cell in legalMoveCells" :key="'r'+cell.r+'-'+cell.c"
+        :cx="cell.x + CS/2" :cy="cell.y + CS/2" :r="CS*0.38"
+        class="cell-ring" :class="turn===1 ? 'ring-p1' : 'ring-p2'"/>
+
+      <!-- Wall hit targets + previews (only structurally & path-legal) -->
+      <template v-for="w in wallSlots" :key="'w'+w.r+'-'+w.c+'-'+w.orient">
+        <rect :x="w.x" :y="w.y" :width="w.w" :height="w.h" rx="4" class="wall-preview"/>
+        <rect :x="w.x" :y="w.y" :width="w.w" :height="w.h" class="wall-hit" @click="clickWall(w.r, w.c, w.orient)"/>
+      </template>
+
+      <!-- Placed walls -->
+      <rect v-for="w in placedWalls" :key="'pw'+w.r+'-'+w.c+'-'+w.orient"
+        :x="w.x" :y="w.y" :width="w.w" :height="w.h" class="wall-piece"/>
+
+      <!-- Pawns -->
+      <circle class="pawn pawn-p1" :cx="pawnXY(pos[0]).x" :cy="pawnXY(pos[0]).y" :r="CS*0.34"/>
+      <circle class="pawn-ring" :cx="pawnXY(pos[0]).x" :cy="pawnXY(pos[0]).y" :r="CS*0.34"/>
+      <circle class="pawn pawn-p2" :cx="pawnXY(pos[1]).x" :cy="pawnXY(pos[1]).y" :r="CS*0.34"/>
+      <circle class="pawn-ring" :cx="pawnXY(pos[1]).x" :cy="pawnXY(pos[1]).y" :r="CS*0.34"/>
+    </svg>
+  </div>
+
+  <div class="mode-bar">
+    <button class="mode-btn" :class="{active: mode==='2p'}"   @click="setMode('2p')">{{ UI.mode2p }}</button>
+    <button class="mode-btn" :class="{active: mode==='easy'}" @click="setMode('easy')">{{ UI.modeEasy }}</button>
+    <button class="mode-btn" :class="{active: mode==='hard'}" @click="setMode('hard')">{{ UI.modeHard }}</button>
+    <button class="mode-btn" :class="{active: mode==='net'}"  @click="setMode('net')">{{ UI.modeNet }}</button>
+  </div>
+
+  <div class="btn-row">
+    <button class="new-game-btn" @click="newGame">{{ UI.newGame }}</button>
+    <button class="reset-scores-btn" @click="resetScores" :title="UI.resetScores">↺</button>
+  </div>
+
+</div>
+<script>
+const { createApp, ref, computed, provide, watchEffect } = Vue;
+
+const STRINGS = {
+  back:        { en: 'All Games',       he: 'כל המשחקים' },
+  title:       { en: 'QUORIDOR',        he: 'קוורידור' },
+  p1:          { en: 'Clay',            he: 'חימר' },
+  p2:          { en: 'Slate',           he: 'צפחה' },
+  wonVerb:     { en: 'wins!',           he: 'ניצח!' },
+  turnWord:    { en: "'s turn",         he: 'תור' },
+  thinking:    { en: 'Thinking…',       he: 'חושב…' },
+  newGame:     { en: 'New Game',        he: 'משחק חדש' },
+  resetScores: { en: 'Reset scores',    he: 'אפס ניקוד' },
+  mode2p:      { en: '👥 2 Players',   he: '👥 2 שחקנים' },
+  modeEasy:    { en: '🤖 Easy',        he: '🤖 קל' },
+  modeHard:    { en: '🤖 Hard',        he: '🤖 קשה' },
+  modeNet:     { en: '🌐 Network',     he: '🌐 רשת' },
+  wallsLeft:   { en: 'Walls remaining', he: 'קירות שנותרו' },
+};
+
+// ── Board constants ──────────────────────────────────────────────────
+const N = 9;              // 9×9 cells
+const WALLS_PER_PLAYER = 10;
+const GOAL_ROWS = [0, 8];  // player1 (index0) heads to row 0, player2 (index1) to row 8
+const START_POS = [{ r: 8, c: 4 }, { r: 0, c: 4 }];
+const CS = 30, GS = 12;    // cell size, wall-gap size (SVG units)
+const BOARD_PX = N * CS + (N - 1) * GS;
+const DIRS = [[1,0],[-1,0],[0,1],[0,-1]];
+
+function cellX(c) { return c * (CS + GS); }
+function cellY(r) { return r * (CS + GS); }
+
+// ── Pure board logic (used by both the live game and the AI search) ──
+function computeBlocked(wallGrid) {
+  const blockedH = new Set(), blockedV = new Set();
+  for (let r = 0; r < N - 1; r++) {
+    for (let c = 0; c < N - 1; c++) {
+      const o = wallGrid[r][c];
+      if (o === 'h') { blockedH.add(r+','+c); blockedH.add(r+','+(c+1)); }
+      else if (o === 'v') { blockedV.add(r+','+c); blockedV.add((r+1)+','+c); }
+    }
+  }
+  return { blockedH, blockedV };
+}
+
+function canMove(r, c, dr, dc, blockedH, blockedV) {
+  if (dr === 1)  return r < N-1 && !blockedH.has(r+','+c);
+  if (dr === -1) return r > 0   && !blockedH.has((r-1)+','+c);
+  if (dc === 1)  return c < N-1 && !blockedV.has(r+','+c);
+  if (dc === -1) return c > 0   && !blockedV.has(r+','+(c-1));
+  return false;
+}
+
+// BFS distance from `start` to the nearest cell in `goalRow`; Infinity if unreachable.
+function bfsDist(start, goalRow, blockedH, blockedV) {
+  const seen = new Set([start.r+','+start.c]);
+  let queue = [start], dist = 0;
+  while (queue.length) {
+    for (const p of queue) if (p.r === goalRow) return dist;
+    const next = [];
+    for (const p of queue) {
+      for (const [dr, dc] of DIRS) {
+        if (!canMove(p.r, p.c, dr, dc, blockedH, blockedV)) continue;
+        const nr = p.r+dr, nc = p.c+dc, key = nr+','+nc;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        next.push({ r: nr, c: nc });
+      }
+    }
+    queue = next; dist++;
+  }
+  return Infinity;
+}
+
+function legalPawnMoves(playerIdx, positions, blockedH, blockedV) {
+  const p = positions[playerIdx], o = positions[1 - playerIdx];
+  const moves = [];
+  for (const [dr, dc] of DIRS) {
+    if (!canMove(p.r, p.c, dr, dc, blockedH, blockedV)) continue;
+    const nr = p.r+dr, nc = p.c+dc;
+    if (nr === o.r && nc === o.c) {
+      const sr = nr+dr, sc = nc+dc;
+      if (sr>=0 && sr<N && sc>=0 && sc<N && canMove(nr, nc, dr, dc, blockedH, blockedV)) {
+        moves.push({ r: sr, c: sc });
+      } else {
+        const perp = dr !== 0 ? [[0,-1],[0,1]] : [[-1,0],[1,0]];
+        for (const [pdr, pdc] of perp) {
+          const dr2 = nr+pdr, dc2 = nc+pdc;
+          if (dr2>=0 && dr2<N && dc2>=0 && dc2<N && canMove(nr, nc, pdr, pdc, blockedH, blockedV)) {
+            moves.push({ r: dr2, c: dc2 });
+          }
+        }
+      }
+    } else {
+      moves.push({ r: nr, c: nc });
+    }
+  }
+  return moves;
+}
+
+function structuralOk(wallGrid, r, c, orient) {
+  if (wallGrid[r][c]) return false;
+  if (orient === 'h') {
+    if (c > 0 && wallGrid[r][c-1] === 'h') return false;
+    if (c < N-2 && wallGrid[r][c+1] === 'h') return false;
+  } else {
+    if (r > 0 && wallGrid[r-1][c] === 'v') return false;
+    if (r < N-2 && wallGrid[r+1][c] === 'v') return false;
+  }
+  return true;
+}
+
+function cloneGrid(g) { return g.map(row => [...row]); }
+
+// All legal wall placements within [r0,r1]×[c0,c1] of anchors (both orientations).
+function legalWallsInBox(wallGrid, positions, r0, r1, c0, c1) {
+  const results = [];
+  for (let r = Math.max(0,r0); r <= Math.min(N-2,r1); r++) {
+    for (let c = Math.max(0,c0); c <= Math.min(N-2,c1); c++) {
+      for (const orient of ['h', 'v']) {
+        if (!structuralOk(wallGrid, r, c, orient)) continue;
+        const ng = cloneGrid(wallGrid); ng[r][c] = orient;
+        const { blockedH, blockedV } = computeBlocked(ng);
+        if (bfsDist(positions[0], GOAL_ROWS[0], blockedH, blockedV) === Infinity) continue;
+        if (bfsDist(positions[1], GOAL_ROWS[1], blockedH, blockedV) === Infinity) continue;
+        results.push({ r, c, orient });
+      }
+    }
+  }
+  return results;
+}
+
+// ── AI ────────────────────────────────────────────────────────────────
+function cloneState(s) {
+  return { positions: s.positions.map(p => ({...p})), wallsLeft: [...s.wallsLeft], wallGrid: cloneGrid(s.wallGrid) };
+}
+
+function applyCandidate(state, playerIdx, cand) {
+  const ns = cloneState(state);
+  if (cand.type === 'move') {
+    ns.positions[playerIdx] = { r: cand.r, c: cand.c };
+  } else {
+    ns.wallGrid[cand.r][cand.c] = cand.orient;
+    ns.wallsLeft[playerIdx]--;
+  }
+  const won = cand.type === 'move' && cand.r === GOAL_ROWS[playerIdx];
+  return { state: ns, won };
+}
+
+function aiCandidates(state, playerIdx, includeWalls) {
+  const { blockedH, blockedV } = computeBlocked(state.wallGrid);
+  const moves = legalPawnMoves(playerIdx, state.positions, blockedH, blockedV)
+    .map(t => ({ type: 'move', r: t.r, c: t.c }));
+  let walls = [];
+  if (includeWalls && state.wallsLeft[playerIdx] > 0) {
+    // Restrict to a padded box around both pawns — keeps AI search fast.
+    const rows = state.positions.map(p => p.r), cols = state.positions.map(p => p.c);
+    const pad = 1;
+    walls = legalWallsInBox(
+      state.wallGrid, state.positions,
+      Math.min(...rows) - pad, Math.max(...rows) + pad,
+      Math.min(...cols) - pad, Math.max(...cols) + pad,
+    ).map(w => ({ type: 'wall', r: w.r, c: w.c, orient: w.orient }));
+  }
+  return moves.concat(walls);
+}
+
+function heuristicEval(state, playerIdx) {
+  const { blockedH, blockedV } = computeBlocked(state.wallGrid);
+  const own = bfsDist(state.positions[playerIdx], GOAL_ROWS[playerIdx], blockedH, blockedV);
+  const opp = bfsDist(state.positions[1-playerIdx], GOAL_ROWS[1-playerIdx], blockedH, blockedV);
+  return (opp - own) * 10 + (state.wallsLeft[playerIdx] - state.wallsLeft[1-playerIdx]);
+}
+
+// Negamax with alpha-beta; depth counts plies remaining after the move being scored.
+function negamax(state, playerIdx, depth, alpha, beta) {
+  if (depth === 0) return heuristicEval(state, playerIdx);
+  const cands = aiCandidates(state, playerIdx, true);
+  if (!cands.length) return heuristicEval(state, playerIdx);
+  let best = -Infinity;
+  for (const cand of cands) {
+    const { state: ns, won } = applyCandidate(state, playerIdx, cand);
+    const score = won ? 1000 : -negamax(ns, 1-playerIdx, depth-1, -beta, -alpha);
+    if (score > best) best = score;
+    if (best > alpha) alpha = best;
+    if (alpha >= beta) break;
+  }
+  return best;
+}
+
+function pickAIMove(state, playerIdx, mode) {
+  if (mode === 'easy') {
+    // Greedy pawn-only pathfinding — never places walls, so it's easy to out-maneuver.
+    const { blockedH, blockedV } = computeBlocked(state.wallGrid);
+    const moves = legalPawnMoves(playerIdx, state.positions, blockedH, blockedV);
+    let best = moves[0], bestDist = Infinity;
+    const ties = [];
+    for (const m of moves) {
+      const d = bfsDist(m, GOAL_ROWS[playerIdx], blockedH, blockedV);
+      if (d < bestDist) { bestDist = d; ties.length = 0; ties.push(m); }
+      else if (d === bestDist) ties.push(m);
+    }
+    best = ties[Math.floor(Math.random() * ties.length)];
+    return { type: 'move', r: best.r, c: best.c };
+  }
+  // Hard: depth-2 negamax (own move + opponent's best reply) over pawn moves + nearby walls.
+  const cands = aiCandidates(state, playerIdx, true);
+  let best = -Infinity, bestCands = [];
+  for (const cand of cands) {
+    const { state: ns, won } = applyCandidate(state, playerIdx, cand);
+    const score = won ? 1000 : -negamax(ns, 1-playerIdx, 1, -Infinity, Infinity);
+    if (score > best) { best = score; bestCands = [cand]; }
+    else if (score === best) bestCands.push(cand);
+  }
+  return bestCands[Math.floor(Math.random() * bestCands.length)];
+}
+
+const PALETTES = {
+  1: ['#fb7a52','#fca589','#f97316','#fdba8c','#ea580c'],
+  2: ['#93b4d9','#bfdbfe','#60a5fa','#7dd3fc','#38bdf8'],
+};
+
+function launchFireworks(player) {
+  const cv = document.createElement('canvas');
+  cv.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:200;';
+  cv.width = innerWidth; cv.height = innerHeight;
+  document.body.appendChild(cv);
+  const ctx = cv.getContext('2d');
+  const cols = PALETTES[player];
+  const ps = [];
+  const burst = (x, y) => {
+    for (let i = 0; i < 65; i++) {
+      const a = Math.PI*2*i/65, s = 2+Math.random()*6;
+      ps.push({ x, y, vx: Math.cos(a)*s, vy: Math.sin(a)*s-2, alpha: 1, c: cols[~~(Math.random()*cols.length)], r: 2+Math.random()*3 });
+    }
+  };
+  const end = Date.now()+3000; let lb = 0;
+  const frame = now => {
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    if (now-lb>420 && Date.now()<end-500) { burst(cv.width*(0.2+Math.random()*0.6), cv.height*(0.1+Math.random()*0.4)); lb = now; }
+    for (const p of ps) {
+      p.x+=p.vx; p.y+=p.vy; p.vy+=0.12; p.alpha-=0.016;
+      if (p.alpha <= 0) continue;
+      ctx.globalAlpha = p.alpha; ctx.fillStyle = p.c;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    ps.splice(0, ps.length, ...ps.filter(p => p.alpha > 0));
+    if (Date.now() < end || ps.length) requestAnimationFrame(frame);
+    else document.body.removeChild(cv);
+  };
+  burst(cv.width*0.5, cv.height*0.35);
+  requestAnimationFrame(frame);
+}
+
+const SAVE_KEY = 'quoridor-save';
+
+createApp({
+  components: { NetPanel },
+  setup() {
+    const lang    = ref('en');
+    const mode    = ref('2p');
+    const pos     = ref(START_POS.map(p => ({...p})));
+    const wallGrid = ref(Array.from({length: N-1}, () => Array(N-1).fill(null)));
+    const wallsLeft = ref([WALLS_PER_PLAYER, WALLS_PER_PLAYER]);
+    const turn    = ref(1);
+    const phase   = ref('playing');
+    const winner  = ref(null);
+    const aiThink = ref(false);
+
+    const humanScores = ref([0, 0]);
+    const aiScores    = ref([0, 0]);
+    function scoresRef() { return (mode.value === '2p' || mode.value === 'net') ? humanScores : aiScores; }
+    const scores = computed(() => scoresRef().value);
+
+    const netCtrl = createNetplay({
+      gameId: 'quoridor',
+      onMove(data) {
+        if (mode.value !== 'net') return;
+        if (data.type === 'move' && phase.value === 'playing') makeMove(data.cand, true);
+        else if (data.type === 'newgame') resetBoard();
+      },
+      onReset: () => resetBoard(),
+      onSync() { if (netCtrl.netStatus === 'connected') mode.value = 'net'; },
+    });
+    provide('_netplay', netCtrl);
+
+    const isRTL = computed(() => lang.value === 'he');
+    const UI    = computed(() => {
+      const l = lang.value;
+      return Object.fromEntries(Object.entries(STRINGS).map(([k, v]) => [k, v[l] ?? v.en]));
+    });
+
+    const statusClass = computed(() => phase.value === 'over' ? (winner.value === 1 ? 'won-p1' : 'won-p2') : '');
+
+    function currentState() {
+      return { positions: pos.value.map(p => ({...p})), wallsLeft: [...wallsLeft.value], wallGrid: cloneGrid(wallGrid.value) };
+    }
+
+    const blocked = computed(() => computeBlocked(wallGrid.value));
+
+    const canAct = computed(() => {
+      if (phase.value !== 'playing' || aiThink.value) return false;
+      if (mode.value === 'net') return netCtrl.netStatus === 'connected' && netCtrl.isMyTurn(turn.value);
+      return mode.value === '2p' || turn.value === 1;
+    });
+
+    const legalMoveCells = computed(() => {
+      if (!canAct.value) return [];
+      const { blockedH, blockedV } = blocked.value;
+      return legalPawnMoves(turn.value - 1, pos.value, blockedH, blockedV)
+        .map(t => ({ r: t.r, c: t.c, x: cellX(t.c), y: cellY(t.r) }));
+    });
+    const legalMoveSet = computed(() => new Set(legalMoveCells.value.map(c => c.r+','+c.c)));
+
+    const cellList = computed(() => {
+      const list = [];
+      for (let r = 0; r < N; r++) {
+        for (let c = 0; c < N; c++) {
+          list.push({
+            r, c, x: cellX(c), y: cellY(r),
+            goal: r === GOAL_ROWS[0] ? 'p1' : r === GOAL_ROWS[1] ? 'p2' : null,
+            legal: legalMoveSet.value.has(r+','+c),
+          });
+        }
+      }
+      return list;
+    });
+
+    const wallSlots = computed(() => {
+      if (!canAct.value || wallsLeft.value[turn.value-1] <= 0) return [];
+      return legalWallsInBox(wallGrid.value, pos.value, 0, N-2, 0, N-2).map(w => ({
+        r: w.r, c: w.c, orient: w.orient,
+        x: w.orient === 'h' ? cellX(w.c) : cellX(w.c) + CS,
+        y: w.orient === 'h' ? cellY(w.r) + CS : cellY(w.r),
+        w: w.orient === 'h' ? 2*CS + GS : GS,
+        h: w.orient === 'h' ? GS : 2*CS + GS,
+      }));
+    });
+
+    const placedWalls = computed(() => {
+      const list = [];
+      for (let r = 0; r < N-1; r++) {
+        for (let c = 0; c < N-1; c++) {
+          const o = wallGrid.value[r][c];
+          if (!o) continue;
+          list.push({
+            r, c, orient: o,
+            x: o === 'h' ? cellX(c) : cellX(c) + CS,
+            y: o === 'h' ? cellY(r) + CS : cellY(r),
+            w: o === 'h' ? 2*CS + GS : GS,
+            h: o === 'h' ? GS : 2*CS + GS,
+          });
+        }
+      }
+      return list;
+    });
+
+    function pawnXY(p) { return { x: cellX(p.c) + CS/2, y: cellY(p.r) + CS/2 }; }
+
+    function endGame(winPlayer) {
+      phase.value = 'over';
+      winner.value = winPlayer;
+      const s = [...scoresRef().value];
+      s[winPlayer - 1]++;
+      scoresRef().value = s;
+      launchFireworks(winPlayer);
+      save();
+    }
+
+    function makeMove(cand, remote = false) {
+      const playerIdx = turn.value - 1;
+      if (!remote && mode.value === 'net') netCtrl.send({ type: 'move', cand });
+
+      if (cand.type === 'move') {
+        pos.value = pos.value.map((p, i) => i === playerIdx ? { r: cand.r, c: cand.c } : p);
+      } else {
+        wallGrid.value[cand.r][cand.c] = cand.orient;
+        wallsLeft.value = wallsLeft.value.map((w, i) => i === playerIdx ? w - 1 : w);
+      }
+
+      if (cand.type === 'move' && cand.r === GOAL_ROWS[playerIdx]) {
+        endGame(turn.value);
+        return;
+      }
+
+      turn.value = 3 - turn.value;
+      save();
+
+      if (mode.value !== '2p' && mode.value !== 'net' && turn.value === 2 && phase.value === 'playing') {
+        triggerAI();
+      }
+    }
+
+    function triggerAI() {
+      aiThink.value = true;
+      setTimeout(() => {
+        const cand = pickAIMove(currentState(), 1, mode.value);
+        aiThink.value = false;
+        if (cand) makeMove(cand);
+      }, 380);
+    }
+
+    function clickCell(r, c) {
+      if (!canAct.value) return;
+      if (!legalMoveSet.value.has(r+','+c)) return;
+      makeMove({ type: 'move', r, c });
+    }
+    function clickWall(r, c, orient) {
+      if (!canAct.value) return;
+      if (wallsLeft.value[turn.value-1] <= 0) return;
+      makeMove({ type: 'wall', r, c, orient });
+    }
+
+    function resetBoard() {
+      pos.value = START_POS.map(p => ({...p}));
+      wallGrid.value = Array.from({length: N-1}, () => Array(N-1).fill(null));
+      wallsLeft.value = [WALLS_PER_PLAYER, WALLS_PER_PLAYER];
+      turn.value = 1;
+      phase.value = 'playing';
+      winner.value = null;
+      aiThink.value = false;
+    }
+
+    function newGame() {
+      resetBoard();
+      save();
+      if (mode.value === 'net') netCtrl.send({ type: 'newgame' });
+    }
+
+    function setMode(m) { mode.value = m; resetBoard(); save(); }
+    function setLang(l) { lang.value = l; save(); }
+    function resetScores() { humanScores.value = [0,0]; aiScores.value = [0,0]; save(); }
+
+    function save() {
+      try {
+        localStorage.setItem(SAVE_KEY, JSON.stringify({
+          lang: lang.value,
+          mode: mode.value === 'net' ? '2p' : mode.value,
+          humanScores: humanScores.value,
+          aiScores: aiScores.value,
+        }));
+      } catch (_) {}
+    }
+    function load() {
+      try {
+        const d = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}');
+        if (d.lang) lang.value = d.lang;
+        const urlLang = new URLSearchParams(location.search).get('lang');
+        if (urlLang && ["en","he"].includes(urlLang)) lang.value = urlLang;
+        if (d.mode) mode.value = d.mode;
+        if (d.humanScores) humanScores.value = d.humanScores;
+        if (d.aiScores) aiScores.value = d.aiScores;
+      } catch (_) {}
+    }
+
+    load();
+
+    watchEffect(() => {
+      document.documentElement.lang = lang.value;
+      document.documentElement.dir = isRTL.value ? 'rtl' : 'ltr';
+    });
+
+    return {
+      lang, mode, pos, wallsLeft, turn, phase, winner, aiThink, netCtrl, scores,
+      CS, BOARD_PX, cellList, legalMoveCells, wallSlots, placedWalls, pawnXY,
+      isRTL, UI, statusClass,
+      clickCell, clickWall, newGame, setMode, setLang, resetScores,
+    };
+  }
+}).mount('#app');
+</script>
+<script>
+(function(){
+  const d=new Date(document.lastModified),p=n=>String(n).padStart(2,"0");
+  const v=document.createElement("div");
+  v.style.cssText="position:fixed;bottom:4px;right:6px;font-size:0.6rem;color:#444c56;pointer-events:none;font-family:monospace;z-index:999";
+  v.textContent=d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())+" "+p(d.getHours())+":"+p(d.getMinutes());
+  document.body.appendChild(v);
+})();
+</script>
+</body>
+</html>
