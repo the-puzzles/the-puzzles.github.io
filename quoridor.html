@@ -98,22 +98,46 @@ h1 {
 .pawn-p2 { fill: url(#quoP2); }
 .pawn-ring { fill: none; stroke: rgba(0,0,0,0.5); stroke-width: 1; }
 
-.wall-hit { fill: transparent; cursor: pointer; }
-.wall-hit:hover ~ .wall-preview {
-  opacity: 0.8; transform: scale(1.08);
-  animation: wallBreathe 1s ease-in-out infinite;
+/* First tap: pick one edge segment (idle hover only hints at it). */
+.edge-hit { fill: transparent; cursor: pointer; }
+.edge-hit:hover ~ .edge-preview {
+  opacity: 0.65; transform: scale(1.1);
 }
-.wall-preview {
+.edge-preview {
   fill: #6e7681; opacity: 0; pointer-events: none;
   transition: opacity 0.15s, transform 0.15s;
   transform-box: fill-box; transform-origin: 50% 50%;
-  rx: 4;
+  rx: 3;
 }
-.wall-preview.preview-p1 { fill: #fb7a52; }
-.wall-preview.preview-p2 { fill: #93b4d9; }
+.edge-preview.preview-p1 { fill: #fb7a52; }
+.edge-preview.preview-p2 { fill: #93b4d9; }
+
+/* The confirmed first half, waiting for its tail. */
+.edge-first {
+  rx: 3; pointer-events: none;
+  animation: edgePulse 1s ease-in-out infinite;
+}
+.edge-first.preview-p1 { fill: #fb7a52; }
+.edge-first.preview-p2 { fill: #93b4d9; }
+@keyframes edgePulse {
+  0%, 100% { opacity: 0.75; transform: scale(1); }
+  50%      { opacity: 1;    transform: scale(1.08); }
+}
+
+/* Completion targets: always visible (no hover needed) so they read on touch too. */
+.edge-completion-hit { fill: transparent; cursor: pointer; }
+.edge-completion {
+  rx: 3; pointer-events: none;
+  fill-opacity: 0.22; stroke-width: 2; stroke-dasharray: 5 4;
+  transform-box: fill-box; transform-origin: 50% 50%;
+  animation: wallBreathe 1.1s ease-in-out infinite;
+}
+.edge-completion.preview-p1 { fill: #fb7a52; stroke: #fb7a52; }
+.edge-completion.preview-p2 { fill: #93b4d9; stroke: #93b4d9; }
+.edge-completion-hit:hover ~ .edge-completion { fill-opacity: 0.45; }
 @keyframes wallBreathe {
-  0%, 100% { transform: scale(1.08); }
-  50%      { transform: scale(1.18); }
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.06); }
 }
 .wall-piece {
   fill: #c68a52; stroke: #8a5a30; stroke-width: 1; rx: 4;
@@ -221,8 +245,11 @@ h1 {
   </div>
 
   <div class="walls-row" v-if="phase==='playing' || phase==='over'" :title="UI.wallsLeft">
-    <span class="w1">🧱 {{ wallsLeft[0] }}</span>
-    <span class="w2">🧱 {{ wallsLeft[1] }}</span>
+    <template v-if="wallFirst">{{ UI.wallHint }}</template>
+    <template v-else>
+      <span class="w1">🧱 {{ wallsLeft[0] }}</span>
+      <span class="w2">🧱 {{ wallsLeft[1] }}</span>
+    </template>
   </div>
 
   <div class="board-wrap" dir="ltr">
@@ -251,16 +278,34 @@ h1 {
         :cx="cell.x + CS/2" :cy="cell.y + CS/2" :r="CS*0.38"
         class="cell-ring" :class="turn===1 ? 'ring-p1' : 'ring-p2'"/>
 
-      <!-- Wall hit targets + previews (only structurally & path-legal).
-           Grouped per-slot in its own <g> so the hover-reveals-preview CSS
-           rule (a sibling combinator) can't leak across different slots. -->
-      <g v-for="w in wallSlots" :key="'w'+w.r+'-'+w.c+'-'+w.orient">
-        <rect v-for="(arm, ai) in w.hitArms" :key="ai"
-          :x="arm.x" :y="arm.y" :width="arm.w" :height="arm.h"
-          class="wall-hit" @click="clickWall(w.r, w.c, w.orient)"/>
-        <rect :x="w.x" :y="w.y" :width="w.w" :height="w.h" rx="4"
-          class="wall-preview" :class="turn===1 ? 'preview-p1' : 'preview-p2'"/>
-      </g>
+      <!-- Wall placement: tap one edge segment, then tap an adjacent one to
+           complete it. Not mid-selection: every startable edge is a plain
+           hover-only hit target (own <g> per edge so the hover-reveals-
+           preview CSS rule, a sibling selector, can't leak across edges). -->
+      <template v-if="!wallFirst">
+        <g v-for="e in firstTapEdges" :key="'e'+e.type+e.r+'-'+e.c">
+          <rect :x="e.x" :y="e.y" :width="e.w" :height="e.h"
+            class="edge-hit" @click="clickEdge(e.type, e.r, e.c)"/>
+          <rect :x="e.x" :y="e.y" :width="e.w" :height="e.h"
+            class="edge-preview" :class="turn===1 ? 'preview-p1' : 'preview-p2'"/>
+        </g>
+      </template>
+
+      <!-- Mid-selection: show the confirmed first half, plus the 1-2 valid
+           completions as always-visible (no hover needed) tap targets. -->
+      <template v-else>
+        <rect :x="wallFirstRect.x" :y="wallFirstRect.y" :width="wallFirstRect.w" :height="wallFirstRect.h"
+          class="edge-first" :class="turn===1 ? 'preview-p1' : 'preview-p2'"/>
+        <g v-for="t in completionTargets" :key="'t'+t.edge.type+t.edge.r+'-'+t.edge.c">
+          <rect :x="t.x" :y="t.y" :width="t.w" :height="t.h"
+            class="edge-completion" :class="turn===1 ? 'preview-p1' : 'preview-p2'"/>
+          <rect :x="t.x" :y="t.y" :width="t.w" :height="t.h"
+            class="edge-completion-hit" @click="clickEdge(t.edge.type, t.edge.r, t.edge.c)"/>
+        </g>
+        <!-- Tapping the first edge again cancels the pending selection. -->
+        <rect :x="wallFirstRect.x" :y="wallFirstRect.y" :width="wallFirstRect.w" :height="wallFirstRect.h"
+          class="edge-completion-hit" @click="clickEdge(wallFirst.type, wallFirst.r, wallFirst.c)"/>
+      </template>
 
       <!-- Placed walls -->
       <template v-for="w in placedWalls" :key="'pw'+w.r+'-'+w.c+'-'+w.orient">
@@ -308,6 +353,7 @@ const STRINGS = {
   modeHard:    { en: '🤖 Hard',        he: '🤖 קשה' },
   modeNet:     { en: '🌐 Network',     he: '🌐 רשת' },
   wallsLeft:   { en: 'Walls remaining', he: 'קירות שנותרו' },
+  wallHint:    { en: 'Tap the wall\'s other end', he: 'הקישו על הקצה השני של הקיר' },
 };
 
 // ── Board constants ──────────────────────────────────────────────────
@@ -321,6 +367,14 @@ const DIRS = [[1,0],[-1,0],[0,1],[0,-1]];
 
 function cellX(c) { return c * (CS + GS); }
 function cellY(r) { return r * (CS + GS); }
+
+// Geometry of a single blockable edge — half of one 2-unit wall. 'h' edge
+// (r,c) sits below cell (r,c); 'v' edge (r,c) sits right of cell (r,c).
+function edgeRect(type, r, c) {
+  return type === 'h'
+    ? { x: cellX(c), y: cellY(r) + CS, w: CS, h: GS }
+    : { x: cellX(c) + CS, y: cellY(r), w: GS, h: CS };
+}
 
 // ── Pure board logic (used by both the live game and the AI search) ──
 function computeBlocked(wallGrid) {
@@ -589,6 +643,7 @@ createApp({
     const phase   = ref('playing');
     const winner  = ref(null);
     const aiThink = ref(false);
+    const wallFirst = ref(null); // { type:'h'|'v', r, c } — first tap of a two-tap wall placement
 
     const humanScores = ref([0, 0]);
     const aiScores    = ref([0, 0]);
@@ -649,22 +704,44 @@ createApp({
       return list;
     });
 
-    const wallSlots = computed(() => {
+    // All wall anchors legal right now (structurally + doesn't seal off either player).
+    const legalAnchors = computed(() => {
       if (!canAct.value || wallsLeft.value[turn.value-1] <= 0) return [];
-      return legalWallsInBox(wallGrid.value, pos.value, 0, N-2, 0, N-2).map(w => {
-        const x = w.orient === 'h' ? cellX(w.c) : cellX(w.c) + CS;
-        const y = w.orient === 'h' ? cellY(w.r) + CS : cellY(w.r);
-        const width  = w.orient === 'h' ? 2*CS + GS : GS;
-        const height = w.orient === 'h' ? GS : 2*CS + GS;
-        // Split the hit area into two arms that skip the shared crossing
-        // square at the anchor's center — otherwise a click there is
-        // ambiguous between this wall and the perpendicular one at the
-        // same anchor, and whichever is painted on top always wins.
-        const hitArms = w.orient === 'h'
-          ? [{ x, y, w: CS, h: GS }, { x: x + CS + GS, y, w: CS, h: GS }]
-          : [{ x, y, w: GS, h: CS }, { x, y: y + CS + GS, w: GS, h: CS }];
-        return { r: w.r, c: w.c, orient: w.orient, x, y, w: width, h: height, hitArms };
-      });
+      return legalWallsInBox(wallGrid.value, pos.value, 0, N-2, 0, N-2);
+    });
+    function anchorIsLegal(r, c, orient) {
+      return legalAnchors.value.some(a => a.r === r && a.c === c && a.orient === orient);
+    }
+
+    // Every individual edge that's half of at least one legal anchor —
+    // i.e. every valid "first tap" for starting a wall.
+    const firstTapEdges = computed(() => {
+      const seen = new Map();
+      for (const a of legalAnchors.value) {
+        const edges = a.orient === 'h'
+          ? [{ type: 'h', r: a.r, c: a.c }, { type: 'h', r: a.r, c: a.c + 1 }]
+          : [{ type: 'v', r: a.r, c: a.c }, { type: 'v', r: a.r + 1, c: a.c }];
+        for (const e of edges) seen.set(e.type + ',' + e.r + ',' + e.c, e);
+      }
+      return [...seen.values()].map(e => ({ ...e, ...edgeRect(e.type, e.r, e.c) }));
+    });
+
+    const wallFirstRect = computed(() => wallFirst.value ? edgeRect(wallFirst.value.type, wallFirst.value.r, wallFirst.value.c) : null);
+
+    // The 1-2 edges that would complete the wall started by wallFirst,
+    // each paired with the wall anchor it would actually place.
+    const completionTargets = computed(() => {
+      if (!wallFirst.value) return [];
+      const { type, r, c } = wallFirst.value;
+      const out = [];
+      if (type === 'h') {
+        if (c - 1 >= 0 && anchorIsLegal(r, c-1, 'h')) out.push({ edge: {type, r, c: c-1}, anchor: {r, c: c-1, orient: 'h'} });
+        if (c <= N-2   && anchorIsLegal(r, c, 'h'))   out.push({ edge: {type, r, c: c+1}, anchor: {r, c, orient: 'h'} });
+      } else {
+        if (r - 1 >= 0 && anchorIsLegal(r-1, c, 'v')) out.push({ edge: {type, r: r-1, c}, anchor: {r: r-1, c, orient: 'v'} });
+        if (r <= N-2   && anchorIsLegal(r, c, 'v'))   out.push({ edge: {type, r: r+1, c}, anchor: {r, c, orient: 'v'} });
+      }
+      return out.map(o => ({ ...o, ...edgeRect(o.edge.type, o.edge.r, o.edge.c) }));
     });
 
     const placedWalls = computed(() => {
@@ -701,6 +778,7 @@ createApp({
 
     function makeMove(cand, remote = false) {
       const playerIdx = turn.value - 1;
+      wallFirst.value = null;
       if (!remote && mode.value === 'net') netCtrl.send({ type: 'move', cand });
 
       if (cand.type === 'move') {
@@ -744,13 +822,28 @@ createApp({
 
     function clickCell(r, c) {
       if (!canAct.value) return;
+      wallFirst.value = null;
       if (!legalMoveSet.value.has(r+','+c)) return;
       makeMove({ type: 'move', r, c });
     }
-    function clickWall(r, c, orient) {
-      if (!canAct.value) return;
-      if (wallsLeft.value[turn.value-1] <= 0) return;
-      makeMove({ type: 'wall', r, c, orient });
+
+    // Two-tap wall placement: first tap picks a single edge; second tap
+    // picks an adjacent edge to complete the 2-unit wall.
+    function clickEdge(type, r, c) {
+      if (!canAct.value || wallsLeft.value[turn.value-1] <= 0) return;
+      const key = e => e.type+','+e.r+','+e.c;
+      if (!wallFirst.value) {
+        if (firstTapEdges.value.some(e => key(e) === type+','+r+','+c)) wallFirst.value = { type, r, c };
+        return;
+      }
+      const wf = wallFirst.value;
+      if (key(wf) === type+','+r+','+c) { wallFirst.value = null; return; } // tap same edge again -> cancel
+      const match = completionTargets.value.find(t => key(t.edge) === type+','+r+','+c);
+      if (match) {
+        makeMove({ type: 'wall', r: match.anchor.r, c: match.anchor.c, orient: match.anchor.orient });
+      } else {
+        wallFirst.value = firstTapEdges.value.some(e => key(e) === type+','+r+','+c) ? { type, r, c } : null;
+      }
     }
 
     function resetBoard() {
@@ -761,6 +854,7 @@ createApp({
       phase.value = 'playing';
       winner.value = null;
       aiThink.value = false;
+      wallFirst.value = null;
     }
 
     function newGame() {
@@ -803,10 +897,10 @@ createApp({
     });
 
     return {
-      lang, mode, pos, wallsLeft, turn, phase, winner, aiThink, netCtrl, scores,
-      CS, BOARD_PX, cellList, legalMoveCells, wallSlots, placedWalls, pawnXY,
+      lang, mode, pos, wallsLeft, turn, phase, winner, aiThink, netCtrl, scores, wallFirst,
+      CS, BOARD_PX, cellList, legalMoveCells, firstTapEdges, wallFirstRect, completionTargets, placedWalls, pawnXY,
       isRTL, UI, statusClass,
-      clickCell, clickWall, newGame, setMode, setLang, resetScores,
+      clickCell, clickEdge, newGame, setMode, setLang, resetScores,
     };
   }
 }).mount('#app');
