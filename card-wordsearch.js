@@ -1,7 +1,7 @@
 CATEGORIES.find(c=>c.label==="Words").games.push({
   "id": "wordsearch",
   "title": "WORDSEARCH",
-  "title_he": "חיפוש מילים",
+  "title_he": "תפזורת",
   "title_es": "SOPA DE LETRAS",
   "icon": "🔍",
   "href": "wordsearch.html",
