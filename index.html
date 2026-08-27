@@ -238,11 +238,11 @@ footer { margin-top: 64px; color: #444c56; font-size: .78rem; text-align: center
 
 <script>
 const CATEGORIES = [
-  { label: 'Shapes & Colors', games: [] },
-  { label: 'Geography',       games: [] },
-  { label: 'Words',           games: [] },
-  { label: 'Codes',           games: [] },
   { label: 'Classic Games',   games: [] },
+  { label: 'Codes',           games: [] },
+  { label: 'Geography',       games: [] },
+  { label: 'Shapes & Colors', games: [] },
+  { label: 'Words',           games: [] },
 ];
 </script>
 <script src="card-chromino.js"></script>
@@ -309,9 +309,11 @@ Vue.createApp({
         .filter(cat => this.activeCategory === 'All' || cat.label === this.activeCategory)
         .map(cat => ({
           label: cat.label,
-          games: cat.games.filter(g => !q ||
-            this.gField(g, 'title').toLowerCase().includes(q) ||
-            this.gField(g, 'tagline').toLowerCase().includes(q)),
+          games: cat.games
+            .filter(g => !q ||
+              this.gField(g, 'title').toLowerCase().includes(q) ||
+              this.gField(g, 'tagline').toLowerCase().includes(q))
+            .sort((a, b) => this.gField(a, 'title').localeCompare(this.gField(b, 'title'), this.lang)),
         }))
         .filter(cat => cat.games.length > 0);
     },
