@@ -16,30 +16,89 @@ body {
 .lang-toggle { gap: 6px; justify-content: center; margin-bottom: 18px; }
 .lang-btn { padding: 5px 10px; font-size: .75rem; background: #161b22; }
 
-header { text-align: center; margin-bottom: 56px; }
+header { text-align: center; margin-bottom: 40px; }
 .site-title { font-size: 3rem; font-weight: 900; letter-spacing: .06em; color: #e6edf3; margin-bottom: 10px; }
 .site-sub { color: #6e7681; font-size: 1rem; max-width: 420px; margin: 0 auto; line-height: 1.6; }
 .home-btn { display: inline-block; margin-top: 12px; padding: 5px 12px; }
 
-.categories { display: flex; flex-direction: column; gap: 48px; max-width: 860px; width: 100%; }
+/* ── Toolbar: search + category chips ─────────────────────────────── */
+.toolbar { display: flex; flex-direction: column; align-items: center; gap: 14px; width: 100%; max-width: 640px; margin-bottom: 40px; }
+.search-input {
+  width: 100%; padding: 12px 16px; border-radius: 12px;
+  background: #161b22; border: 1px solid #30363d; color: #c9d1d9;
+  font-size: .95rem; font-family: inherit; transition: border-color .15s;
+}
+.search-input::placeholder { color: #6e7681; }
+.search-input:focus { outline: none; border-color: #58a6ff; }
+.filter-chips { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.filter-chip {
+  background: none; border: 1px solid #30363d; color: #8b949e;
+  border-radius: 20px; padding: 6px 14px; font-size: .8rem; font-weight: 600;
+  font-family: inherit; cursor: pointer; transition: all .15s;
+}
+.filter-chip:hover:not(.active) { border-color: #6e7681; color: #c9d1d9; }
+.filter-chip.active { background: #0c2233; border-color: #58a6ff; color: #58a6ff; }
+
+.categories { display: flex; flex-direction: column; gap: 40px; max-width: 1040px; width: 100%; }
 .category-label {
   font-size: .7rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
   color: #444c56; margin-bottom: 16px;
 }
-.cards { display: flex; gap: 28px; flex-wrap: wrap; justify-content: center; width: 100%; }
+.no-results { color: #6e7681; text-align: center; padding: 40px 0; font-size: .95rem; }
 
-/* ── Card ──────────────────────────────────────────────────────────── */
-.card {
-  background: #161b22; border: 2px solid #30363d; border-radius: 16px;
-  padding: 28px 28px 24px; width: 380px; display: flex; flex-direction: column;
-  gap: 18px; transition: border-color .2s, transform .2s, box-shadow .2s;
-  text-decoration: none; color: inherit;
+/* ── Compact tile grid ─────────────────────────────────────────────── */
+.tile-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(148px, 1fr)); gap: 14px; }
+.tile {
+  position: relative;
+  background: #161b22; border: 2px solid #30363d; border-radius: 14px;
+  padding: 18px 12px 14px; display: flex; flex-direction: column; align-items: center;
+  text-align: center; gap: 8px; text-decoration: none; color: inherit;
+  transition: border-color .2s, transform .2s, box-shadow .2s;
 }
-.card:hover {
-  transform: translateY(-4px);
-  border-color: var(--accent);
-  box-shadow: 0 12px 40px var(--shadow);
+.tile:hover { transform: translateY(-3px); border-color: var(--accent); box-shadow: 0 10px 26px var(--shadow); }
+.tile-icon {
+  width: 42px; height: 42px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.35rem; flex-shrink: 0; background: var(--icon-bg);
 }
+.tile-title {
+  font-size: .86rem; font-weight: 800; letter-spacing: .03em;
+  background: var(--gradient);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.tile-tagline {
+  font-size: .7rem; color: #6e7681; line-height: 1.45;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.tile-info-btn {
+  position: absolute; top: 8px; inset-inline-end: 8px;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: rgba(255,255,255,.06); border: 1px solid #30363d; color: #6e7681;
+  font-size: .68rem; font-weight: 700; font-style: italic; font-family: Georgia, serif;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all .15s;
+}
+.tile-info-btn:hover { background: rgba(255,255,255,.12); color: #c9d1d9; border-color: #6e7681; }
+
+/* ── Detail modal (reuses the old full-card content) ─────────────────── */
+.modal-backdrop {
+  position: fixed; inset: 0; background: rgba(1,4,9,.72); backdrop-filter: blur(2px);
+  display: flex; align-items: center; justify-content: center; padding: 20px; z-index: 100;
+}
+.modal-panel {
+  position: relative; background: #161b22; border: 2px solid var(--accent); border-radius: 16px;
+  padding: 28px 28px 24px; max-width: 380px; width: 100%; max-height: 86vh; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 18px; box-shadow: 0 20px 60px rgba(0,0,0,.5);
+}
+.modal-close {
+  position: absolute; top: 14px; inset-inline-end: 14px;
+  width: 28px; height: 28px; border-radius: 50%;
+  background: rgba(255,255,255,.06); border: 1px solid #30363d; color: #8b949e;
+  font-size: 1rem; line-height: 1; cursor: pointer; transition: all .15s;
+  display: flex; align-items: center; justify-content: center;
+}
+.modal-close:hover { background: rgba(255,255,255,.12); color: #c9d1d9; }
+
 .card-header { display: flex; align-items: center; gap: 14px; }
 .card-icon {
   width: 44px; height: 44px; border-radius: 10px;
@@ -53,7 +112,7 @@ header { text-align: center; margin-bottom: 56px; }
   -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
 }
 
-/* ── Preview ───────────────────────────────────────────────────────── */
+/* ── Preview (per-game mini board, shown inside the modal) ───────────── */
 .preview {
   border: 2px solid #21262d; border-radius: 10px; overflow: hidden;
   background: #0d1117; display: inline-grid; align-self: center;
@@ -67,13 +126,11 @@ header { text-align: center; margin-bottom: 56px; }
   border: 1.5px solid rgba(255,255,255,.3);
 }
 
-/* ── Card body ─────────────────────────────────────────────────────── */
 .card-tagline { font-size: .88rem; color: #8b949e; line-height: 1.6; }
 .card-rules { display: flex; flex-direction: column; gap: 6px; }
 .rule { display: flex; align-items: flex-start; gap: 8px; font-size: .82rem; color: #6e7681; line-height: 1.5; }
 .rule-dot { width: 6px; height: 6px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; background: var(--accent); }
 
-/* ── Play button ───────────────────────────────────────────────────── */
 .play-btn {
   display: flex; align-items: center; justify-content: center; gap: 8px;
   padding: 12px 20px; border-radius: 10px; font-size: .9rem; font-weight: 700;
@@ -84,15 +141,14 @@ header { text-align: center; margin-bottom: 56px; }
 .play-btn:hover { opacity: .88; transform: translateY(-1px); }
 .play-btn:active { transform: translateY(0); }
 .play-arrow { font-size: 1rem; transition: transform .15s; }
-.card:hover .play-arrow { transform: translateX(3px); }
 
 footer { margin-top: 64px; color: #444c56; font-size: .78rem; text-align: center; }
 
 @media (max-width: 480px) {
   .site-title { font-size: 2.2rem; }
-  .card { width: 100%; max-width: 400px; padding: 22px 20px 20px; }
-  .preview-cell { width: 30px; height: 30px; }
-  .preview-dot { width: 11px; height: 11px; }
+  .tile-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
+  .tile { padding: 14px 8px 10px; }
+  .modal-panel { padding: 22px 20px 20px; }
 }
 </style>
 </head>
@@ -110,33 +166,41 @@ footer { margin-top: 64px; color: #444c56; font-size: .78rem; text-align: center
     <a class="home-btn" href="how-to-play.html">{{ T('howToPlay') }} ↗</a>
   </header>
 
-  <div class="categories">
-    <div v-for="cat in CATEGORIES" :key="cat.label">
-      <div class="category-label">{{ catLabel(cat.label) }}</div>
-      <div class="cards">
-        <a
-          v-for="g in cat.games"
-          :key="g.id"
-          class="card"
-          :href="g.href + '?lang=' + lang"
-          :style="{ '--accent': g.accent, '--shadow': g.shadow, '--icon-bg': g.iconBg, '--gradient': g.gradient, '--btn-bg': g.btnBg, '--btn-color': g.btnColor }"
-        >
-          <div class="card-header">
-            <div class="card-icon">{{ g.icon }}</div>
-            <div class="card-title">{{ gField(g, 'title') }}</div>
-          </div>
-          <div v-html="g.preview"></div>
-          <p class="card-tagline">{{ gField(g, 'tagline') }}</p>
-          <div class="card-rules">
-            <div v-for="rule in gRules(g)" class="rule">
-              <div class="rule-dot"></div>
-              <span v-html="rule"></span>
-            </div>
-          </div>
-          <div class="play-btn" v-html="T('play') + ' ' + gField(g, 'title') + ' <span class=\'play-arrow\'>→</span>'"></div>
-        </a>
-      </div>
+  <div class="toolbar">
+    <input class="search-input" type="search" v-model="searchQuery" :placeholder="T('searchPlaceholder')">
+    <div class="filter-chips">
+      <button class="filter-chip" :class="{active: activeCategory==='All'}" @click="activeCategory='All'">{{ T('allCategories') }}</button>
+      <button
+        v-for="cat in availableCategories"
+        :key="cat.label"
+        class="filter-chip"
+        :class="{active: activeCategory===cat.label}"
+        @click="activeCategory=cat.label"
+      >{{ catLabel(cat.label) }}</button>
     </div>
+  </div>
+
+  <div class="categories">
+    <template v-if="filteredCategories.length">
+      <div v-for="cat in filteredCategories" :key="cat.label">
+        <div class="category-label">{{ catLabel(cat.label) }}</div>
+        <div class="tile-grid">
+          <a
+            v-for="g in cat.games"
+            :key="g.id"
+            class="tile"
+            :href="g.href + '?lang=' + lang"
+            :style="{ '--accent': g.accent, '--shadow': g.shadow, '--icon-bg': g.iconBg, '--gradient': g.gradient }"
+          >
+            <button class="tile-info-btn" @click.stop.prevent="openInfo(g)" :title="T('moreInfo')">i</button>
+            <div class="tile-icon">{{ g.icon }}</div>
+            <div class="tile-title">{{ gField(g, 'title') }}</div>
+            <div class="tile-tagline">{{ gField(g, 'tagline') }}</div>
+          </a>
+        </div>
+      </div>
+    </template>
+    <p v-else class="no-results">{{ T('noResults') }}</p>
   </div>
 
   <footer>
@@ -144,6 +208,32 @@ footer { margin-top: 64px; color: #444c56; font-size: .78rem; text-align: center
     &nbsp;·&nbsp; <a href="how-to-play.html" style="color:#6e7681;text-decoration:none;transition:color .15s" onmouseover="this.style.color='#c9d1d9'" onmouseout="this.style.color='#6e7681'">{{ T('howToPlay') }}</a>
     &nbsp;·&nbsp; <span id="ver" style="font-family:monospace"></span>
   </footer>
+
+  <div v-if="infoGame" class="modal-backdrop" @click.self="closeInfo">
+    <div
+      class="modal-panel"
+      :style="{ '--accent': infoGame.accent, '--shadow': infoGame.shadow, '--icon-bg': infoGame.iconBg, '--gradient': infoGame.gradient, '--btn-bg': infoGame.btnBg, '--btn-color': infoGame.btnColor }"
+    >
+      <button class="modal-close" @click="closeInfo" :title="T('close')">×</button>
+      <div class="card-header">
+        <div class="card-icon">{{ infoGame.icon }}</div>
+        <div class="card-title">{{ gField(infoGame, 'title') }}</div>
+      </div>
+      <div v-html="infoGame.preview"></div>
+      <p class="card-tagline">{{ gField(infoGame, 'tagline') }}</p>
+      <div class="card-rules">
+        <div v-for="rule in gRules(infoGame)" class="rule">
+          <div class="rule-dot"></div>
+          <span v-html="rule"></span>
+        </div>
+      </div>
+      <a
+        class="play-btn"
+        :href="infoGame.href + '?lang=' + lang"
+        v-html="T('play') + ' ' + gField(infoGame, 'title') + ' <span class=\'play-arrow\'>→</span>'"
+      ></a>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -189,6 +279,11 @@ const STRINGS = {
                 he: 'גררו צורות · הקישו לבחירה · החליקו לסיבוב',
                 es: 'Arrastra formas · Toca para seleccionar · Desliza para girar' },
   play:       { en: 'Play', he: 'שחק', es: 'Jugar' },
+  searchPlaceholder: { en: 'Search games…', he: 'חיפוש משחקים…', es: 'Buscar juegos…' },
+  allCategories:     { en: 'All', he: 'הכל', es: 'Todos' },
+  noResults:  { en: 'No games match your search.', he: 'לא נמצאו משחקים התואמים לחיפוש.', es: 'No se encontraron juegos.' },
+  moreInfo:   { en: 'More info', he: 'מידע נוסף', es: 'Más información' },
+  close:      { en: 'Close', he: 'סגור', es: 'Cerrar' },
 };
 
 const CATEGORY_LABELS = {
@@ -202,8 +297,29 @@ const CATEGORY_LABELS = {
 const LANG_KEY = 'index-lang';
 
 Vue.createApp({
-  data: () => ({ CATEGORIES, lang: localStorage.getItem(LANG_KEY) || 'en' }),
-  mounted() { this.applyDir(); },
+  data: () => ({
+    CATEGORIES, lang: localStorage.getItem(LANG_KEY) || 'en',
+    searchQuery: '', activeCategory: 'All', infoGame: null,
+  }),
+  computed: {
+    availableCategories() { return this.CATEGORIES.filter(cat => cat.games.length); },
+    filteredCategories() {
+      const q = this.searchQuery.trim().toLowerCase();
+      return this.CATEGORIES
+        .filter(cat => this.activeCategory === 'All' || cat.label === this.activeCategory)
+        .map(cat => ({
+          label: cat.label,
+          games: cat.games.filter(g => !q ||
+            this.gField(g, 'title').toLowerCase().includes(q) ||
+            this.gField(g, 'tagline').toLowerCase().includes(q)),
+        }))
+        .filter(cat => cat.games.length > 0);
+    },
+  },
+  mounted() {
+    this.applyDir();
+    window.addEventListener('keydown', e => { if (e.key === 'Escape') this.closeInfo(); });
+  },
   methods: {
     T(key) { const v = STRINGS[key]; return v ? (v[this.lang] || v.en) : key; },
     catLabel(label) { return (CATEGORY_LABELS[label] && CATEGORY_LABELS[label][this.lang]) || label; },
@@ -215,6 +331,8 @@ Vue.createApp({
       localStorage.setItem(LANG_KEY, l);
       this.applyDir();
     },
+    openInfo(g) { this.infoGame = g; },
+    closeInfo() { this.infoGame = null; },
   },
 }).mount('#app');
 (function(){
