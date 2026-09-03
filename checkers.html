@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Checkers</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0d1117">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="stylesheet" href="common.css">
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<script src="netplay.js"></script>
+<style>
+:root {
+  --cell: clamp(38px, calc((100vw - 50px) / 8), 58px);
+  --net-panel-width: calc(var(--cell) * 8 + 14px);
+  --net-btn-bg: #2a0f0f; --net-btn-border: #dc2626; --net-btn-color: #fca5a5;
+}
+
+body {
+  padding: 16px 16px 48px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.top-bar { max-width: 520px; }
+
+/* ── Title ───────────────────────────────────────────────────────── */
+h1 {
+  font-size: 2.6rem; font-weight: 900; letter-spacing: 0.16em;
+  margin-bottom: 24px; text-align: center; line-height: 1;
+  background: linear-gradient(135deg, #dc2626, #c99a52);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+
+/* ── Score bar ───────────────────────────────────────────────────── */
+.score-bar {
+  display: flex;
+  width: calc(var(--cell) * 8 + 14px);
+  background: #161b22; border: 1px solid #21262d;
+  border-radius: 14px; overflow: hidden; margin-bottom: 14px;
+}
+.score-item {
+  flex: 1; padding: 12px 8px 14px;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  position: relative; transition: background 0.2s;
+}
+.score-item + .score-item { border-inline-start: 1px solid #21262d; }
+.score-item::after {
+  content: ''; position: absolute; bottom: 0; left: 12px; right: 12px;
+  height: 3px; border-radius: 2px 2px 0 0;
+  transform: scaleX(0); transition: transform 0.25s ease;
+}
+.score-p1.active  { background: rgba(220,38,38,0.08); }
+.score-p1.active::after { background: #dc2626; transform: scaleX(1); }
+.score-p2.active  { background: rgba(201,154,82,0.08); }
+.score-p2.active::after { background: #c99a52; transform: scaleX(1); }
+
+.score-label { font-size: 0.68rem; color: #6e7681; text-transform: uppercase; letter-spacing: 0.12em; font-weight: 700; }
+.score-val   { font-size: 2rem; font-weight: 800; line-height: 1; min-width: 1.2ch; text-align: center; }
+.score-p1 .score-val { color: #dc2626; }
+.score-p2 .score-val { color: #c99a52; }
+
+/* ── Status ──────────────────────────────────────────────────────── */
+.status {
+  font-size: 1.05rem; font-weight: 700; color: #c9d1d9;
+  margin-bottom: 4px; gap: 6px; letter-spacing: 0.01em;
+}
+.status.won-p1 { color: #dc2626; }
+.status.won-p2 { color: #c99a52; }
+
+.turn-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; animation: pulse 1.4s ease infinite; }
+.turn-dot.dot-p1 { background: #dc2626; }
+.turn-dot.dot-p2 { background: #c99a52; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.65)} }
+
+/* must-capture hint row */
+.hint-row {
+  font-size: 0.82rem; color: #f0b98f; font-weight: 700; margin-bottom: 12px; height: 1.1rem;
+}
+
+/* ── Board ───────────────────────────────────────────────────────── */
+.board {
+  display: grid;
+  grid-template-columns: repeat(8, var(--cell));
+  grid-template-rows:    repeat(8, var(--cell));
+  gap: 1px;
+  background: #1a120b;
+  border: 2px solid #1a120b;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.square {
+  display: flex; align-items: center; justify-content: center;
+  cursor: default; position: relative; transition: background 0.1s;
+}
+.square.light { background: #d9b989; }
+.square.dark  { background: #241611; }
+.square.clickable { cursor: pointer; }
+.square.dark.clickable:hover { background: #331e15; }
+
+.square.target-slide::after,
+.square.target-capture::after {
+  content: '';
+  position: absolute;
+  width: calc(var(--cell) * 0.24);
+  height: calc(var(--cell) * 0.24);
+  border-radius: 50%;
+  pointer-events: none;
+}
+.square.target-slide::after   { background: rgba(255,255,255,0.22); }
+.square.target-capture::after { background: rgba(220,38,38,0.55); box-shadow: 0 0 8px 1px rgba(220,38,38,0.6); }
+
+.square.selected { box-shadow: inset 0 0 0 3px #f0b98f; }
+
+.square.last-from::before, .square.last-to::before {
+  content: ''; position: absolute; inset: 0;
+  background: rgba(240,185,143,0.12); pointer-events: none;
+}
+
+/* pieces */
+.piece {
+  width: calc(var(--cell) * 0.76);
+  height: calc(var(--cell) * 0.76);
+  border-radius: 50%;
+  position: relative; z-index: 1;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform 0.12s;
+}
+.piece.p1 {
+  background: radial-gradient(circle at 38% 32%, #f87171, #7f1d1d);
+  box-shadow: 0 0 0 2px #dc2626, 0 2px 6px rgba(0,0,0,0.5);
+}
+.piece.p2 {
+  background: radial-gradient(circle at 38% 32%, #52525b, #0a0a0a);
+  box-shadow: 0 0 0 2px #c99a52, 0 2px 6px rgba(0,0,0,0.5);
+}
+.piece .crown {
+  font-size: calc(var(--cell) * 0.34);
+  color: #f4d58d;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+  line-height: 1;
+}
+
+@keyframes mustPulse {
+  0%, 100% { box-shadow: 0 0 0 2px var(--ring), 0 2px 6px rgba(0,0,0,0.5); }
+  50%      { box-shadow: 0 0 0 4px var(--ring), 0 0 10px 2px var(--ring), 0 2px 6px rgba(0,0,0,0.5); }
+}
+.piece.p1.must-jump { --ring: #dc2626; animation: mustPulse 1s ease-in-out infinite; }
+.piece.p2.must-jump { --ring: #c99a52; animation: mustPulse 1s ease-in-out infinite; }
+
+@keyframes popIn {
+  0%   { transform: scale(0.2); opacity: 0; }
+  65%  { transform: scale(1.2); }
+  100% { transform: scale(1);   opacity: 1; }
+}
+.pop-enter-active { animation: popIn 0.22s cubic-bezier(0.34,1.56,0.64,1); }
+
+@keyframes captureFade {
+  0%   { transform: scale(1);   opacity: 1; }
+  100% { transform: scale(0.2); opacity: 0; }
+}
+.piece.captured { animation: captureFade 0.28s ease forwards; }
+
+.won-p1 .piece.p1 { box-shadow: 0 0 0 2px #dc2626, 0 0 12px 3px rgba(220,38,38,0.7); }
+.won-p2 .piece.p2 { box-shadow: 0 0 0 2px #c99a52, 0 0 12px 3px rgba(201,154,82,0.7); }
+
+/* ── Piece count bar ─────────────────────────────────────────────── */
+.count-bar {
+  width: calc(var(--cell) * 8 + 14px);
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 20px; font-size: 0.82rem; font-weight: 700;
+}
+.count-track {
+  flex: 1; height: 6px; border-radius: 3px;
+  background: #21262d; overflow: hidden; position: relative;
+}
+.count-fill-p1 {
+  position: absolute; left: 0; top: 0; height: 100%;
+  background: #dc2626; border-radius: 3px;
+  transition: width 0.3s ease;
+}
+.count-num-p1 { color: #dc2626; min-width: 2ch; text-align: right; }
+.count-num-p2 { color: #c99a52; min-width: 2ch; }
+
+/* ── Mode bar ────────────────────────────────────────────────────── */
+.mode-bar {
+  display: flex; gap: 6px; margin-bottom: 20px; justify-content: center;
+  width: calc(var(--cell) * 8 + 14px); flex-wrap: wrap;
+}
+.mode-btn {
+  background: #161b22; border: 1px solid #30363d; color: #8b949e;
+  border-radius: 20px; padding: 6px 14px; font-size: 0.82rem;
+  font-weight: 600; font-family: inherit; cursor: pointer; transition: all 0.15s;
+}
+.mode-btn:hover:not(.active) { border-color: #6e7681; color: #c9d1d9; }
+.mode-btn.active { background: #2a0f0f; border-color: #dc2626; color: #fca5a5; }
+
+/* ── Buttons ─────────────────────────────────────────────────────── */
+.btn-row { display: flex; gap: 10px; }
+.new-game-btn {
+  background: #2a0f0f; border: 1px solid #dc2626; color: #fca5a5;
+  border-radius: 10px; padding: 11px 40px; font-size: 0.92rem; font-weight: 700;
+  font-family: inherit; cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s, box-shadow 0.15s; letter-spacing: 0.04em;
+}
+.new-game-btn:hover  { opacity: 0.85; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(220,38,38,0.25); }
+.new-game-btn:active { transform: translateY(0); box-shadow: none; }
+.reset-scores-btn {
+  background: none; border: 1px solid #30363d; color: #6e7681;
+  border-radius: 10px; padding: 11px 14px; font-size: 0.9rem;
+  font-family: inherit; cursor: pointer; transition: color 0.15s, border-color 0.15s;
+}
+.reset-scores-btn:hover { color: #c9d1d9; border-color: #6e7681; }
+</style>
+</head>
+<body>
+<div id="app" v-cloak>
+
+  <div class="top-bar">
+    <a class="back-link" href="index.html">{{ UI.back }}</a>
+    <div class="lang-toggle">
+      <button class="lang-btn" :class="{active: lang==='en'}" @click="setLang('en')">EN</button>
+      <button class="lang-btn" :class="{active: lang==='he'}" @click="setLang('he')">עב</button>
+    </div>
+  </div>
+
+  <h1>{{ UI.title }}</h1>
+
+  <div class="score-bar" dir="ltr">
+    <div class="score-item score-p1" :class="{active: phase==='playing' && turn===1 && !aiThink}">
+      <div class="score-label">{{ UI.p1 }}</div>
+      <div class="score-val">{{ scores[0] }}</div>
+    </div>
+    <div class="score-item score-p2" :class="{active: phase==='playing' && turn===2 && !aiThink}">
+      <div class="score-label">{{ UI.p2 }}</div>
+      <div class="score-val">{{ scores[1] }}</div>
+    </div>
+  </div>
+
+  <net-panel v-if="mode === 'net'"></net-panel>
+
+  <div class="status" :class="statusClass">
+    <template v-if="mode === 'net' && netCtrl.netStatus !== 'connected'"></template>
+    <template v-else-if="phase === 'won'">
+      <template v-if="isRTL">
+        <span>{{ UI.wonVerb }}</span>
+        <span :style="{color: winner===1?'#dc2626':'#c99a52'}">{{ winner===1?UI.p1:UI.p2 }}</span>
+        <span>🎉</span>
+      </template>
+      <template v-else>
+        <span :style="{color: winner===1?'#dc2626':'#c99a52'}">{{ winner===1?UI.p1:UI.p2 }}</span>
+        <span>{{ UI.wonVerb }}</span>
+        <span>🎉</span>
+      </template>
+    </template>
+    <template v-else-if="isRTL">
+      <span v-if="!aiThink" class="turn-dot" :class="turn===1?'dot-p1':'dot-p2'"></span>
+      <span>{{ aiThink ? UI.thinking : UI.turnWord }}</span>
+      <span :style="{color: turn===1?'#dc2626':'#c99a52'}">{{ turn===1?UI.p1:UI.p2 }}</span>
+    </template>
+    <template v-else>
+      <span v-if="!aiThink" class="turn-dot" :class="turn===1?'dot-p1':'dot-p2'"></span>
+      <span :style="{color: turn===1?'#dc2626':'#c99a52'}">{{ turn===1?UI.p1:UI.p2 }}</span>
+      <span>{{ aiThink ? UI.thinking : UI.turnWord }}</span>
+    </template>
+  </div>
+
+  <div class="hint-row">
+    <template v-if="phase==='playing' && !aiThink && forcedIdxSet.size">{{ UI.mustCapture }}</template>
+  </div>
+
+  <div class="board" :class="phase !== 'playing' ? statusClass : ''">
+    <div
+      v-for="(cell, i) in board"
+      :key="i"
+      class="square"
+      :class="[isDark(i) ? 'dark' : 'light', {
+        clickable: canAct && isDark(i) && (forcedIdxSet.has(i) || slideTargetSet.has(i) || captureTargetSet.has(i)),
+        selected: selected === i,
+        'target-slide': slideTargetSet.has(i),
+        'target-capture': captureTargetSet.has(i),
+        'last-from': lastMove && lastMove.from === i,
+        'last-to': lastMove && lastMove.to === i,
+      }]"
+      @click="clickCell(i)"
+    >
+      <transition name="pop">
+        <div
+          v-if="cell"
+          :key="cell + '-' + i"
+          class="piece"
+          :class="[owner(cell) === 1 ? 'p1' : 'p2', {
+            'must-jump': forcedIdxSet.has(i),
+            captured: flashCaptured.has(i),
+          }]"
+        ><span v-if="isKing(cell)" class="crown">♛</span></div>
+      </transition>
+    </div>
+  </div>
+
+  <div class="count-bar" dir="ltr">
+    <span class="count-num-p1">{{ countP1 }}</span>
+    <div class="count-track">
+      <div class="count-fill-p1" :style="{width: countP1 / (countP1 + countP2) * 100 + '%'}"></div>
+    </div>
+    <span class="count-num-p2">{{ countP2 }}</span>
+  </div>
+
+  <div class="mode-bar">
+    <button class="mode-btn" :class="{active: mode==='2p'}"   @click="setMode('2p')">{{ UI.mode2p }}</button>
+    <button class="mode-btn" :class="{active: mode==='easy'}" @click="setMode('easy')">{{ UI.modeEasy }}</button>
+    <button class="mode-btn" :class="{active: mode==='hard'}" @click="setMode('hard')">{{ UI.modeHard }}</button>
+    <button class="mode-btn" :class="{active: mode==='net'}"  @click="setMode('net')">{{ UI.modeNet }}</button>
+  </div>
+
+  <div class="btn-row">
+    <button class="new-game-btn" @click="newGame">{{ UI.newGame }}</button>
+    <button class="reset-scores-btn" @click="resetScores" :title="UI.resetScores">↺</button>
+  </div>
+
+</div>
+<script>
+const { createApp, ref, computed, provide, watchEffect } = Vue;
+
+const STRINGS = {
+  title:       { en: 'CHECKERS',      he: 'דמקה' },
+  back:        { en: 'All Games',     he: 'כל המשחקים' },
+  p1:          { en: 'Red',           he: 'אדום' },
+  p2:          { en: 'Black',         he: 'שחור' },
+  wonVerb:     { en: 'wins!',         he: 'ניצח!' },
+  turnWord:    { en: "'s turn",       he: 'תור' },
+  thinking:    { en: 'Thinking…',     he: 'חושב…' },
+  mustCapture: { en: 'Capture available — you must jump',   he: 'יש קפיצה אפשרית — חובה לקפוץ' },
+  newGame:     { en: 'New Game',      he: 'משחק חדש' },
+  resetScores: { en: 'Reset scores',  he: 'אפס ניקוד' },
+  mode2p:      { en: '👥 2 Players',  he: '👥 2 שחקנים' },
+  modeEasy:    { en: '🤖 Easy',       he: '🤖 קל' },
+  modeHard:    { en: '🤖 Hard',       he: '🤖 קשה' },
+  modeNet:     { en: '🌐 Network',    he: '🌐 רשת' },
+};
+
+// ── Board representation: 64 cells, 0=empty, 1/2=men, 3/4=kings ──────
+const DIAG = [[-1,-1],[-1,1],[1,-1],[1,1]];
+function rc(i)          { return [ (i/8)|0, i%8 ]; }
+function idxOf(r, c)     { return r*8 + c; }
+function inBounds(r, c)  { return r >= 0 && r < 8 && c >= 0 && c < 8; }
+function owner(v)        { return v === 0 ? 0 : (v === 1 || v === 3) ? 1 : 2; }
+function isKing(v)       { return v === 3 || v === 4; }
+function isDark(i)       { const [r,c] = rc(i); return (r+c) % 2 === 1; }
+function promote(v, r)   { if (v === 1 && r === 0) return 3; if (v === 2 && r === 7) return 4; return v; }
+
+function initialBoard() {
+  const b = Array(64).fill(0);
+  for (let i = 0; i < 64; i++) {
+    if (!isDark(i)) continue;
+    const [r] = rc(i);
+    if (r <= 2) b[i] = 2;
+    else if (r >= 5) b[i] = 1;
+  }
+  return b;
+}
+
+// Men can move only forward diagonally, kings move any diagonal direction.
+function slideDirs(v) {
+  if (isKing(v)) return DIAG;
+  return owner(v) === 1 ? [[-1,-1],[-1,1]] : [[1,-1],[1,1]];
+}
+
+function slideTargets(board, idx) {
+  const [r, c] = rc(idx);
+  const out = [];
+  for (const [dr, dc] of slideDirs(board[idx])) {
+    const nr = r+dr, nc = c+dc;
+    if (inBounds(nr, nc) && board[idxOf(nr,nc)] === 0) out.push(idxOf(nr,nc));
+  }
+  return out;
+}
+
+// Both men and kings may capture in any of the 4 diagonal directions
+// (standard American rule: a man can jump backward to capture).
+function jumpTargets(board, idx) {
+  const v = board[idx], pl = owner(v);
+  const [r, c] = rc(idx);
+  const out = [];
+  for (const [dr, dc] of DIAG) {
+    const mr = r+dr, mc = c+dc, lr = r+2*dr, lc = c+2*dc;
+    if (!inBounds(lr, lc)) continue;
+    const mi = idxOf(mr,mc), li = idxOf(lr,lc);
+    if (owner(board[mi]) !== 0 && owner(board[mi]) !== pl && board[li] === 0) out.push({ mid: mi, land: li });
+  }
+  return out;
+}
+
+function capturePieces(board, player) {
+  const out = [];
+  for (let i = 0; i < 64; i++) if (owner(board[i]) === player && jumpTargets(board, i).length) out.push(i);
+  return out;
+}
+
+// All maximal capture sequences from one piece. A man that crowns mid-chain
+// stops immediately (standard rule) — it can't keep jumping as a king.
+function capturingChains(board, idx) {
+  const results = [];
+  (function dfs(cur, pos, captured) {
+    const jumps = jumpTargets(cur, pos);
+    if (!jumps.length) {
+      if (captured.length) results.push({ board: cur, captured, landing: pos });
+      return;
+    }
+    for (const { mid, land } of jumps) {
+      const nb = [...cur];
+      nb[land] = nb[pos]; nb[pos] = 0; nb[mid] = 0;
+      const [lr] = rc(land);
+      const promoted = promote(nb[land], lr);
+      if (promoted !== nb[land]) {
+        nb[land] = promoted;
+        results.push({ board: nb, captured: [...captured, mid], landing: land });
+      } else {
+        dfs(nb, land, [...captured, mid]);
+      }
+    }
+  })(board, idx, []);
+  return results;
+}
+
+// Capturing is mandatory whenever available; otherwise any legal slide.
+function legalMoves(board, player) {
+  const capturers = capturePieces(board, player);
+  if (capturers.length) {
+    const moves = [];
+    for (const i of capturers) for (const seq of capturingChains(board, i)) moves.push({ type: 'capture', from: i, ...seq });
+    return moves;
+  }
+  const moves = [];
+  for (let i = 0; i < 64; i++) {
+    if (owner(board[i]) !== player) continue;
+    for (const to of slideTargets(board, i)) {
+      const nb = [...board]; nb[to] = nb[i]; nb[i] = 0;
+      const [tr] = rc(to); nb[to] = promote(nb[to], tr);
+      moves.push({ type: 'slide', from: i, to, board: nb });
+    }
+  }
+  return moves;
+}
+
+// ── AI ────────────────────────────────────────────────────────────────
+function evaluate(board, player) {
+  let score = 0;
+  for (let i = 0; i < 64; i++) {
+    const v = board[i];
+    if (!v) continue;
+    const pl = owner(v);
+    const [r] = rc(i);
+    const advance = pl === 1 ? (7 - r) : r;
+    const val = (isKing(v) ? 160 : 100) + advance * 2;
+    score += pl === player ? val : -val;
+  }
+  return score;
+}
+
+function negamax(board, player, depth, alpha, beta) {
+  const moves = legalMoves(board, player);
+  if (!moves.length) return -1000;
+  if (depth === 0) return evaluate(board, player);
+  let best = -Infinity;
+  for (const mv of moves) {
+    const score = -negamax(mv.board, 3-player, depth-1, -beta, -alpha);
+    if (score > best) best = score;
+    if (best > alpha) alpha = best;
+    if (alpha >= beta) break;
+  }
+  return best;
+}
+
+const AI_DEPTH = 6;
+
+function pickAIMove(board, player, mode) {
+  const moves = legalMoves(board, player);
+  if (!moves.length) return null;
+  if (mode === 'easy') return moves[Math.floor(Math.random() * moves.length)];
+  let best = -Infinity, bestMoves = [];
+  for (const mv of moves) {
+    const score = -negamax(mv.board, 3-player, AI_DEPTH-1, -Infinity, Infinity);
+    if (score > best) { best = score; bestMoves = [mv]; }
+    else if (score === best) bestMoves.push(mv);
+  }
+  return bestMoves[Math.floor(Math.random() * bestMoves.length)];
+}
+
+const PALETTES = {
+  1: ['#dc2626','#f87171','#ef4444','#fca5a5','#7f1d1d'],
+  2: ['#c99a52','#e8c27a','#a67c3a','#f4d58d','#52525b'],
+};
+
+function launchFireworks(player) {
+  const cv = document.createElement('canvas');
+  cv.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:200;';
+  cv.width = innerWidth; cv.height = innerHeight;
+  document.body.appendChild(cv);
+  const ctx = cv.getContext('2d');
+  const cols = PALETTES[player];
+  const ps = [];
+  const burst = (x, y) => {
+    for (let i = 0; i < 65; i++) {
+      const a = Math.PI*2*i/65, s = 2+Math.random()*6;
+      ps.push({ x, y, vx: Math.cos(a)*s, vy: Math.sin(a)*s-2, alpha: 1, c: cols[~~(Math.random()*cols.length)], r: 2+Math.random()*3 });
+    }
+  };
+  const end = Date.now()+3000; let lb = 0;
+  const frame = now => {
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    if (now-lb>420 && Date.now()<end-500) { burst(cv.width*(0.2+Math.random()*0.6), cv.height*(0.1+Math.random()*0.4)); lb = now; }
+    for (const p of ps) {
+      p.x+=p.vx; p.y+=p.vy; p.vy+=0.12; p.alpha-=0.016;
+      if (p.alpha <= 0) continue;
+      ctx.globalAlpha = p.alpha; ctx.fillStyle = p.c;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    ps.splice(0, ps.length, ...ps.filter(p => p.alpha > 0));
+    if (Date.now() < end || ps.length) requestAnimationFrame(frame);
+    else document.body.removeChild(cv);
+  };
+  burst(cv.width*0.5, cv.height*0.35);
+  requestAnimationFrame(frame);
+}
+
+const SAVE_KEY = 'checkers-save';
+
+createApp({
+  components: { NetPanel },
+  setup() {
+    const lang    = ref('en');
+    const mode    = ref('2p');
+    const board   = ref(initialBoard());
+    const turn    = ref(1);
+    const phase   = ref('playing');
+    const winner  = ref(null);
+    const selected = ref(null);
+    const aiThink = ref(false);
+    const lastMove = ref(null);
+    const flashCaptured = ref(new Set());
+
+    const humanScores = ref([0, 0]);
+    const aiScores    = ref([0, 0]);
+    function scoresRef() { return (mode.value === '2p' || mode.value === 'net') ? humanScores : aiScores; }
+    const scores = computed(() => scoresRef().value);
+
+    const netCtrl = createNetplay({
+      gameId: 'checkers',
+      onMove(data) {
+        if (mode.value !== 'net') return;
+        if (data.type === 'move' && phase.value === 'playing') applyMove(data.mv, true);
+        else if (data.type === 'newgame') resetBoard();
+      },
+      onReset: () => resetBoard(),
+      onSync() { if (netCtrl.netStatus === 'connected') mode.value = 'net'; },
+    });
+    provide('_netplay', netCtrl);
+
+    const isRTL = computed(() => lang.value === 'he');
+    const UI    = computed(() => {
+      const l = lang.value;
+      return Object.fromEntries(Object.entries(STRINGS).map(([k, v]) => [k, v[l] ?? v.en]));
+    });
+
+    const statusClass = computed(() => phase.value === 'won' ? (winner.value === 1 ? 'won-p1' : 'won-p2') : '');
+
+    const countP1 = computed(() => board.value.filter(v => owner(v) === 1).length);
+    const countP2 = computed(() => board.value.filter(v => owner(v) === 2).length);
+
+    const canAct = computed(() => {
+      if (phase.value !== 'playing' || aiThink.value) return false;
+      if (mode.value === 'net') return netCtrl.netStatus === 'connected' && netCtrl.isMyTurn(turn.value);
+      return mode.value === '2p' || turn.value === 1;
+    });
+
+    const currentMoves = computed(() => phase.value === 'playing' ? legalMoves(board.value, turn.value) : []);
+    const forcedIdxSet = computed(() => new Set(currentMoves.value.map(m => m.from)));
+    const targetsForSelected = computed(() => selected.value === null ? [] : currentMoves.value.filter(m => m.from === selected.value));
+    const slideTargetSet   = computed(() => new Set(targetsForSelected.value.filter(m => m.type === 'slide').map(m => m.to)));
+    const captureTargetSet = computed(() => new Set(targetsForSelected.value.filter(m => m.type === 'capture').map(m => m.landing)));
+
+    function endGame(winPlayer) {
+      phase.value = 'won';
+      winner.value = winPlayer;
+      const s = [...scoresRef().value];
+      s[winPlayer - 1]++;
+      scoresRef().value = s;
+      launchFireworks(winPlayer);
+      save();
+    }
+
+    function applyMove(mv, remote = false) {
+      if (!remote && mode.value === 'net') netCtrl.send({ type: 'move', mv });
+
+      board.value = mv.board;
+      selected.value = null;
+      lastMove.value = mv.type === 'slide' ? { from: mv.from, to: mv.to } : { from: mv.from, to: mv.landing };
+
+      if (mv.type === 'capture') {
+        flashCaptured.value = new Set(mv.captured);
+        setTimeout(() => { flashCaptured.value = new Set(); }, 280);
+      }
+
+      const mover = turn.value;
+      const next = 3 - mover;
+      if (legalMoves(board.value, next).length === 0) {
+        endGame(mover);
+        return;
+      }
+      turn.value = next;
+      save();
+
+      if (mode.value !== '2p' && mode.value !== 'net' && turn.value === 2 && phase.value === 'playing') triggerAI();
+    }
+
+    function triggerAI() {
+      aiThink.value = true;
+      setTimeout(() => {
+        const mv = pickAIMove(board.value, 2, mode.value);
+        aiThink.value = false;
+        if (mv) applyMove(mv);
+      }, 380);
+    }
+
+    function clickCell(i) {
+      if (!canAct.value) return;
+      const v = board.value[i];
+      if (owner(v) === turn.value && forcedIdxSet.value.has(i)) {
+        selected.value = selected.value === i ? null : i;
+        return;
+      }
+      if (selected.value !== null) {
+        const mv = currentMoves.value.find(m => m.from === selected.value && (m.type === 'slide' ? m.to === i : m.landing === i));
+        if (mv) { applyMove(mv); return; }
+      }
+      selected.value = null;
+    }
+
+    function resetBoard() {
+      board.value = initialBoard();
+      turn.value = 1;
+      phase.value = 'playing';
+      winner.value = null;
+      selected.value = null;
+      aiThink.value = false;
+      lastMove.value = null;
+      flashCaptured.value = new Set();
+    }
+
+    function newGame() {
+      resetBoard();
+      save();
+      if (mode.value === 'net') netCtrl.send({ type: 'newgame' });
+    }
+
+    function setMode(m) { mode.value = m; resetBoard(); save(); }
+    function setLang(l) { lang.value = l; save(); }
+    function resetScores() { humanScores.value = [0,0]; aiScores.value = [0,0]; save(); }
+
+    function save() {
+      try {
+        localStorage.setItem(SAVE_KEY, JSON.stringify({
+          lang: lang.value,
+          mode: mode.value === 'net' ? '2p' : mode.value,
+          humanScores: humanScores.value,
+          aiScores: aiScores.value,
+        }));
+      } catch (_) {}
+    }
+    function load() {
+      try {
+        const d = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}');
+        if (d.lang) lang.value = d.lang;
+        const urlLang = new URLSearchParams(location.search).get('lang');
+        if (urlLang && ["en","he"].includes(urlLang)) lang.value = urlLang;
+        if (d.mode) mode.value = d.mode;
+        if (d.humanScores) humanScores.value = d.humanScores;
+        if (d.aiScores) aiScores.value = d.aiScores;
+      } catch (_) {}
+    }
+
+    load();
+
+    watchEffect(() => {
+      document.documentElement.lang = lang.value;
+      document.documentElement.dir = isRTL.value ? 'rtl' : 'ltr';
+    });
+
+    return {
+      lang, mode, board, turn, phase, winner, selected, aiThink, lastMove, flashCaptured, netCtrl,
+      scores, countP1, countP2, canAct, forcedIdxSet, slideTargetSet, captureTargetSet,
+      isRTL, UI, statusClass, owner, isKing, isDark,
+      clickCell, newGame, setMode, setLang, resetScores,
+    };
+  }
+}).mount('#app');
+</script>
+<script>
+(function(){
+  const d=new Date(document.lastModified),p=n=>String(n).padStart(2,"0");
+  const v=document.createElement("div");
+  v.style.cssText="position:fixed;bottom:4px;right:6px;font-size:0.6rem;color:#444c56;pointer-events:none;font-family:monospace;z-index:999";
+  v.textContent=d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())+" "+p(d.getHours())+":"+p(d.getMinutes());
+  document.body.appendChild(v);
+})();
+</script>
+</body>
+</html>
