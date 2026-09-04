@@ -223,6 +223,7 @@ h1 .y { color: var(--accent2); }
     <div class="lang-toggle">
       <button class="lang-btn" :class="{active: lang==='en'}" @click="lang='en'">EN</button>
       <button class="lang-btn" :class="{active: lang==='he'}" @click="lang='he'">עב</button>
+      <button class="lang-btn" :class="{active: lang==='es'}" @click="lang='es'">ES</button>
     </div>
   </div>
 
@@ -586,25 +587,25 @@ createApp({
         if (s.mode) mode.value = s.mode;
       } catch {}
       const urlLang = new URLSearchParams(location.search).get('lang');
-      if (urlLang && ["en","he"].includes(urlLang)) lang.value = urlLang;
+      if (urlLang && ["en","he","es"].includes(urlLang)) lang.value = urlLang;
     });
 
     // ── i18n ──
     const S = {
-      back:     { en: 'Games',        he: 'משחקים' },
-      p1:       { en: 'Red',          he: 'אדום' },
-      p2:       { en: 'Yellow',       he: 'צהוב' },
-      draws:    { en: 'Draws',        he: 'תיקו' },
-      turn:     { en: 'to play',      he: 'מהלך' },
-      thinking: { en: 'Thinking…',    he: 'חושב…' },
-      wins:     { en: 'wins!',        he: 'ניצח!' },
-      draw:     { en: 'Draw!',        he: 'תיקו!' },
-      m2p:      { en: '2 Players',    he: '2 שחקנים' },
-      easy:     { en: 'Easy',         he: 'קל' },
-      hard:     { en: 'Hard',         he: 'קשה' },
-      net:      { en: '🌐 Network',   he: '🌐 רשת' },
-      newGame:  { en: 'New Game',     he: 'משחק חדש' },
-      reset:    { en: 'Reset Scores', he: 'אפס ניקוד' },
+      back:     { en: 'Games',        he: 'משחקים',       es: 'Juegos' },
+      p1:       { en: 'Red',          he: 'אדום',         es: 'Rojo' },
+      p2:       { en: 'Yellow',       he: 'צהוב',         es: 'Amarillo' },
+      draws:    { en: 'Draws',        he: 'תיקו',         es: 'Empates' },
+      turn:     { en: 'to play',      he: 'מהלך',         es: 'para jugar' },
+      thinking: { en: 'Thinking…',    he: 'חושב…',        es: 'Pensando…' },
+      wins:     { en: 'wins!',        he: 'ניצח!',        es: '¡gana!' },
+      draw:     { en: 'Draw!',        he: 'תיקו!',        es: '¡Empate!' },
+      m2p:      { en: '2 Players',    he: '2 שחקנים',    es: '2 Jugadores' },
+      easy:     { en: 'Easy',         he: 'קל',           es: 'Fácil' },
+      hard:     { en: 'Hard',         he: 'קשה',          es: 'Difícil' },
+      net:      { en: '🌐 Network',   he: '🌐 רשת',       es: '🌐 Red' },
+      newGame:  { en: 'New Game',     he: 'משחק חדש',    es: 'Nueva partida' },
+      reset:    { en: 'Reset Scores', he: 'אפס ניקוד',   es: 'Reiniciar puntos' },
     };
     function t(k) { return S[k]?.[lang.value] ?? S[k]?.en ?? k; }
 

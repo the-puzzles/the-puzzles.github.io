@@ -251,6 +251,7 @@ h1 {
     <div class="lang-toggle">
       <button class="lang-btn" :class="{active: lang==='en'}" @click="setLang('en')">EN</button>
       <button class="lang-btn" :class="{active: lang==='he'}" @click="setLang('he')">עב</button>
+      <button class="lang-btn" :class="{active: lang==='es'}" @click="setLang('es')">ES</button>
     </div>
   </div>
 
@@ -387,23 +388,23 @@ h1 {
 const { createApp, ref, computed, provide, watchEffect } = Vue;
 
 const STRINGS = {
-  back:       { en: 'All Games',         he: 'כל המשחקים' },
-  title:      { en: "Three Men's Morris", he: 'מוריס שלושה' },
-  p1:         { en: 'Orange',            he: 'כתום' },
-  p2:         { en: 'Violet',            he: 'סגול' },
-  draws:      { en: 'Draws',             he: 'תיקו' },
-  wonVerb:    { en: 'wins!',             he: 'ניצח!' },
-  turnWord:   { en: "'s turn",           he: 'תור' },
-  draw:       { en: "It's a draw!",      he: 'תיקו!' },
-  thinking:   { en: 'Thinking…',         he: 'המחשב חושב…' },
-  newGame:    { en: 'New Game',          he: 'משחק חדש' },
-  resetScores:{ en: 'Reset scores',      he: 'אפס ניקוד' },
-  mode2p:     { en: '👥 2 Players',     he: '👥 2 שחקנים' },
-  modeEasy:   { en: '🤖 Easy',          he: '🤖 קל' },
-  modeHard:   { en: '🤖 Hard',          he: '🤖 קשה' },
-  modeNet:    { en: '🌐 Network',       he: '🌐 רשת' },
-  phasePlace: { en: 'Placing pieces',    he: 'מניחים כלים' },
-  phaseMove:  { en: 'Moving pieces',     he: 'מזיזים כלים' },
+  back:       { en: 'All Games',         he: 'כל המשחקים',     es: 'Todos los juegos' },
+  title:      { en: "Three Men's Morris", he: 'מוריס שלושה',   es: 'Molino de Tres' },
+  p1:         { en: 'Orange',            he: 'כתום',           es: 'Naranja' },
+  p2:         { en: 'Violet',            he: 'סגול',           es: 'Violeta' },
+  draws:      { en: 'Draws',             he: 'תיקו',           es: 'Empates' },
+  wonVerb:    { en: 'wins!',             he: 'ניצח!',          es: '¡gana!' },
+  turnWord:   { en: "'s turn",           he: 'תור',            es: 'turno' },
+  draw:       { en: "It's a draw!",      he: 'תיקו!',          es: '¡Empate!' },
+  thinking:   { en: 'Thinking…',         he: 'המחשב חושב…',    es: 'Pensando…' },
+  newGame:    { en: 'New Game',          he: 'משחק חדש',      es: 'Nueva partida' },
+  resetScores:{ en: 'Reset scores',      he: 'אפס ניקוד',     es: 'Reiniciar puntos' },
+  mode2p:     { en: '👥 2 Players',     he: '👥 2 שחקנים',   es: '👥 2 Jugadores' },
+  modeEasy:   { en: '🤖 Easy',          he: '🤖 קל',          es: '🤖 Fácil' },
+  modeHard:   { en: '🤖 Hard',          he: '🤖 קשה',         es: '🤖 Difícil' },
+  modeNet:    { en: '🌐 Network',       he: '🌐 רשת',         es: '🌐 Red' },
+  phasePlace: { en: 'Placing pieces',    he: 'מניחים כלים',   es: 'Colocando piezas' },
+  phaseMove:  { en: 'Moving pieces',     he: 'מזיזים כלים',   es: 'Moviendo piezas' },
 };
 
 // Board positions (SVG coords)
@@ -818,7 +819,7 @@ createApp({
         const d = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}');
         if (d.lang)        lang.value        = d.lang;
         const urlLang = new URLSearchParams(location.search).get('lang');
-        if (urlLang && ["en","he"].includes(urlLang)) lang.value = urlLang;
+        if (urlLang && ["en","he","es"].includes(urlLang)) lang.value = urlLang;
         if (d.mode)        mode.value        = d.mode;
         if (d.humanScores) humanScores.value = d.humanScores;
         if (d.aiScores)    aiScores.value    = d.aiScores;

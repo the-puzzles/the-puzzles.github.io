@@ -249,6 +249,7 @@ h1 {
     <div class="lang-toggle">
       <button class="lang-btn" :class="{active: lang==='en'}" @click="setLang('en')">EN</button>
       <button class="lang-btn" :class="{active: lang==='he'}" @click="setLang('he')">עב</button>
+      <button class="lang-btn" :class="{active: lang==='es'}" @click="setLang('es')">ES</button>
     </div>
   </div>
 
@@ -359,27 +360,27 @@ h1 {
 const { createApp, ref, computed, provide, watchEffect } = Vue;
 
 const STRINGS = {
-  title:       { en: 'CHECKERS',      he: 'דמקה' },
-  back:        { en: 'All Games',     he: 'כל המשחקים' },
-  p1:          { en: 'White',         he: 'לבן' },
-  p2:          { en: 'Black',         he: 'שחור' },
-  wonVerb:     { en: 'wins!',         he: 'ניצח!' },
-  turnWord:    { en: "'s turn",       he: 'תור' },
-  thinking:    { en: 'Thinking…',     he: 'חושב…' },
-  mustCapture: { en: 'Capture available — you must jump',   he: 'יש קפיצה אפשרית — חובה לקפוץ' },
-  newGame:     { en: 'New Game',      he: 'משחק חדש' },
-  resetScores: { en: 'Reset scores',  he: 'אפס ניקוד' },
-  mode2p:      { en: '👥 2 Players',  he: '👥 2 שחקנים' },
-  modeEasy:    { en: '🤖 Easy',       he: '🤖 קל' },
-  modeHard:    { en: '🤖 Hard',       he: '🤖 קשה' },
-  modeNet:     { en: '🌐 Network',    he: '🌐 רשת' },
-  ruleLabel:      { en: 'Backward capture:', he: 'אכילה אחורה:' },
-  ruleForward:    { en: 'Forward only',      he: 'קדימה בלבד' },
-  ruleForwardHint:{ en: 'Men can only capture forward (kings capture any direction)', he: 'חיילים אוכלים רק קדימה (מלכים אוכלים בכל כיוון)' },
-  ruleChain:      { en: 'Chain only',        he: 'רק בשרשרת' },
-  ruleChainHint:  { en: 'Men can capture backward only to continue a jump already in progress', he: 'חיילים אוכלים אחורה רק כדי להמשיך שרשרת קפיצות שכבר החלה' },
-  ruleFree:       { en: 'Any direction',     he: 'כל כיוון' },
-  ruleFreeHint:   { en: 'Men can capture backward at any time', he: 'חיילים יכולים לאכול אחורה בכל עת' },
+  title:       { en: 'CHECKERS',      he: 'דמקה',            es: 'DAMAS' },
+  back:        { en: 'All Games',     he: 'כל המשחקים',       es: 'Todos los juegos' },
+  p1:          { en: 'White',         he: 'לבן',              es: 'Blancas' },
+  p2:          { en: 'Black',         he: 'שחור',             es: 'Negras' },
+  wonVerb:     { en: 'wins!',         he: 'ניצח!',            es: '¡gana!' },
+  turnWord:    { en: "'s turn",       he: 'תור',              es: 'turno' },
+  thinking:    { en: 'Thinking…',     he: 'חושב…',            es: 'Pensando…' },
+  mustCapture: { en: 'Capture available — you must jump',   he: 'יש קפיצה אפשרית — חובה לקפוץ', es: 'Captura disponible — debes saltar' },
+  newGame:     { en: 'New Game',      he: 'משחק חדש',        es: 'Nueva partida' },
+  resetScores: { en: 'Reset scores',  he: 'אפס ניקוד',       es: 'Reiniciar puntos' },
+  mode2p:      { en: '👥 2 Players',  he: '👥 2 שחקנים',    es: '👥 2 Jugadores' },
+  modeEasy:    { en: '🤖 Easy',       he: '🤖 קל',            es: '🤖 Fácil' },
+  modeHard:    { en: '🤖 Hard',       he: '🤖 קשה',           es: '🤖 Difícil' },
+  modeNet:     { en: '🌐 Network',    he: '🌐 רשת',           es: '🌐 Red' },
+  ruleLabel:      { en: 'Backward capture:', he: 'אכילה אחורה:', es: 'Captura hacia atrás:' },
+  ruleForward:    { en: 'Forward only',      he: 'קדימה בלבד', es: 'Solo adelante' },
+  ruleForwardHint:{ en: 'Men can only capture forward (kings capture any direction)', he: 'חיילים אוכלים רק קדימה (מלכים אוכלים בכל כיוון)', es: 'Las piezas solo capturan hacia adelante (las damas capturan en cualquier dirección)' },
+  ruleChain:      { en: 'Chain only',        he: 'רק בשרשרת', es: 'Solo en cadena' },
+  ruleChainHint:  { en: 'Men can capture backward only to continue a jump already in progress', he: 'חיילים אוכלים אחורה רק כדי להמשיך שרשרת קפיצות שכבר החלה', es: 'Las piezas capturan hacia atrás solo para continuar un salto ya iniciado' },
+  ruleFree:       { en: 'Any direction',     he: 'כל כיוון', es: 'Cualquier dirección' },
+  ruleFreeHint:   { en: 'Men can capture backward at any time', he: 'חיילים יכולים לאכול אחורה בכל עת', es: 'Las piezas pueden capturar hacia atrás en cualquier momento' },
 };
 
 // ── Board representation: 64 cells, 0=empty, 1/2=men, 3/4=kings ──────
@@ -816,7 +817,7 @@ createApp({
         const d = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}');
         if (d.lang) lang.value = d.lang;
         const urlLang = new URLSearchParams(location.search).get('lang');
-        if (urlLang && ["en","he"].includes(urlLang)) lang.value = urlLang;
+        if (urlLang && ["en","he","es"].includes(urlLang)) lang.value = urlLang;
         if (d.mode) mode.value = d.mode;
         if (d.ruleset) ruleset.value = d.ruleset;
         if (d.humanScores) humanScores.value = d.humanScores;

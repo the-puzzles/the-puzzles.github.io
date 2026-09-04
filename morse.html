@@ -728,6 +728,22 @@ const UI = {
     feedbackErr: '✗ נסה שוב',
     easy: 'קל', hard: 'קשה',
   },
+  es: {
+    play: 'Reproducir', check: 'Comprobar', hint: 'Mostrar pista',
+    placeholder: 'Escribe el mensaje…',
+    level: 'NIVEL', bonus: 'BONUS',
+    next: 'Siguiente nivel', finish: 'Terminar campaña',
+    restart: 'Jugar de nuevo',
+    refTitle: 'Tabla de código Morse',
+    winTitle: '¡CAMPAÑA COMPLETA!',
+    winSub: 'Decodificaste todos los mensajes. ¿Listo para los desafíos bonus?',
+    bonusStart: 'Modo bonus →',
+    hintLetters: (word) => `Empieza con: ${word[0]}`,
+    hintWords: (n) => `${n} palabra${n > 1 ? 's' : ''} en el mensaje`,
+    feedbackOk: '✓ ¡Correcto!',
+    feedbackErr: '✗ Intenta de nuevo',
+    easy: 'Fácil', hard: 'Difícil',
+  },
 };
 
 /* ── Persistence ───────────────────────────────────────────────── */
@@ -798,7 +814,9 @@ createApp({
       const saved = loadState();
       if (saved && saved.lang) return saved.lang;
       const bl = (navigator.language || '').toLowerCase();
-      return bl.startsWith('he') || bl.startsWith('ar') ? 'he' : 'en';
+      if (bl.startsWith('he') || bl.startsWith('ar')) return 'he';
+      if (bl.startsWith('es')) return 'es';
+      return 'en';
     }
 
     watchEffect(() => {

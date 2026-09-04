@@ -154,6 +154,7 @@ h1 .td { color: #fb923c; }
     <div class="lang-toggle">
       <button class="lang-btn" :class="{active: lang==='en'}" @click="setLang('en')">EN</button>
       <button class="lang-btn" :class="{active: lang==='he'}" @click="setLang('he')">עב</button>
+      <button class="lang-btn" :class="{active: lang==='es'}" @click="setLang('es')">ES</button>
     </div>
   </div>
 
@@ -236,25 +237,25 @@ h1 .td { color: #fb923c; }
 const { createApp, ref, computed, watchEffect } = Vue;
 
 const STRINGS = {
-  title:       { en: 'FROGS & TOADS',          he: 'צפרדעים וקרפדות' },
-  back:        { en: 'All Games',              he: 'כל המשחקים' },
-  solved:      { en: 'Solved',                 he: 'פתור' },
-  moves:       { en: 'Moves',                  he: 'מהלכים' },
-  best:        { en: 'Best',                   he: 'שיא' },
-  movesUnit:   { en: 'moves',                  he: 'מהלכים' },
-  tapHint:     { en: 'Tap a piece to move',    he: 'הקש על כלי להזזה' },
-  solvedIn:    { en: 'Solved in',              he: 'פתרת ב' },
-  newBest:     { en: 'New best!',              he: 'שיא חדש!' },
-  stuck:       { en: 'Stuck — no moves left',  he: 'תקוע — אין מהלכים' },
-  frogs:       { en: 'Frogs',                  he: 'צפרדעים' },
-  toads:       { en: 'Toads',                  he: 'קרפדות' },
-  newGame:     { en: 'New Puzzle',             he: 'חידה חדשה' },
-  undo:        { en: 'Undo',                   he: 'בטל מהלך' },
-  hint:        { en: 'Hint',                   he: 'רמז' },
-  resetScores: { en: 'Reset scores',           he: 'אפס ניקוד' },
-  size2:       { en: '2 + 2',                  he: '2 + 2' },
-  size3:       { en: '3 + 3',                  he: '3 + 3' },
-  size4:       { en: '4 + 4',                  he: '4 + 4' },
+  title:       { en: 'FROGS & TOADS',          he: 'צפרדעים וקרפדות',    es: 'RANAS Y SAPOS' },
+  back:        { en: 'All Games',              he: 'כל המשחקים',         es: 'Todos los juegos' },
+  solved:      { en: 'Solved',                 he: 'פתור',               es: 'Resuelto' },
+  moves:       { en: 'Moves',                  he: 'מהלכים',             es: 'Movimientos' },
+  best:        { en: 'Best',                   he: 'שיא',                es: 'Récord' },
+  movesUnit:   { en: 'moves',                  he: 'מהלכים',             es: 'movimientos' },
+  tapHint:     { en: 'Tap a piece to move',    he: 'הקש על כלי להזזה',   es: 'Toca una pieza para moverla' },
+  solvedIn:    { en: 'Solved in',              he: 'פתרת ב',             es: 'Resuelto en' },
+  newBest:     { en: 'New best!',              he: 'שיא חדש!',           es: '¡Nuevo récord!' },
+  stuck:       { en: 'Stuck — no moves left',  he: 'תקוע — אין מהלכים',  es: 'Atascado — sin movimientos' },
+  frogs:       { en: 'Frogs',                  he: 'צפרדעים',            es: 'Ranas' },
+  toads:       { en: 'Toads',                  he: 'קרפדות',             es: 'Sapos' },
+  newGame:     { en: 'New Puzzle',             he: 'חידה חדשה',         es: 'Nuevo puzzle' },
+  undo:        { en: 'Undo',                   he: 'בטל מהלך',          es: 'Deshacer' },
+  hint:        { en: 'Hint',                   he: 'רמז',                es: 'Pista' },
+  resetScores: { en: 'Reset scores',           he: 'אפס ניקוד',        es: 'Reiniciar puntos' },
+  size2:       { en: '2 + 2',                  he: '2 + 2',              es: '2 + 2' },
+  size3:       { en: '3 + 3',                  he: '3 + 3',              es: '3 + 3' },
+  size4:       { en: '4 + 4',                  he: '4 + 4',              es: '4 + 4' },
 };
 
 function makeBoard(n) {
@@ -475,7 +476,7 @@ createApp({
         const d = JSON.parse(localStorage.getItem(KEY) || '{}');
         if (d.lang)      lang.value      = d.lang;
         const urlLang = new URLSearchParams(location.search).get('lang');
-        if (urlLang && ["en","he"].includes(urlLang)) lang.value = urlLang;
+        if (urlLang && ["en","he","es"].includes(urlLang)) lang.value = urlLang;
         if (d.size)      size.value      = d.size;
         if (d.solvedMap) solvedMap.value = d.solvedMap;
         if (d.bestMap)   bestMap.value   = d.bestMap;

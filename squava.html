@@ -201,6 +201,7 @@ h1 {
     <div class="lang-toggle">
       <button class="lang-btn" :class="{active: lang==='en'}" @click="setLang('en')">EN</button>
       <button class="lang-btn" :class="{active: lang==='he'}" @click="setLang('he')">עב</button>
+      <button class="lang-btn" :class="{active: lang==='es'}" @click="setLang('es')">ES</button>
     </div>
   </div>
 
@@ -302,22 +303,22 @@ h1 {
 const { createApp, ref, computed, provide, watchEffect } = Vue;
 
 const STRINGS = {
-  title:       { en: 'SQUAVA',           he: 'סקוואבה' },
-  back:        { en: 'All Games',       he: 'כל המשחקים' },
-  p1:          { en: 'Amber',           he: 'כתום' },
-  p2:          { en: 'Indigo',          he: 'סגול' },
-  draws:       { en: 'Draws',           he: 'תיקו' },
-  wonVerb:     { en: 'wins!',           he: 'ניצח!' },
-  lostVerb:    { en: 'made 3 in a row', he: 'שלישייה — הפסיד' },
-  turnWord:    { en: "'s turn",         he: 'תור' },
-  draw:        { en: "It's a draw!",    he: 'תיקו!' },
-  thinking:    { en: 'Thinking…',       he: 'המחשב חושב…' },
-  newGame:     { en: 'New Game',        he: 'משחק חדש' },
-  resetScores: { en: 'Reset scores',    he: 'אפס ניקוד' },
-  mode2p:      { en: '👥 2 Players',   he: '👥 2 שחקנים' },
-  modeEasy:    { en: '🤖 Easy',        he: '🤖 קל' },
-  modeHard:    { en: '🤖 Hard',        he: '🤖 קשה' },
-  modeNet:     { en: '🌐 Network',    he: '🌐 רשת' },
+  title:       { en: 'SQUAVA',           he: 'סקוואבה',           es: 'SQUAVA' },
+  back:        { en: 'All Games',       he: 'כל המשחקים',        es: 'Todos los juegos' },
+  p1:          { en: 'Amber',           he: 'כתום',              es: 'Ámbar' },
+  p2:          { en: 'Indigo',          he: 'סגול',              es: 'Índigo' },
+  draws:       { en: 'Draws',           he: 'תיקו',              es: 'Empates' },
+  wonVerb:     { en: 'wins!',           he: 'ניצח!',             es: '¡gana!' },
+  lostVerb:    { en: 'made 3 in a row', he: 'שלישייה — הפסיד',   es: 'hizo 3 en línea' },
+  turnWord:    { en: "'s turn",         he: 'תור',               es: 'turno' },
+  draw:        { en: "It's a draw!",    he: 'תיקו!',             es: '¡Empate!' },
+  thinking:    { en: 'Thinking…',       he: 'המחשב חושב…',       es: 'Pensando…' },
+  newGame:     { en: 'New Game',        he: 'משחק חדש',         es: 'Nueva partida' },
+  resetScores: { en: 'Reset scores',    he: 'אפס ניקוד',        es: 'Reiniciar puntos' },
+  mode2p:      { en: '👥 2 Players',   he: '👥 2 שחקנים',      es: '👥 2 Jugadores' },
+  modeEasy:    { en: '🤖 Easy',        he: '🤖 קל',             es: '🤖 Fácil' },
+  modeHard:    { en: '🤖 Hard',        he: '🤖 קשה',            es: '🤖 Difícil' },
+  modeNet:     { en: '🌐 Network',    he: '🌐 רשת',            es: '🌐 Red' },
 };
 
 // All 4-cell lines on a 5×5 board (horizontal, vertical, diagonal)
@@ -612,7 +613,7 @@ createApp({
         const d = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}');
         if (d.lang)        lang.value        = d.lang;
         const urlLang = new URLSearchParams(location.search).get('lang');
-        if (urlLang && ["en","he"].includes(urlLang)) lang.value = urlLang;
+        if (urlLang && ["en","he","es"].includes(urlLang)) lang.value = urlLang;
         if (d.mode)        mode.value        = d.mode;
         if (d.humanScores) humanScores.value = d.humanScores;
         if (d.aiScores)    aiScores.value    = d.aiScores;

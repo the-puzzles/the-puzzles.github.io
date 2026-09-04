@@ -247,6 +247,7 @@ h1 .w2 { color: #fde047; }
     <div class="lang-toggle">
       <button class="lang-btn" :class="{active: lang==='en'}" @click="lang='en'">EN</button>
       <button class="lang-btn" :class="{active: lang==='he'}" @click="lang='he'">עב</button>
+      <button class="lang-btn" :class="{active: lang==='es'}" @click="lang='es'">ES</button>
     </div>
   </div>
 
@@ -319,6 +320,7 @@ const { createApp, ref, computed, watch, onMounted, onUnmounted, watchEffect } =
 const T = {
   en: { title:'WOODOKU', back:'Back', score:'SCORE', best:'BEST', pick:'Pick a block', place:'Click board to place', over:'Game Over', newGame:'New Game', newBest:'New Best!', viewBoard:'View board' },
   he: { title:'וודוקו', back:'חזרה', score:'ניקוד', best:'שיא', pick:'בחר קוביה', place:'לחץ להנחה', over:'המשחק נגמר', newGame:'משחק חדש', newBest:'שיא חדש!', viewBoard:'צפה בלוח' },
+  es: { title:'WOODOKU', back:'Volver', score:'PUNTOS', best:'RÉCORD', pick:'Elige un bloque', place:'Toca el tablero para colocarlo', over:'Fin del juego', newGame:'Nueva partida', newBest:'¡Nuevo récord!', viewBoard:'Ver tablero' },
 };
 
 const SHAPES = [
@@ -417,7 +419,7 @@ createApp({
   setup() {
     const lang = ref(localStorage.getItem('woodoku-lang') || 'en');
     const urlLang = new URLSearchParams(location.search).get('lang');
-    if (urlLang && ["en","he"].includes(urlLang)) lang.value = urlLang;
+    if (urlLang && ["en","he","es"].includes(urlLang)) lang.value = urlLang;
     const isRTL = computed(() => lang.value === 'he');
     const t = k => T[lang.value][k];
     watch(lang, v => localStorage.setItem('woodoku-lang', v));
