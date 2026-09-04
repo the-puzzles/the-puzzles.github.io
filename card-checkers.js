@@ -20,7 +20,7 @@ CATEGORIES.find(c=>c.label==="Classic Games").games.push({
     "Move one step diagonally forward",
     "Capturing is mandatory whenever a jump is available",
     "Chain multiple jumps in one turn when you can",
-    "Reach the far row to crown a king — kings move any diagonal",
+    "Reach the far row to crown a king — kings fly any distance along a clear diagonal",
     "2-player mode or vs computer (Easy / Hard)"
   ],
   "rules_he": [
@@ -28,7 +28,7 @@ CATEGORIES.find(c=>c.label==="Classic Games").games.push({
     "זוזו צעד אחד באלכסון קדימה",
     "קפיצה היא חובה כל אימת שהיא אפשרית",
     "שרשרו כמה קפיצות באותו תור כשאפשר",
-    "הגיעו לשורה הרחוקה כדי להפוך למלך — מלך זז בכל אלכסון",
+    "הגיעו לשורה הרחוקה כדי להפוך למלך — מלך טס כל מרחק לאורך אלכסון פנוי",
     "שני שחקנים או נגד מחשב (קל / קשה)"
   ],
   "rules_es": [
@@ -36,7 +36,7 @@ CATEGORIES.find(c=>c.label==="Classic Games").games.push({
     "Muévete un paso en diagonal hacia adelante",
     "Capturar es obligatorio siempre que sea posible",
     "Encadena varios saltos en el mismo turno si puedes",
-    "Llega a la fila lejana para coronar una dama — se mueve en cualquier diagonal",
+    "Llega a la fila lejana para coronar una dama — vuela cualquier distancia por una diagonal libre",
     "Modo 2 jugadores o contra la computadora (Fácil / Difícil)"
   ],
   "preview": "<div class=\"preview\" style=\"grid-template-columns:repeat(4,36px);gap:1px;background:#1a120b;border-radius:6px;padding:1px\">\n          <div class=\"preview-cell\" style=\"background:#d9b989;border-radius:3px\"></div>\n          <div class=\"preview-cell\" style=\"background:#241611;border-radius:3px\"><div class=\"preview-dot\" style=\"background:radial-gradient(circle at 38% 32%,#52525b,#0a0a0a);box-shadow:0 0 0 1.5px #c99a52;width:22px;height:22px;border-radius:50%\"></div></div>\n          <div class=\"preview-cell\" style=\"background:#d9b989;border-radius:3px\"></div>\n          <div class=\"preview-cell\" style=\"background:#241611;border-radius:3px\"><div class=\"preview-dot\" style=\"background:radial-gradient(circle at 38% 32%,#52525b,#0a0a0a);box-shadow:0 0 0 1.5px #c99a52;width:22px;height:22px;border-radius:50%\"></div></div>\n          <div class=\"preview-cell\" style=\"background:#241611;border-radius:3px\"><div class=\"preview-dot\" style=\"background:radial-gradient(circle at 38% 32%,#52525b,#0a0a0a);box-shadow:0 0 0 1.5px #c99a52;width:22px;height:22px;border-radius:50%\"></div></div>\n          <div class=\"preview-cell\" style=\"background:#d9b989;border-radius:3px\"></div>\n          <div class=\"preview-cell\" style=\"background:#241611;border-radius:3px\"><div class=\"preview-dot\" style=\"background:radial-gradient(circle at 38% 32%,#52525b,#0a0a0a);box-shadow:0 0 0 1.5px #c99a52;width:22px;height:22px;border-radius:50%\"></div></div>\n          <div class=\"preview-cell\" style=\"background:#d9b989;border-radius:3px\"></div>\n          <div class=\"preview-cell\" style=\"background:#241611;border-radius:3px\"></div>\n          <div class=\"preview-cell\" style=\"background:#d9b989;border-radius:3px\"></div>\n          <div class=\"preview-cell\" style=\"background:#241611;border-radius:3px\"></div>\n          <div class=\"preview-cell\" style=\"background:#d9b989;border-radius:3px\"></div>\n          <div class=\"preview-cell\" style=\"background:#d9b989;border-radius:3px\"></div>\n          <div class=\"preview-cell\" style=\"background:#241611;border-radius:3px\"><div class=\"preview-dot\" style=\"background:radial-gradient(circle at 38% 32%,#f87171,#7f1d1d);box-shadow:0 0 0 1.5px #dc2626;width:22px;height:22px;border-radius:50%\"></div></div>\n          <div class=\"preview-cell\" style=\"background:#d9b989;border-radius:3px\"></div>\n          <div class=\"preview-cell\" style=\"background:#241611;border-radius:3px\"><div class=\"preview-dot\" style=\"background:radial-gradient(circle at 38% 32%,#f87171,#7f1d1d);box-shadow:0 0 0 1.5px #dc2626;width:22px;height:22px;border-radius:50%\"></div></div>\n        </div>"

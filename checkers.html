@@ -363,7 +363,8 @@ function initialBoard() {
   return b;
 }
 
-// Men can move only forward diagonally, kings move any diagonal direction.
+// Men can move only forward diagonally, kings fly any distance in any
+// diagonal direction (International/Russian-style "flying king").
 function slideDirs(v) {
   if (isKing(v)) return DIAG;
   return owner(v) === 1 ? [[-1,-1],[-1,1]] : [[1,-1],[1,1]];
@@ -371,25 +372,44 @@ function slideDirs(v) {
 
 function slideTargets(board, idx) {
   const [r, c] = rc(idx);
+  const v = board[idx];
   const out = [];
-  for (const [dr, dc] of slideDirs(board[idx])) {
-    const nr = r+dr, nc = c+dc;
-    if (inBounds(nr, nc) && board[idxOf(nr,nc)] === 0) out.push(idxOf(nr,nc));
+  for (const [dr, dc] of slideDirs(v)) {
+    let nr = r+dr, nc = c+dc;
+    while (inBounds(nr, nc) && board[idxOf(nr,nc)] === 0) {
+      out.push(idxOf(nr,nc));
+      if (!isKing(v)) break;
+      nr += dr; nc += dc;
+    }
   }
   return out;
 }
 
 // Both men and kings may capture in any of the 4 diagonal directions
-// (standard American rule: a man can jump backward to capture).
+// (standard American rule: a man can jump backward to capture). A flying
+// king may jump a piece from any distance and land on any empty square
+// past it, as long as nothing else lies between it and the captured piece.
 function jumpTargets(board, idx) {
   const v = board[idx], pl = owner(v);
   const [r, c] = rc(idx);
   const out = [];
   for (const [dr, dc] of DIAG) {
-    const mr = r+dr, mc = c+dc, lr = r+2*dr, lc = c+2*dc;
-    if (!inBounds(lr, lc)) continue;
-    const mi = idxOf(mr,mc), li = idxOf(lr,lc);
-    if (owner(board[mi]) !== 0 && owner(board[mi]) !== pl && board[li] === 0) out.push({ mid: mi, land: li });
+    if (isKing(v)) {
+      let mr = r+dr, mc = c+dc;
+      while (inBounds(mr, mc) && board[idxOf(mr,mc)] === 0) { mr += dr; mc += dc; }
+      if (!inBounds(mr, mc) || owner(board[idxOf(mr,mc)]) === pl) continue;
+      const mi = idxOf(mr,mc);
+      let lr = mr+dr, lc = mc+dc;
+      while (inBounds(lr, lc) && board[idxOf(lr,lc)] === 0) {
+        out.push({ mid: mi, land: idxOf(lr,lc) });
+        lr += dr; lc += dc;
+      }
+    } else {
+      const mr = r+dr, mc = c+dc, lr = r+2*dr, lc = c+2*dc;
+      if (!inBounds(lr, lc)) continue;
+      const mi = idxOf(mr,mc), li = idxOf(lr,lc);
+      if (owner(board[mi]) !== 0 && owner(board[mi]) !== pl && board[li] === 0) out.push({ mid: mi, land: li });
+    }
   }
   return out;
 }
