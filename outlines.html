@@ -294,24 +294,25 @@ h1 {
 
   <!-- Top bar: back link + language toggle -->
   <div class="top-bar">
-    <a href="index.html" class="back-link">{{ isRTL ? 'כל המשחקים' : 'All Games' }}</a>
+    <a href="index.html" class="back-link">{{ t('All Games', 'כל המשחקים', 'Todos los juegos') }}</a>
     <div style="display:flex;gap:8px;align-items:center">
-    <button class="btn-reset-prog" @click="resetAllProgress">{{ isRTL ? 'איפוס' : 'reset' }}</button>
+    <button class="btn-reset-prog" @click="resetAllProgress">{{ t('reset', 'איפוס', 'reiniciar') }}</button>
     <div class="lang-toggle">
       <button class="lang-btn" :class="{ active: lang === 'en' }" @click="setLang('en')">EN</button>
       <button class="lang-btn" :class="{ active: lang === 'he' }" @click="setLang('he')">עב</button>
+      <button class="lang-btn" :class="{ active: lang === 'es' }" @click="setLang('es')">ES</button>
     </div>
     </div>
   </div>
 
-  <h1>{{ isRTL ? 'קווי מתאר' : 'OUTLINES' }}</h1>
-  <p class="tagline">{{ isRTL ? 'נחשו את שם המדינה לפי צורתה — השתמשו ברמזים אם נתקעתם' : 'Name the country from its shape — use hints if you\'re stuck' }}</p>
+  <h1>{{ t('OUTLINES', 'קווי מתאר', 'CONTORNOS') }}</h1>
+  <p class="tagline">{{ t('Name the country from its shape — use hints if you\'re stuck', 'נחשו את שם המדינה לפי צורתה — השתמשו ברמזים אם נתקעתם', 'Adivina el país por su silueta — usa pistas si te atascas') }}</p>
 
 
   <!-- ── Results screen ──────────────────────────────────────────── -->
   <div v-if="gameOver" class="results">
     <div class="results-icon">🌍</div>
-    <h2>{{ isRTL ? '!הסיבוב הסתיים' : 'Round Complete!' }}</h2>
+    <h2>{{ t('Round Complete!', '!הסיבוב הסתיים', '¡Ronda completa!') }}</h2>
     <div class="results-score">{{ totalScore }} / {{ maxScore }}</div>
     <p class="results-sub">{{ resultMessage }}</p>
 
@@ -320,12 +321,12 @@ h1 {
         <span class="result-flag">{{ r.solved ? '✓' : '✗' }}</span>
         <span class="result-name">{{ r.name }}</span>
         <span class="result-pts" :class="`pts-${r.pts}`">
-          {{ r.solved ? `+${r.pts}` : (isRTL ? 'דילגת' : 'skipped') }}
+          {{ r.solved ? `+${r.pts}` : t('skipped', 'דילגת', 'omitido') }}
         </span>
       </div>
     </div>
 
-    <button class="btn-play-again" @click="startRound">{{ isRTL ? 'שחקו שוב ↺' : 'Play Again ↺' }}</button>
+    <button class="btn-play-again" @click="startRound">{{ t('Play Again ↺', 'שחקו שוב ↺', 'Jugar de nuevo ↺') }}</button>
   </div>
 
   <!-- ── Load error ─────────────────────────────────────────────── -->
@@ -333,13 +334,13 @@ h1 {
     <div style="font-size:2rem;margin-bottom:12px">🌐</div>
     <p style="color:#f85149;font-size:0.88rem;margin-bottom:16px">{{ loadError }}</p>
     <button @click="loadData" style="background:#0d3d2a;border:2px solid #34d399;color:#34d399;padding:10px 24px;border-radius:8px;cursor:pointer;font-size:0.88rem;font-family:inherit;font-weight:700">
-      {{ isRTL ? 'נסו שוב ↺' : 'Retry ↺' }}
+      {{ t('Retry ↺', 'נסו שוב ↺', 'Reintentar ↺') }}
     </button>
   </div>
 
   <!-- ── Loading ─────────────────────────────────────────────────── -->
   <div v-else-if="loading" style="color:#6e7681;font-size:0.88rem;margin-top:40px">
-    {{ isRTL ? '…טוען נתוני מפה' : 'Loading map data…' }}
+    {{ t('Loading map data…', '…טוען נתוני מפה', 'Cargando datos del mapa…') }}
   </div>
 
   <!-- ── Game ────────────────────────────────────────────────────── -->
@@ -357,7 +358,7 @@ h1 {
           }"
         ></div>
       </div>
-      <span>{{ isRTL ? 'ניקוד' : 'Score' }}: <strong>{{ totalScore }}</strong></span>
+      <span>{{ t('Score', 'ניקוד', 'Puntos') }}: <strong>{{ totalScore }}</strong></span>
     </div>
 
     <!-- Country shape -->
@@ -373,7 +374,7 @@ h1 {
           stroke-linejoin="round"
         />
       </svg>
-      <span v-if="!svgPathData" class="loading-msg">{{ renderError || (isRTL ? '…מרנדר' : 'Rendering…') }}</span>
+      <span v-if="!svgPathData" class="loading-msg">{{ renderError || t('Rendering…', '…מרנדר', 'Renderizando…') }}</span>
     </div>
 
     <!-- Letter blanks (dir flips flex layout for RTL) -->
@@ -409,7 +410,7 @@ h1 {
         :class="{ shake: shakeInput }"
         :dir="isRTL ? 'rtl' : 'ltr'"
         type="text"
-        :placeholder="isRTL ? '…הקלידו שם מדינה' : 'Type country name…'"
+        :placeholder="t('Type country name…', '…הקלידו שם מדינה', 'Escribe el nombre del país…')"
         autocomplete="off"
         autocorrect="off"
         autocapitalize="off"
@@ -418,7 +419,7 @@ h1 {
         @input="clearFeedback"
       />
       <button class="btn-submit" @click="submitGuess" :disabled="!guess.trim()">
-        {{ isRTL ? 'שלח' : 'Go →' }}
+        {{ t('Go →', 'שלח', 'Ir →') }}
       </button>
     </div>
 
@@ -433,20 +434,20 @@ h1 {
         :disabled="hintsUsed >= MAX_HINTS || solved"
         @click="useHint"
       >
-        💡 {{ isRTL ? 'רמז' : 'Hint' }}
+        💡 {{ t('Hint', 'רמז', 'Pista') }}
         <div class="hint-pips">
           <div v-for="n in MAX_HINTS" :key="n" class="hint-pip" :class="{ used: n <= hintsUsed }"></div>
         </div>
       </button>
 
       <button v-if="!solved && !revealedAnswer" class="btn-skip" @click="skipCountry">
-        {{ isRTL ? 'דלגו ↷' : 'Skip ↷' }}
+        {{ t('Skip ↷', 'דלגו ↷', 'Saltar ↷') }}
       </button>
 
       <button v-if="solved || revealedAnswer" class="btn-next" @click="nextCountry">
-        {{ isRTL
-          ? (currentIdx + 1 < ROUND_SIZE ? '← הבא' : 'סיום')
-          : (currentIdx + 1 < ROUND_SIZE ? 'Next →' : 'Finish') }}
+        {{ currentIdx + 1 < ROUND_SIZE
+          ? t('Next →', '← הבא', 'Siguiente →')
+          : t('Finish', 'סיום', 'Terminar') }}
       </button>
     </div>
   </template>
@@ -463,45 +464,45 @@ const SVG_W = 560, SVG_H = 300, PAD = 28;
 const LETTER_RE = /\p{L}/u;
 
 const COUNTRIES = [
-  { id: '32',  name: 'Argentina',      he: 'ארגנטינה' },
-  { id: '36',  name: 'Australia',      he: 'אוסטרליה' },
-  { id: '76',  name: 'Brazil',         he: 'ברזיל' },
-  { id: '124', name: 'Canada',         he: 'קנדה' },
-  { id: '152', name: 'Chile',          he: "צ'ילה" },
-  { id: '156', name: 'China',          he: 'סין',            aliases: ['prc'] },
-  { id: '170', name: 'Colombia',       he: 'קולומביה' },
-  { id: '818', name: 'Egypt',          he: 'מצרים' },
-  { id: '246', name: 'Finland',        he: 'פינלנד' },
-  { id: '250', name: 'France',         he: 'צרפת' },
-  { id: '276', name: 'Germany',        he: 'גרמניה' },
-  { id: '300', name: 'Greece',         he: 'יוון' },
-  { id: '356', name: 'India',          he: 'הודו' },
-  { id: '360', name: 'Indonesia',      he: 'אינדונזיה' },
-  { id: '364', name: 'Iran',           he: 'איראן' },
-  { id: '380', name: 'Italy',          he: 'איטליה' },
-  { id: '392', name: 'Japan',          he: 'יפן' },
-  { id: '404', name: 'Kenya',          he: 'קניה' },
-  { id: '484', name: 'Mexico',         he: 'מקסיקו' },
-  { id: '504', name: 'Morocco',        he: 'מרוקו' },
-  { id: '554', name: 'New Zealand',    he: 'ניו זילנד' },
-  { id: '566', name: 'Nigeria',        he: 'ניגריה' },
-  { id: '578', name: 'Norway',         he: 'נורווגיה' },
-  { id: '604', name: 'Peru',           he: 'פרו' },
-  { id: '616', name: 'Poland',         he: 'פולין' },
-  { id: '620', name: 'Portugal',       he: 'פורטוגל' },
-  { id: '643', name: 'Russia',         he: 'רוסיה',          aliases: ['russian federation'] },
-  { id: '682', name: 'Saudi Arabia',   he: 'ערב הסעודית' },
-  { id: '710', name: 'South Africa',   he: 'דרום אפריקה' },
-  { id: '410', name: 'South Korea',    he: 'דרום קוריאה',    aliases: ['korea'] },
-  { id: '724', name: 'Spain',          he: 'ספרד' },
-  { id: '752', name: 'Sweden',         he: 'שוודיה' },
-  { id: '756', name: 'Switzerland',    he: 'שוויץ' },
-  { id: '764', name: 'Thailand',       he: 'תאילנד' },
-  { id: '792', name: 'Turkey',         he: 'טורקיה',         aliases: ['türkiye', 'turkiye'] },
-  { id: '804', name: 'Ukraine',        he: 'אוקראינה' },
-  { id: '826', name: 'United Kingdom', he: 'הממלכה המאוחדת', aliases: ['uk', 'great britain', 'britain'], heAliases: ['בריטניה', 'אנגליה'] },
-  { id: '840', name: 'United States',  he: 'ארצות הברית',   aliases: ['usa', 'us', 'america', 'united states of america'], heAliases: ['ארהב', 'אמריקה'] },
-  { id: '704', name: 'Vietnam',        he: 'וייטנאם',        aliases: ['viet nam'] },
+  { id: '32',  name: 'Argentina',      he: 'ארגנטינה',        es: 'Argentina' },
+  { id: '36',  name: 'Australia',      he: 'אוסטרליה',        es: 'Australia' },
+  { id: '76',  name: 'Brazil',         he: 'ברזיל',           es: 'Brasil' },
+  { id: '124', name: 'Canada',         he: 'קנדה',            es: 'Canadá',        esAliases: ['canada'] },
+  { id: '152', name: 'Chile',          he: "צ'ילה",           es: 'Chile' },
+  { id: '156', name: 'China',          he: 'סין',            aliases: ['prc'], es: 'China' },
+  { id: '170', name: 'Colombia',       he: 'קולומביה',        es: 'Colombia' },
+  { id: '818', name: 'Egypt',          he: 'מצרים',           es: 'Egipto' },
+  { id: '246', name: 'Finland',        he: 'פינלנד',          es: 'Finlandia' },
+  { id: '250', name: 'France',         he: 'צרפת',            es: 'Francia' },
+  { id: '276', name: 'Germany',        he: 'גרמניה',          es: 'Alemania' },
+  { id: '300', name: 'Greece',         he: 'יוון',            es: 'Grecia' },
+  { id: '356', name: 'India',          he: 'הודו',            es: 'India' },
+  { id: '360', name: 'Indonesia',      he: 'אינדונזיה',       es: 'Indonesia' },
+  { id: '364', name: 'Iran',           he: 'איראן',           es: 'Irán',          esAliases: ['iran'] },
+  { id: '380', name: 'Italy',          he: 'איטליה',          es: 'Italia' },
+  { id: '392', name: 'Japan',          he: 'יפן',             es: 'Japón',         esAliases: ['japon'] },
+  { id: '404', name: 'Kenya',          he: 'קניה',            es: 'Kenia' },
+  { id: '484', name: 'Mexico',         he: 'מקסיקו',          es: 'México',        esAliases: ['mexico'] },
+  { id: '504', name: 'Morocco',        he: 'מרוקו',           es: 'Marruecos' },
+  { id: '554', name: 'New Zealand',    he: 'ניו זילנד',        es: 'Nueva Zelanda' },
+  { id: '566', name: 'Nigeria',        he: 'ניגריה',          es: 'Nigeria' },
+  { id: '578', name: 'Norway',         he: 'נורווגיה',        es: 'Noruega' },
+  { id: '604', name: 'Peru',           he: 'פרו',             es: 'Perú',          esAliases: ['peru'] },
+  { id: '616', name: 'Poland',         he: 'פולין',           es: 'Polonia' },
+  { id: '620', name: 'Portugal',       he: 'פורטוגל',         es: 'Portugal' },
+  { id: '643', name: 'Russia',         he: 'רוסיה',          aliases: ['russian federation'], es: 'Rusia', esAliases: ['federación rusa', 'federacion rusa'] },
+  { id: '682', name: 'Saudi Arabia',   he: 'ערב הסעודית',     es: 'Arabia Saudita', esAliases: ['arabia saudi'] },
+  { id: '710', name: 'South Africa',   he: 'דרום אפריקה',      es: 'Sudáfrica',     esAliases: ['sudafrica'] },
+  { id: '410', name: 'South Korea',    he: 'דרום קוריאה',    aliases: ['korea'], es: 'Corea del Sur', esAliases: ['corea'] },
+  { id: '724', name: 'Spain',          he: 'ספרד',            es: 'España',        esAliases: ['espana'] },
+  { id: '752', name: 'Sweden',         he: 'שוודיה',          es: 'Suecia' },
+  { id: '756', name: 'Switzerland',    he: 'שוויץ',           es: 'Suiza' },
+  { id: '764', name: 'Thailand',       he: 'תאילנד',          es: 'Tailandia' },
+  { id: '792', name: 'Turkey',         he: 'טורקיה',         aliases: ['türkiye', 'turkiye'], es: 'Turquía', esAliases: ['turquia'] },
+  { id: '804', name: 'Ukraine',        he: 'אוקראינה',        es: 'Ucrania' },
+  { id: '826', name: 'United Kingdom', he: 'הממלכה המאוחדת', aliases: ['uk', 'great britain', 'britain'], heAliases: ['בריטניה', 'אנגליה'], es: 'Reino Unido', esAliases: ['gran bretaña', 'gran bretana', 'inglaterra', 'uk'] },
+  { id: '840', name: 'United States',  he: 'ארצות הברית',   aliases: ['usa', 'us', 'america', 'united states of america'], heAliases: ['ארהב', 'אמריקה'], es: 'Estados Unidos', esAliases: ['eeuu', 'ee.uu.', 'eua', 'estados unidos de america', 'usa'] },
+  { id: '704', name: 'Vietnam',        he: 'וייטנאם',        aliases: ['viet nam'], es: 'Vietnam' },
 ];
 
 function shuffle(arr) {
@@ -549,6 +550,13 @@ createApp({
     const inputEl          = ref(null);
 
     const isRTL = computed(() => lang.value === 'he');
+
+    // Text-selection helper for the three supported UI languages.
+    function t(en, he, es) {
+      if (lang.value === 'he') return he;
+      if (lang.value === 'es') return es;
+      return en;
+    }
 
     // Sync full-page dir and lang so scrollbars, browser spellcheck, etc. are correct
     watchEffect(() => {
@@ -631,7 +639,7 @@ createApp({
       if (worldData.value) {
         if (!loadSavedRound()) startRound();
         const urlLang = new URLSearchParams(location.search).get('lang');
-        if (urlLang && ["en","he"].includes(urlLang)) lang.value = urlLang;
+        if (urlLang && ["en","he","es"].includes(urlLang)) lang.value = urlLang;
       } else {
         loadError.value = 'Could not load map data — check your connection and try again.';
       }
@@ -676,7 +684,9 @@ createApp({
     // Name in active language
     const currentName = computed(() => {
       if (!current.value) return '';
-      return lang.value === 'he' ? (current.value.he || current.value.name) : current.value.name;
+      if (lang.value === 'he') return current.value.he || current.value.name;
+      if (lang.value === 'es') return current.value.es || current.value.name;
+      return current.value.name;
     });
 
     // Valid answers in active language
@@ -687,6 +697,12 @@ createApp({
           current.value.he || current.value.name,
           ...(current.value.heAliases || []),
         ].map(s => s.trim());
+      }
+      if (lang.value === 'es') {
+        return [
+          current.value.es || current.value.name,
+          ...(current.value.esAliases || []),
+        ].map(s => s.toLowerCase());
       }
       return [
         current.value.name,
@@ -759,15 +775,17 @@ createApp({
         totalScore.value += pts;
         roundResults.value.push({ name: currentName.value, solved: true, pts });
         solved.value = true;
-        feedbackMsg.value  = isHe
-          ? `נכון! +${pts}`
-          : `✓ Correct! +${pts} pt${pts !== 1 ? 's' : ''}`;
+        feedbackMsg.value  = t(
+          `✓ Correct! +${pts} pt${pts !== 1 ? 's' : ''}`,
+          `נכון! +${pts}`,
+          `✓ ¡Correcto! +${pts} pt${pts !== 1 ? 's' : ''}`
+        );
         feedbackType.value = 'correct';
         showCorrectFlash.value = true;
         setTimeout(() => { showCorrectFlash.value = false; }, 600);
         guess.value = '';
       } else {
-        feedbackMsg.value  = isHe ? 'לא נכון — נסו שוב!' : 'Not quite — try again!';
+        feedbackMsg.value  = t('Not quite — try again!', 'לא נכון — נסו שוב!', 'Casi — ¡intenta de nuevo!');
         feedbackType.value = 'wrong';
         shakeInput.value   = true;
         setTimeout(() => { shakeInput.value = false; }, 400);
@@ -787,7 +805,7 @@ createApp({
       const name = currentName.value;
       roundResults.value.push({ name, solved: false, pts: 0 });
       revealedAnswer.value = true;
-      feedbackMsg.value  = lang.value === 'he' ? `התשובה: ${name}` : `The answer was: ${name}`;
+      feedbackMsg.value  = t(`The answer was: ${name}`, `התשובה: ${name}`, `La respuesta era: ${name}`);
       feedbackType.value = 'skipped';
       guess.value = '';
     }
@@ -796,12 +814,11 @@ createApp({
     const maxScore = computed(() => ROUND_SIZE * (MAX_HINTS + 1));
 
     const resultMessage = computed(() => {
-      const pct  = totalScore.value / maxScore.value;
-      const isHe = lang.value === 'he';
-      if (pct >= 0.9) return isHe ? 'מדהים! ידע גיאוגרפי מרשים 🗺️' : 'Outstanding! You really know your maps. 🗺️';
-      if (pct >= 0.7) return isHe ? 'כל הכבוד! עוד קצת ומשלימים את כולן.' : 'Great work! A few more to master.';
-      if (pct >= 0.5) return isHe ? 'לא רע! כדאי לחקור עוד.' : 'Decent! Keep exploring the world.';
-      return isHe ? 'כדאי להמשיך לשחק — הצורות יתחילו להידבק!' : 'Keep playing — the shapes will start to stick!';
+      const pct = totalScore.value / maxScore.value;
+      if (pct >= 0.9) return t('Outstanding! You really know your maps. 🗺️', 'מדהים! ידע גיאוגרפי מרשים 🗺️', '¡Excepcional! Realmente conoces los mapas. 🗺️');
+      if (pct >= 0.7) return t('Great work! A few more to master.', 'כל הכבוד! עוד קצת ומשלימים את כולן.', '¡Buen trabajo! Unos pocos más para dominarlo.');
+      if (pct >= 0.5) return t('Decent! Keep exploring the world.', 'לא רע! כדאי לחקור עוד.', '¡Decente! Sigue explorando el mundo.');
+      return t('Keep playing — the shapes will start to stick!', 'כדאי להמשיך לשחק — הצורות יתחילו להידבק!', '¡Sigue jugando — las formas empezarán a quedarse!');
     });
 
     // ── Auto-save on state changes ────────────────────────────────────
@@ -821,7 +838,7 @@ createApp({
     onUnmounted(() => { clearTimeout(saveTimer); window.removeEventListener('keydown', handleKey); });
 
     return {
-      lang, isRTL, setLang,
+      lang, isRTL, t, setLang,
       resetAllProgress,
       loading, loadError, loadData, worldData, queue, currentIdx, hintsUsed,
       guess, feedbackMsg, feedbackType, solved, revealedAnswer,
