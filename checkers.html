@@ -121,15 +121,16 @@ h1 {
   background: rgba(240,185,143,0.12); pointer-events: none;
 }
 
-/* pieces — a persistent, absolutely-positioned overlay so a piece is one
-   continuous element that glides (and captured pieces fade in place)
-   instead of disappearing from one square and popping in at another. */
-.piece-layer { position: absolute; inset: 2px; pointer-events: none; }
+/* pieces — placed in the SAME grid as the squares (via display:contents on
+   the transition-group wrapper) so a piece's cell is always pixel-identical
+   to the square it sits on, no matter how the browser rounds --cell at a
+   given viewport width. Movement is animated by measuring the piece's
+   actual rendered position before/after a grid-cell change and playing a
+   FLIP transform, rather than duplicating the grid's own track math. */
+.piece-layer { display: contents; pointer-events: none; }
 .piece-slot {
-  position: absolute;
   width: var(--cell); height: var(--cell);
   display: flex; align-items: center; justify-content: center;
-  transition: left 0.26s ease, top 0.26s ease;
 }
 .piece-move { transition: none !important; }
 .piece {
@@ -311,6 +312,7 @@ h1 {
         'last-from': lastMove && lastMove.from === i,
         'last-to': lastMove && lastMove.to === i,
       }]"
+      :style="{ gridColumn: (i % 8) + 1, gridRow: Math.floor(i / 8) + 1 }"
       @click="clickCell(i)"
     ></div>
 
@@ -319,7 +321,8 @@ h1 {
         v-for="p in livePieces"
         :key="p.id"
         class="piece-slot"
-        :style="pieceStyle(p.idx)"
+        :ref="el => setPieceRef(p.id, el)"
+        :style="{ gridColumn: (p.idx % 8) + 1, gridRow: Math.floor(p.idx / 8) + 1 }"
       >
         <div class="piece" :class="[p.owner === 1 ? 'p1' : 'p2', { 'must-jump': mustCapture && forcedIdxSet.has(p.idx) }]">
           <span v-if="p.king" class="crown">♛</span>
@@ -357,7 +360,7 @@ h1 {
 
 </div>
 <script>
-const { createApp, ref, computed, provide, watchEffect } = Vue;
+const { createApp, ref, computed, provide, watchEffect, nextTick } = Vue;
 
 const STRINGS = {
   title:       { en: 'CHECKERS',      he: 'דמקה',            es: 'DAMAS' },
@@ -637,15 +640,35 @@ createApp({
       livePieces.value = pieces;
     }
     function pieceAt(idx) { return livePieces.value.find(p => p.idx === idx); }
+
+    const pieceEls = new Map();
+    function setPieceRef(id, el) { if (el) pieceEls.set(id, el); else pieceEls.delete(id); }
+
+    // Moves a piece to a new grid cell, then plays a FLIP transform animation
+    // measured from its actual before/after rendered position — this can't
+    // drift out of sync with the grid's own track sizing the way duplicating
+    // the grid's math in a calc() formula could.
     function movePieceTo(fromIdx, toIdx, crown) {
+      const piece = pieceAt(fromIdx);
+      const el = piece && pieceEls.get(piece.id);
+      const first = el ? el.getBoundingClientRect() : null;
       livePieces.value = livePieces.value.map(p => p.idx === fromIdx ? { ...p, idx: toIdx, king: p.king || !!crown } : p);
+      if (!el || !first) return;
+      nextTick(() => {
+        const last = el.getBoundingClientRect();
+        const dx = first.left - last.left, dy = first.top - last.top;
+        if (!dx && !dy) return;
+        el.style.transition = 'none';
+        el.style.transform = `translate(${dx}px, ${dy}px)`;
+        el.getBoundingClientRect();
+        requestAnimationFrame(() => {
+          el.style.transition = 'transform 0.26s ease';
+          el.style.transform = '';
+        });
+      });
     }
     function removePieceAt(idx) {
       livePieces.value = livePieces.value.filter(p => p.idx !== idx);
-    }
-    function pieceStyle(idx) {
-      const [r, c] = rc(idx);
-      return { left: `calc((var(--cell) + 1px) * ${c})`, top: `calc((var(--cell) + 1px) * ${r})` };
     }
     resetLivePieces();
 
@@ -835,7 +858,7 @@ createApp({
     return {
       lang, mode, ruleset, board, livePieces, turn, phase, winner, selected, aiThink, animating, lastMove, netCtrl,
       scores, countP1, countP2, canAct, mustCapture, forcedIdxSet, slideTargetSet, captureTargetSet,
-      isRTL, UI, statusClass, isDark, pieceStyle,
+      isRTL, UI, statusClass, isDark, setPieceRef,
       clickCell, newGame, setMode, setRuleset, setLang, resetScores,
     };
   }
