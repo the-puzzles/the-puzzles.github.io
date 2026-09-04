@@ -17,8 +17,6 @@ body {
   touch-action: pan-y; /* allow vertical scroll, but JS will override during drag */
 }
 
-.back-link { margin-bottom: 8px; display: inline-block; font-size: 0.78rem; }
-
 h1 {
   font-size: 2.2rem;
   font-weight: 800;
@@ -353,36 +351,43 @@ h1 {
     <div v-if="won" class="win-overlay">
       <div class="win-box">
         <div class="win-icon">✨</div>
-        <h2>Board Complete!</h2>
-        <p>Every tile placed perfectly.</p>
+        <h2>{{ UI.solved }}</h2>
+        <p>{{ UI.everyTile }}</p>
         <div class="win-btns">
-          <button class="btn" @click="resetLevel">Play Again</button>
-          <button v-if="mode === 'campaign' && currentLevelIdx < LEVELS.length - 1" class="btn accent" @click="nextLevel">Next Level →</button>
-          <button v-else class="btn accent" @click="generateAndPlay('hard')">Bonus Level →</button>
+          <button class="btn" @click="resetLevel">{{ UI.playAgain }}</button>
+          <button v-if="mode === 'campaign' && currentLevelIdx < LEVELS.length - 1" class="btn accent" @click="nextLevel">{{ UI.nextLevel }}</button>
+          <button v-else class="btn accent" @click="generateAndPlay('hard')">{{ UI.bonusLevel }}</button>
         </div>
       </div>
     </div>
   </transition>
 
-  <a class="back-link" href="index.html">← All Games</a>
+  <div class="top-bar">
+    <a class="back-link" href="index.html">{{ UI.back }}</a>
+    <div class="lang-toggle">
+      <button class="lang-btn" :class="{active: lang==='en'}" @click="setLang('en')">EN</button>
+      <button class="lang-btn" :class="{active: lang==='he'}" @click="setLang('he')">עב</button>
+      <button class="lang-btn" :class="{active: lang==='es'}" @click="setLang('es')">ES</button>
+    </div>
+  </div>
   <h1>TESSERA</h1>
-  <p class="tagline">Tile the entire board — a shape can't cover a dot of its own color</p>
+  <p class="tagline">{{ UI.tagline }}</p>
 
   <div class="level-bar">
-    <span v-if="mode === 'campaign'"><strong>Level {{ currentLevelIdx + 1 }}</strong>: {{ level.name }}</span>
-    <span v-else><strong>Random</strong> · {{ difficulty }}</span>
+    <span v-if="mode === 'campaign'"><strong>{{ UI.level }} {{ currentLevelIdx + 1 }}</strong>: {{ levelName(level) }}</span>
+    <span v-else><strong>{{ UI.random }}</strong> · {{ difficultyLabel(difficulty) }}</span>
     <div class="level-pills">
       <div
         v-for="(l, i) in LEVELS" :key="i"
         class="level-pill"
         :class="{ active: mode === 'campaign' && i === currentLevelIdx, done: completedLevels.includes(i) }"
         @click="gotoLevel(i)"
-        :title="`Level ${i+1}: ${l.name}`"
+        :title="`${UI.level} ${i+1}: ${levelName(l)}`"
       ></div>
     </div>
-    <span>Moves: <strong>{{ history.length }}</strong></span>
-    <span>Covered: <strong>{{ coveredCount }} / {{ level.rows * level.cols }}</strong></span>
-    <button class="btn-reset-prog" @click="resetAllProgress">reset</button>
+    <span>{{ UI.moves }}: <strong>{{ history.length }}</strong></span>
+    <span>{{ UI.covered }}: <strong>{{ coveredCount }} / {{ level.rows * level.cols }}</strong></span>
+    <button class="btn-reset-prog" @click="resetAllProgress">{{ UI.reset }}</button>
   </div>
 
   <div class="game-container">
@@ -424,18 +429,18 @@ h1 {
       <div class="action-bar">
         <template v-if="selectedShape">
           <div class="selected-hint">
-            <span>Placing: <strong :style="{ color: COLOR_HEX[selectedShape.color] }">{{ selectedShape.color }} {{ selectedShape.type }}</strong></span>
+            <span>{{ UI.placing }}: <strong :style="{ color: COLOR_HEX[selectedShape.color] }">{{ colorLabel(selectedShape.color) }} {{ selectedShape.type }}</strong></span>
           </div>
-          <button class="rotate-btn" @click="rotateShape" title="Rotate (R)">↻</button>
+          <button class="rotate-btn" @click="rotateShape" :title="UI.rotateTitle">↻</button>
         </template>
-        <button class="btn" @click="undo" :disabled="history.length === 0">↩ Undo</button>
-        <button class="btn" @click="resetLevel">↺ Reset</button>
+        <button class="btn" @click="undo" :disabled="history.length === 0">↩ {{ UI.undo }}</button>
+        <button class="btn" @click="resetLevel">↺ {{ UI.resetLevelBtn }}</button>
       </div>
     </div>
 
     <!-- Palette -->
     <div class="palette-wrap">
-      <div class="palette-title">Shapes</div>
+      <div class="palette-title">{{ UI.shapes }}</div>
 
       <div
         v-for="shape in level.shapes" :key="shape.id"
@@ -454,16 +459,16 @@ h1 {
           </div>
         </div>
         <div class="shape-info">
-          <div class="shape-type" :style="{ color: COLOR_HEX[shape.color] }">{{ shape.type }}-piece</div>
-          <div class="shape-color-name">{{ shape.color }}</div>
+          <div class="shape-type" :style="{ color: COLOR_HEX[shape.color] }">{{ shape.type }}-{{ UI.piece }}</div>
+          <div class="shape-color-name">{{ colorLabel(shape.color) }}</div>
         </div>
         <div v-if="placedIds.has(shape.id)" class="placed-badge">✓</div>
       </div>
 
       <div class="instructions">
-        Tap or drag a shape to the board<br>
-        <kbd>R</kbd> rotate &nbsp; <kbd>Esc</kbd> cancel<br>
-        <kbd>Ctrl+Z</kbd> undo
+        {{ UI.instrTap }}<br>
+        <kbd>R</kbd> {{ UI.instrRotate }} &nbsp; <kbd>Esc</kbd> {{ UI.instrCancel }}<br>
+        <kbd>Ctrl+Z</kbd> {{ UI.instrUndo }}
       </div>
     </div>
 
@@ -471,7 +476,58 @@ h1 {
 </div>
 
 <script>
-const { createApp, ref, computed, watch, onMounted, onUnmounted } = Vue;
+const { createApp, ref, computed, watch, watchEffect, onMounted, onUnmounted } = Vue;
+
+const STRINGS = {
+  back:          { en: 'All Games',      he: 'כל המשחקים',      es: 'Todos los juegos' },
+  tagline:       { en: "Tile the entire board — a shape can't cover a dot of its own color", he: 'רצפו את כל הלוח — צורה לא יכולה לכסות נקודה בצבע שלה', es: 'Cubre todo el tablero — una pieza no puede cubrir un punto de su propio color' },
+  level:         { en: 'Level',          he: 'שלב',              es: 'Nivel' },
+  random:        { en: 'Random',         he: 'אקראי',            es: 'Aleatorio' },
+  moves:         { en: 'Moves',          he: 'מהלכים',           es: 'Movimientos' },
+  covered:       { en: 'Covered',        he: 'כוסו',             es: 'Cubierto' },
+  reset:         { en: 'reset',          he: 'איפוס',            es: 'reiniciar' },
+  solved:        { en: 'Board Complete!', he: 'הלוח הושלם!',     es: '¡Tablero completo!' },
+  everyTile:     { en: 'Every tile placed perfectly.', he: 'כל החלקים הונחו במושלם.', es: 'Cada pieza colocada a la perfección.' },
+  playAgain:     { en: 'Play Again',     he: 'שחקו שוב',         es: 'Jugar de nuevo' },
+  nextLevel:     { en: 'Next Level →',   he: 'שלב הבא ←',        es: 'Siguiente nivel →' },
+  bonusLevel:    { en: 'Bonus Level →',  he: 'שלב בונוס ←',      es: 'Nivel bonus →' },
+  shapes:        { en: 'Shapes',         he: 'צורות',            es: 'Piezas' },
+  piece:         { en: 'piece',          he: 'חלק',              es: 'pieza' },
+  placing:       { en: 'Placing',        he: 'ממקמים',           es: 'Colocando' },
+  rotateTitle:   { en: 'Rotate (R)',     he: 'סובבו (R)',        es: 'Girar (R)' },
+  undo:          { en: 'Undo',           he: 'בטל',              es: 'Deshacer' },
+  resetLevelBtn: { en: 'Reset',          he: 'איפוס',            es: 'Reiniciar' },
+  confirmClear:  { en: 'Clear all saved progress?', he: 'לאפס את כל ההתקדמות השמורה?', es: '¿Borrar todo el progreso guardado?' },
+  instrTap:         { en: 'Tap or drag a shape to the board', he: 'הקישו או גררו צורה אל הלוח', es: 'Toca o arrastra una pieza al tablero' },
+  instrRotate:      { en: 'rotate',       he: 'סיבוב',      es: 'girar' },
+  instrCancel:      { en: 'cancel',       he: 'ביטול',      es: 'cancelar' },
+  instrUndo:        { en: 'undo',         he: 'ביטול מהלך', es: 'deshacer' },
+};
+
+const COLOR_NAMES = {
+  red:    { en: 'red',    he: 'אדום',   es: 'rojo' },
+  blue:   { en: 'blue',   he: 'כחול',   es: 'azul' },
+  green:  { en: 'green',  he: 'ירוק',   es: 'verde' },
+  yellow: { en: 'yellow', he: 'צהוב',   es: 'amarillo' },
+  purple: { en: 'purple', he: 'סגול',   es: 'morado' },
+  orange: { en: 'orange', he: 'כתום',   es: 'naranja' },
+  cyan:   { en: 'cyan',   he: 'טורקיז', es: 'cian' },
+  pink:   { en: 'pink',   he: 'ורוד',   es: 'rosa' },
+};
+
+const LEVEL_NAMES = {
+  'Quadrant': { he: 'רביע',      es: 'Cuadrante' },
+  'Hexagon':  { he: 'משושה',    es: 'Hexágono' },
+  'Octet':    { he: 'אוקטט',    es: 'Octeto' },
+  'Horizon':  { he: 'אופק',      es: 'Horizonte' },
+  'Grand':    { he: 'גדול',      es: 'Grande' },
+};
+
+const DIFFICULTY_NAMES = {
+  easy:   { en: 'easy',   he: 'קל',    es: 'fácil' },
+  medium: { en: 'medium', he: 'בינוני', es: 'medio' },
+  hard:   { en: 'hard',   he: 'קשה',   es: 'difícil' },
+};
 
 const COLOR_HEX = {
   red:    '#e74c3c',
@@ -762,18 +818,40 @@ createApp({
     const randomLevel     = ref(null);
     const difficulty      = ref('medium');
 
+    const lang  = ref('en');
+    const isRTL = computed(() => lang.value === 'he');
+    const UI    = computed(() => {
+      const l = lang.value;
+      return Object.fromEntries(Object.entries(STRINGS).map(([k, v]) => [k, v[l] ?? v.en]));
+    });
+    function colorLabel(c) { return (COLOR_NAMES[c] && (COLOR_NAMES[c][lang.value] ?? COLOR_NAMES[c].en)) || c; }
+    function levelName(lv) {
+      if (lang.value === 'en') return lv.name;
+      const tr = LEVEL_NAMES[lv.name];
+      return (tr && tr[lang.value]) || lv.name;
+    }
+    function difficultyLabel(d) { return (DIFFICULTY_NAMES[d] && (DIFFICULTY_NAMES[d][lang.value] ?? DIFFICULTY_NAMES[d].en)) || d; }
+    function setLang(l) { lang.value = l; saveState(); }
+
+    watchEffect(() => {
+      document.documentElement.lang = lang.value;
+      document.documentElement.dir  = isRTL.value ? 'rtl' : 'ltr';
+    });
+
     // ── Persistence ──────────────────────────────────────────────────
     const SAVE_KEY = 'tessera-v1';
     let saveTimer  = null;
 
     function saveState() {
-      if (mode.value === 'random') return;
       try {
-        localStorage.setItem(SAVE_KEY, JSON.stringify({
-          currentLevelIdx: currentLevelIdx.value,
-          completedLevels: [...completedLevels.value],
-          history: history.value,
-        }));
+        const existing = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}');
+        const data = { ...existing, lang: lang.value };
+        if (mode.value !== 'random') {
+          data.currentLevelIdx = currentLevelIdx.value;
+          data.completedLevels = [...completedLevels.value];
+          data.history = history.value;
+        }
+        localStorage.setItem(SAVE_KEY, JSON.stringify(data));
       } catch {}
     }
 
@@ -781,15 +859,18 @@ createApp({
       try {
         const s = JSON.parse(localStorage.getItem(SAVE_KEY));
         if (!s) return;
+        if (s.lang) lang.value = s.lang;
         if (typeof s.currentLevelIdx === 'number' && s.currentLevelIdx < LEVELS.length)
           currentLevelIdx.value = s.currentLevelIdx;
         if (Array.isArray(s.completedLevels)) completedLevels.value = s.completedLevels;
         if (Array.isArray(s.history)) history.value = s.history;
       } catch {}
+      const urlLang = new URLSearchParams(location.search).get('lang');
+      if (urlLang && ['en','he','es'].includes(urlLang)) lang.value = urlLang;
     }
 
     function resetAllProgress() {
-      if (!confirm('Clear all saved progress?')) return;
+      if (!confirm(UI.value.confirmClear)) return;
       localStorage.removeItem(SAVE_KEY);
       completedLevels.value = [];
       currentLevelIdx.value = 0;
@@ -901,6 +982,18 @@ createApp({
 
     function rotateShape() { rotation.value = (rotation.value + 1) % 4; }
 
+    function conflictMsg(color) {
+      const c = colorLabel(color);
+      if (lang.value === 'he') return `צורה ב${c} לא יכולה לכסות נקודות ${c}!`;
+      if (lang.value === 'es') return `¡Una pieza ${c} no puede cubrir puntos ${c}!`;
+      return `A ${c} shape can't cover ${c} dots!`;
+    }
+    function outOfBoundsMsg() {
+      if (lang.value === 'he') return 'מחוץ ללוח או חופף לחלק אחר.';
+      if (lang.value === 'es') return 'Fuera del tablero o superpuesto.';
+      return 'Out of bounds or overlapping.';
+    }
+
     function onCellClick(row, col) {
       if (!selectedShape.value) return;
       if (!previewValid.value) {
@@ -910,9 +1003,7 @@ createApp({
           p.c >= 0 && p.c < level.value.cols &&
           board.value[p.r][p.c].dot === color
         );
-        errorMsg.value = hasConflict
-          ? `A ${color} shape can't cover ${color} dots!`
-          : 'Out of bounds or overlapping.';
+        errorMsg.value = hasConflict ? conflictMsg(color) : outOfBoundsMsg();
         setTimeout(() => { errorMsg.value = ''; }, 2200);
         return;
       }
@@ -1095,6 +1186,7 @@ createApp({
       currentLevelIdx, selectedShapeId, rotation,
       hoverRow, hoverCol, history, won, errorMsg, completedLevels,
       mode, randomLevel, difficulty,
+      lang, isRTL, UI, setLang, colorLabel, levelName, difficultyLabel,
       isDragging, ghostX, ghostY, boardRef,
       level, board, placedIds, selectedShape, preview, previewValid,
       coveredCount, progressPct, cellSize, boardPxWidth,
