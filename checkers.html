@@ -14,7 +14,7 @@
 :root {
   --cell: clamp(38px, calc((100vw - 50px) / 8), 58px);
   --net-panel-width: calc(var(--cell) * 8 + 14px);
-  --net-btn-bg: #2a0f0f; --net-btn-border: #dc2626; --net-btn-color: #fca5a5;
+  --net-btn-bg: #1e2530; --net-btn-border: #e2e8f0; --net-btn-color: #f1f5f9;
 }
 
 body {
@@ -29,7 +29,7 @@ body {
 h1 {
   font-size: 2.6rem; font-weight: 900; letter-spacing: 0.16em;
   margin-bottom: 24px; text-align: center; line-height: 1;
-  background: linear-gradient(135deg, #dc2626, #c99a52);
+  background: linear-gradient(135deg, #e2e8f0, #c99a52);
   -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
 }
 
@@ -51,14 +51,14 @@ h1 {
   height: 3px; border-radius: 2px 2px 0 0;
   transform: scaleX(0); transition: transform 0.25s ease;
 }
-.score-p1.active  { background: rgba(220,38,38,0.08); }
-.score-p1.active::after { background: #dc2626; transform: scaleX(1); }
+.score-p1.active  { background: rgba(226,232,240,0.08); }
+.score-p1.active::after { background: #e2e8f0; transform: scaleX(1); }
 .score-p2.active  { background: rgba(201,154,82,0.08); }
 .score-p2.active::after { background: #c99a52; transform: scaleX(1); }
 
 .score-label { font-size: 0.68rem; color: #6e7681; text-transform: uppercase; letter-spacing: 0.12em; font-weight: 700; }
 .score-val   { font-size: 2rem; font-weight: 800; line-height: 1; min-width: 1.2ch; text-align: center; }
-.score-p1 .score-val { color: #dc2626; }
+.score-p1 .score-val { color: #e2e8f0; }
 .score-p2 .score-val { color: #c99a52; }
 
 /* ── Status ──────────────────────────────────────────────────────── */
@@ -66,11 +66,11 @@ h1 {
   font-size: 1.05rem; font-weight: 700; color: #c9d1d9;
   margin-bottom: 4px; gap: 6px; letter-spacing: 0.01em;
 }
-.status.won-p1 { color: #dc2626; }
+.status.won-p1 { color: #e2e8f0; }
 .status.won-p2 { color: #c99a52; }
 
 .turn-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; animation: pulse 1.4s ease infinite; }
-.turn-dot.dot-p1 { background: #dc2626; }
+.turn-dot.dot-p1 { background: #e2e8f0; }
 .turn-dot.dot-p2 { background: #c99a52; }
 @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.65)} }
 
@@ -111,7 +111,7 @@ h1 {
   pointer-events: none;
 }
 .square.target-slide::after   { background: rgba(255,255,255,0.22); }
-.square.target-capture::after { background: rgba(220,38,38,0.55); box-shadow: 0 0 8px 1px rgba(220,38,38,0.6); }
+.square.target-capture::after { background: rgba(239,68,68,0.6); box-shadow: 0 0 8px 1px rgba(239,68,68,0.6); }
 
 .square.selected { box-shadow: inset 0 0 0 3px #f0b98f; }
 
@@ -130,8 +130,8 @@ h1 {
   transition: transform 0.12s;
 }
 .piece.p1 {
-  background: radial-gradient(circle at 38% 32%, #f87171, #7f1d1d);
-  box-shadow: 0 0 0 2px #dc2626, 0 2px 6px rgba(0,0,0,0.5);
+  background: radial-gradient(circle at 38% 32%, #ffffff, #cbd5e1);
+  box-shadow: 0 0 0 2px #e2e8f0, 0 2px 6px rgba(0,0,0,0.5);
 }
 .piece.p2 {
   background: radial-gradient(circle at 38% 32%, #52525b, #0a0a0a);
@@ -148,7 +148,7 @@ h1 {
   0%, 100% { box-shadow: 0 0 0 2px var(--ring), 0 2px 6px rgba(0,0,0,0.5); }
   50%      { box-shadow: 0 0 0 4px var(--ring), 0 0 10px 2px var(--ring), 0 2px 6px rgba(0,0,0,0.5); }
 }
-.piece.p1.must-jump { --ring: #dc2626; animation: mustPulse 1s ease-in-out infinite; }
+.piece.p1.must-jump { --ring: #e2e8f0; animation: mustPulse 1s ease-in-out infinite; }
 .piece.p2.must-jump { --ring: #c99a52; animation: mustPulse 1s ease-in-out infinite; }
 
 @keyframes popIn {
@@ -164,7 +164,7 @@ h1 {
 }
 .piece.captured { animation: captureFade 0.28s ease forwards; }
 
-.won-p1 .piece.p1 { box-shadow: 0 0 0 2px #dc2626, 0 0 12px 3px rgba(220,38,38,0.7); }
+.won-p1 .piece.p1 { box-shadow: 0 0 0 2px #e2e8f0, 0 0 12px 3px rgba(226,232,240,0.7); }
 .won-p2 .piece.p2 { box-shadow: 0 0 0 2px #c99a52, 0 0 12px 3px rgba(201,154,82,0.7); }
 
 /* ── Piece count bar ─────────────────────────────────────────────── */
@@ -179,10 +179,10 @@ h1 {
 }
 .count-fill-p1 {
   position: absolute; left: 0; top: 0; height: 100%;
-  background: #dc2626; border-radius: 3px;
+  background: #e2e8f0; border-radius: 3px;
   transition: width 0.3s ease;
 }
-.count-num-p1 { color: #dc2626; min-width: 2ch; text-align: right; }
+.count-num-p1 { color: #e2e8f0; min-width: 2ch; text-align: right; }
 .count-num-p2 { color: #c99a52; min-width: 2ch; }
 
 /* ── Mode bar ────────────────────────────────────────────────────── */
@@ -196,17 +196,31 @@ h1 {
   font-weight: 600; font-family: inherit; cursor: pointer; transition: all 0.15s;
 }
 .mode-btn:hover:not(.active) { border-color: #6e7681; color: #c9d1d9; }
-.mode-btn.active { background: #2a0f0f; border-color: #dc2626; color: #fca5a5; }
+.mode-btn.active { background: #1e2530; border-color: #e2e8f0; color: #f1f5f9; }
+
+/* ── Ruleset bar ─────────────────────────────────────────────────── */
+.rule-bar {
+  display: flex; gap: 6px; margin-bottom: 20px; justify-content: center;
+  align-items: center; width: calc(var(--cell) * 8 + 14px); flex-wrap: wrap;
+}
+.rule-label { font-size: 0.7rem; color: #6e7681; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; margin-inline-end: 2px; }
+.rule-btn {
+  background: #161b22; border: 1px solid #30363d; color: #8b949e;
+  border-radius: 20px; padding: 5px 12px; font-size: 0.76rem;
+  font-weight: 600; font-family: inherit; cursor: pointer; transition: all 0.15s;
+}
+.rule-btn:hover:not(.active) { border-color: #6e7681; color: #c9d1d9; }
+.rule-btn.active { background: #241611; border-color: #c99a52; color: #e8c27a; }
 
 /* ── Buttons ─────────────────────────────────────────────────────── */
 .btn-row { display: flex; gap: 10px; }
 .new-game-btn {
-  background: #2a0f0f; border: 1px solid #dc2626; color: #fca5a5;
+  background: #1e2530; border: 1px solid #e2e8f0; color: #f1f5f9;
   border-radius: 10px; padding: 11px 40px; font-size: 0.92rem; font-weight: 700;
   font-family: inherit; cursor: pointer;
   transition: opacity 0.15s, transform 0.1s, box-shadow 0.15s; letter-spacing: 0.04em;
 }
-.new-game-btn:hover  { opacity: 0.85; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(220,38,38,0.25); }
+.new-game-btn:hover  { opacity: 0.85; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(226,232,240,0.25); }
 .new-game-btn:active { transform: translateY(0); box-shadow: none; }
 .reset-scores-btn {
   background: none; border: 1px solid #30363d; color: #6e7681;
@@ -247,11 +261,11 @@ h1 {
     <template v-else-if="phase === 'won'">
       <template v-if="isRTL">
         <span>{{ UI.wonVerb }}</span>
-        <span :style="{color: winner===1?'#dc2626':'#c99a52'}">{{ winner===1?UI.p1:UI.p2 }}</span>
+        <span :style="{color: winner===1?'#e2e8f0':'#c99a52'}">{{ winner===1?UI.p1:UI.p2 }}</span>
         <span>🎉</span>
       </template>
       <template v-else>
-        <span :style="{color: winner===1?'#dc2626':'#c99a52'}">{{ winner===1?UI.p1:UI.p2 }}</span>
+        <span :style="{color: winner===1?'#e2e8f0':'#c99a52'}">{{ winner===1?UI.p1:UI.p2 }}</span>
         <span>{{ UI.wonVerb }}</span>
         <span>🎉</span>
       </template>
@@ -259,17 +273,17 @@ h1 {
     <template v-else-if="isRTL">
       <span v-if="!aiThink" class="turn-dot" :class="turn===1?'dot-p1':'dot-p2'"></span>
       <span>{{ aiThink ? UI.thinking : UI.turnWord }}</span>
-      <span :style="{color: turn===1?'#dc2626':'#c99a52'}">{{ turn===1?UI.p1:UI.p2 }}</span>
+      <span :style="{color: turn===1?'#e2e8f0':'#c99a52'}">{{ turn===1?UI.p1:UI.p2 }}</span>
     </template>
     <template v-else>
       <span v-if="!aiThink" class="turn-dot" :class="turn===1?'dot-p1':'dot-p2'"></span>
-      <span :style="{color: turn===1?'#dc2626':'#c99a52'}">{{ turn===1?UI.p1:UI.p2 }}</span>
+      <span :style="{color: turn===1?'#e2e8f0':'#c99a52'}">{{ turn===1?UI.p1:UI.p2 }}</span>
       <span>{{ aiThink ? UI.thinking : UI.turnWord }}</span>
     </template>
   </div>
 
   <div class="hint-row">
-    <template v-if="phase==='playing' && !aiThink && forcedIdxSet.size">{{ UI.mustCapture }}</template>
+    <template v-if="phase==='playing' && !aiThink && mustCapture">{{ UI.mustCapture }}</template>
   </div>
 
   <div class="board" :class="phase !== 'playing' ? statusClass : ''">
@@ -293,7 +307,7 @@ h1 {
           :key="cell + '-' + i"
           class="piece"
           :class="[owner(cell) === 1 ? 'p1' : 'p2', {
-            'must-jump': forcedIdxSet.has(i),
+            'must-jump': mustCapture && forcedIdxSet.has(i),
             captured: flashCaptured.has(i),
           }]"
         ><span v-if="isKing(cell)" class="crown">♛</span></div>
@@ -316,6 +330,13 @@ h1 {
     <button class="mode-btn" :class="{active: mode==='net'}"  @click="setMode('net')">{{ UI.modeNet }}</button>
   </div>
 
+  <div class="rule-bar">
+    <span class="rule-label">{{ UI.ruleLabel }}</span>
+    <button class="rule-btn" :class="{active: ruleset==='forward'}" @click="setRuleset('forward')" :title="UI.ruleForwardHint">{{ UI.ruleForward }}</button>
+    <button class="rule-btn" :class="{active: ruleset==='chain'}"   @click="setRuleset('chain')"   :title="UI.ruleChainHint">{{ UI.ruleChain }}</button>
+    <button class="rule-btn" :class="{active: ruleset==='free'}"    @click="setRuleset('free')"    :title="UI.ruleFreeHint">{{ UI.ruleFree }}</button>
+  </div>
+
   <div class="btn-row">
     <button class="new-game-btn" @click="newGame">{{ UI.newGame }}</button>
     <button class="reset-scores-btn" @click="resetScores" :title="UI.resetScores">↺</button>
@@ -328,7 +349,7 @@ const { createApp, ref, computed, provide, watchEffect } = Vue;
 const STRINGS = {
   title:       { en: 'CHECKERS',      he: 'דמקה' },
   back:        { en: 'All Games',     he: 'כל המשחקים' },
-  p1:          { en: 'Red',           he: 'אדום' },
+  p1:          { en: 'White',         he: 'לבן' },
   p2:          { en: 'Black',         he: 'שחור' },
   wonVerb:     { en: 'wins!',         he: 'ניצח!' },
   turnWord:    { en: "'s turn",       he: 'תור' },
@@ -340,6 +361,13 @@ const STRINGS = {
   modeEasy:    { en: '🤖 Easy',       he: '🤖 קל' },
   modeHard:    { en: '🤖 Hard',       he: '🤖 קשה' },
   modeNet:     { en: '🌐 Network',    he: '🌐 רשת' },
+  ruleLabel:      { en: 'Backward capture:', he: 'אכילה אחורה:' },
+  ruleForward:    { en: 'Forward only',      he: 'קדימה בלבד' },
+  ruleForwardHint:{ en: 'Men can only capture forward (kings capture any direction)', he: 'חיילים אוכלים רק קדימה (מלכים אוכלים בכל כיוון)' },
+  ruleChain:      { en: 'Chain only',        he: 'רק בשרשרת' },
+  ruleChainHint:  { en: 'Men can capture backward only to continue a jump already in progress', he: 'חיילים אוכלים אחורה רק כדי להמשיך שרשרת קפיצות שכבר החלה' },
+  ruleFree:       { en: 'Any direction',     he: 'כל כיוון' },
+  ruleFreeHint:   { en: 'Men can capture backward at any time', he: 'חיילים יכולים לאכול אחורה בכל עת' },
 };
 
 // ── Board representation: 64 cells, 0=empty, 1/2=men, 3/4=kings ──────
@@ -385,15 +413,29 @@ function slideTargets(board, idx) {
   return out;
 }
 
+// Three selectable rulesets for when a MAN may capture backward (kings
+// always capture in any of the 4 diagonal directions, regardless):
+//  - 'forward': never (standard English/American draughts)
+//  - 'free':    always (International/Russian-style draughts)
+//  - 'chain':   only as a continuation of a jump already in progress —
+//               the opening jump of a turn must still be forward
+function manCaptureDirs(v, ruleset, isContinuation) {
+  const forward = owner(v) === 1 ? [[-1,-1],[-1,1]] : [[1,-1],[1,1]];
+  if (ruleset === 'forward') return forward;
+  if (ruleset === 'chain') return isContinuation ? DIAG : forward;
+  return DIAG;
+}
+
 // Both men and kings may capture in any of the 4 diagonal directions
-// (standard American rule: a man can jump backward to capture). A flying
-// king may jump a piece from any distance and land on any empty square
-// past it, as long as nothing else lies between it and the captured piece.
-function jumpTargets(board, idx) {
+// (subject to `ruleset` for men — see manCaptureDirs). A flying king may
+// jump a piece from any distance and land on any empty square past it,
+// as long as nothing else lies between it and the captured piece.
+function jumpTargets(board, idx, ruleset, isContinuation) {
   const v = board[idx], pl = owner(v);
   const [r, c] = rc(idx);
   const out = [];
-  for (const [dr, dc] of DIAG) {
+  const dirs = isKing(v) ? DIAG : manCaptureDirs(v, ruleset, isContinuation);
+  for (const [dr, dc] of dirs) {
     if (isKing(v)) {
       let mr = r+dr, mc = c+dc;
       while (inBounds(mr, mc) && board[idxOf(mr,mc)] === 0) { mr += dr; mc += dc; }
@@ -414,18 +456,18 @@ function jumpTargets(board, idx) {
   return out;
 }
 
-function capturePieces(board, player) {
+function capturePieces(board, player, ruleset) {
   const out = [];
-  for (let i = 0; i < 64; i++) if (owner(board[i]) === player && jumpTargets(board, i).length) out.push(i);
+  for (let i = 0; i < 64; i++) if (owner(board[i]) === player && jumpTargets(board, i, ruleset, false).length) out.push(i);
   return out;
 }
 
 // All maximal capture sequences from one piece. A man that crowns mid-chain
 // stops immediately (standard rule) — it can't keep jumping as a king.
-function capturingChains(board, idx) {
+function capturingChains(board, idx, ruleset) {
   const results = [];
   (function dfs(cur, pos, captured) {
-    const jumps = jumpTargets(cur, pos);
+    const jumps = jumpTargets(cur, pos, ruleset, captured.length > 0);
     if (!jumps.length) {
       if (captured.length) results.push({ board: cur, captured, landing: pos });
       return;
@@ -447,11 +489,11 @@ function capturingChains(board, idx) {
 }
 
 // Capturing is mandatory whenever available; otherwise any legal slide.
-function legalMoves(board, player) {
-  const capturers = capturePieces(board, player);
+function legalMoves(board, player, ruleset) {
+  const capturers = capturePieces(board, player, ruleset);
   if (capturers.length) {
     const moves = [];
-    for (const i of capturers) for (const seq of capturingChains(board, i)) moves.push({ type: 'capture', from: i, ...seq });
+    for (const i of capturers) for (const seq of capturingChains(board, i, ruleset)) moves.push({ type: 'capture', from: i, ...seq });
     return moves;
   }
   const moves = [];
@@ -481,13 +523,13 @@ function evaluate(board, player) {
   return score;
 }
 
-function negamax(board, player, depth, alpha, beta) {
-  const moves = legalMoves(board, player);
+function negamax(board, player, depth, alpha, beta, ruleset) {
+  const moves = legalMoves(board, player, ruleset);
   if (!moves.length) return -1000;
   if (depth === 0) return evaluate(board, player);
   let best = -Infinity;
   for (const mv of moves) {
-    const score = -negamax(mv.board, 3-player, depth-1, -beta, -alpha);
+    const score = -negamax(mv.board, 3-player, depth-1, -beta, -alpha, ruleset);
     if (score > best) best = score;
     if (best > alpha) alpha = best;
     if (alpha >= beta) break;
@@ -497,13 +539,13 @@ function negamax(board, player, depth, alpha, beta) {
 
 const AI_DEPTH = 6;
 
-function pickAIMove(board, player, mode) {
-  const moves = legalMoves(board, player);
+function pickAIMove(board, player, mode, ruleset) {
+  const moves = legalMoves(board, player, ruleset);
   if (!moves.length) return null;
   if (mode === 'easy') return moves[Math.floor(Math.random() * moves.length)];
   let best = -Infinity, bestMoves = [];
   for (const mv of moves) {
-    const score = -negamax(mv.board, 3-player, AI_DEPTH-1, -Infinity, Infinity);
+    const score = -negamax(mv.board, 3-player, AI_DEPTH-1, -Infinity, Infinity, ruleset);
     if (score > best) { best = score; bestMoves = [mv]; }
     else if (score === best) bestMoves.push(mv);
   }
@@ -511,7 +553,7 @@ function pickAIMove(board, player, mode) {
 }
 
 const PALETTES = {
-  1: ['#dc2626','#f87171','#ef4444','#fca5a5','#7f1d1d'],
+  1: ['#ffffff','#e2e8f0','#cbd5e1','#f1f5f9','#94a3b8'],
   2: ['#c99a52','#e8c27a','#a67c3a','#f4d58d','#52525b'],
 };
 
@@ -555,6 +597,7 @@ createApp({
   setup() {
     const lang    = ref('en');
     const mode    = ref('2p');
+    const ruleset = ref('forward');
     const board   = ref(initialBoard());
     const turn    = ref(1);
     const phase   = ref('playing');
@@ -598,7 +641,8 @@ createApp({
       return mode.value === '2p' || turn.value === 1;
     });
 
-    const currentMoves = computed(() => phase.value === 'playing' ? legalMoves(board.value, turn.value) : []);
+    const currentMoves = computed(() => phase.value === 'playing' ? legalMoves(board.value, turn.value, ruleset.value) : []);
+    const mustCapture  = computed(() => currentMoves.value.length > 0 && currentMoves.value[0].type === 'capture');
     const forcedIdxSet = computed(() => new Set(currentMoves.value.map(m => m.from)));
     const targetsForSelected = computed(() => selected.value === null ? [] : currentMoves.value.filter(m => m.from === selected.value));
     const slideTargetSet   = computed(() => new Set(targetsForSelected.value.filter(m => m.type === 'slide').map(m => m.to)));
@@ -628,7 +672,7 @@ createApp({
 
       const mover = turn.value;
       const next = 3 - mover;
-      if (legalMoves(board.value, next).length === 0) {
+      if (legalMoves(board.value, next, ruleset.value).length === 0) {
         endGame(mover);
         return;
       }
@@ -641,7 +685,7 @@ createApp({
     function triggerAI() {
       aiThink.value = true;
       setTimeout(() => {
-        const mv = pickAIMove(board.value, 2, mode.value);
+        const mv = pickAIMove(board.value, 2, mode.value, ruleset.value);
         aiThink.value = false;
         if (mv) applyMove(mv);
       }, 380);
@@ -679,6 +723,7 @@ createApp({
     }
 
     function setMode(m) { mode.value = m; resetBoard(); save(); }
+    function setRuleset(r) { ruleset.value = r; resetBoard(); save(); }
     function setLang(l) { lang.value = l; save(); }
     function resetScores() { humanScores.value = [0,0]; aiScores.value = [0,0]; save(); }
 
@@ -687,6 +732,7 @@ createApp({
         localStorage.setItem(SAVE_KEY, JSON.stringify({
           lang: lang.value,
           mode: mode.value === 'net' ? '2p' : mode.value,
+          ruleset: ruleset.value,
           humanScores: humanScores.value,
           aiScores: aiScores.value,
         }));
@@ -699,6 +745,7 @@ createApp({
         const urlLang = new URLSearchParams(location.search).get('lang');
         if (urlLang && ["en","he"].includes(urlLang)) lang.value = urlLang;
         if (d.mode) mode.value = d.mode;
+        if (d.ruleset) ruleset.value = d.ruleset;
         if (d.humanScores) humanScores.value = d.humanScores;
         if (d.aiScores) aiScores.value = d.aiScores;
       } catch (_) {}
@@ -712,10 +759,10 @@ createApp({
     });
 
     return {
-      lang, mode, board, turn, phase, winner, selected, aiThink, lastMove, flashCaptured, netCtrl,
-      scores, countP1, countP2, canAct, forcedIdxSet, slideTargetSet, captureTargetSet,
+      lang, mode, ruleset, board, turn, phase, winner, selected, aiThink, lastMove, flashCaptured, netCtrl,
+      scores, countP1, countP2, canAct, mustCapture, forcedIdxSet, slideTargetSet, captureTargetSet,
       isRTL, UI, statusClass, owner, isKing, isDark,
-      clickCell, newGame, setMode, setLang, resetScores,
+      clickCell, newGame, setMode, setRuleset, setLang, resetScores,
     };
   }
 }).mount('#app');
