@@ -16,8 +16,6 @@ body {
   -webkit-user-select: none;
 }
 
-.back-link { margin-bottom: 8px; display: inline-block; font-size: 0.78rem; }
-
 h1 {
   font-size: 2.2rem;
   font-weight: 800;
@@ -219,36 +217,43 @@ h1 {
     <div v-if="showWin" class="win-overlay">
       <div class="win-box">
         <div class="win-icon">🎉</div>
-        <h2>Puzzle Solved!</h2>
-        <p>{{ level.name }} completed in {{ history.length }} moves!</p>
+        <h2>{{ UI.solved }}</h2>
+        <p>{{ completedMsg(level, history.length) }}</p>
         <div class="win-btns">
-          <button class="btn" @click="resetLevel">Play Again</button>
-          <button v-if="mode === 'campaign' && currentLevelIdx < LEVELS.length - 1" class="btn btn-accent" @click="nextLevel">Next Level →</button>
-          <button v-else class="btn btn-accent" @click="generateAndPlay('expert')">Expert Puzzle →</button>
+          <button class="btn" @click="resetLevel">{{ UI.playAgain }}</button>
+          <button v-if="mode === 'campaign' && currentLevelIdx < LEVELS.length - 1" class="btn btn-accent" @click="nextLevel">{{ UI.nextLevel }}</button>
+          <button v-else class="btn btn-accent" @click="generateAndPlay('expert')">{{ UI.expertPuzzle }}</button>
         </div>
       </div>
     </div>
   </transition>
 
-  <a class="back-link" href="index.html">← All Games</a>
+  <div class="top-bar">
+    <a class="back-link" href="index.html">{{ UI.back }}</a>
+    <div class="lang-toggle">
+      <button class="lang-btn" :class="{active: lang==='en'}" @click="setLang('en')">EN</button>
+      <button class="lang-btn" :class="{active: lang==='he'}" @click="setLang('he')">עב</button>
+      <button class="lang-btn" :class="{active: lang==='es'}" @click="setLang('es')">ES</button>
+    </div>
+  </div>
   <h1>COLORKU</h1>
-  <p class="tagline">Fill each row{{ level.boxRows ? ', column and box' : ' and column' }} with every color exactly once</p>
+  <p class="tagline">{{ level.boxRows ? UI.taglineBox : UI.taglineSimple }}</p>
 
   <div class="level-bar">
-    <span v-if="mode === 'campaign'"><strong>Level {{ currentLevelIdx + 1 }}</strong>: {{ level.name }}</span>
-    <span v-else><strong>Random</strong> · {{ difficulty }} {{ level.size }}×{{ level.size }}</span>
+    <span v-if="mode === 'campaign'"><strong>{{ UI.level }} {{ currentLevelIdx + 1 }}</strong>: {{ levelName(level) }}</span>
+    <span v-else><strong>{{ UI.random }}</strong> · {{ difficultyLabel(difficulty) }} {{ level.size }}×{{ level.size }}</span>
     <div class="level-pills">
       <div
         v-for="(l, i) in LEVELS" :key="i"
         class="level-pill"
         :class="{ active: mode === 'campaign' && i === currentLevelIdx, done: completedLevels.includes(i) }"
         @click="gotoLevel(i)"
-        :title="`Level ${i+1}: ${l.name}`"
+        :title="`${UI.level} ${i+1}: ${levelName(l)}`"
       ></div>
     </div>
-    <span>Moves: <strong>{{ history.length }}</strong></span>
-    <span>Empty: <strong>{{ emptyCells }}</strong></span>
-    <button class="btn-reset-prog" @click="resetAllProgress">reset</button>
+    <span>{{ UI.moves }}: <strong>{{ history.length }}</strong></span>
+    <span>{{ UI.empty }}: <strong>{{ emptyCells }}</strong></span>
+    <button class="btn-reset-prog" @click="resetAllProgress">{{ UI.reset }}</button>
   </div>
 
   <div class="board-wrap">
@@ -285,7 +290,7 @@ h1 {
         class="swatch eraser"
         :class="{ active: eraserMode }"
         @click="toggleEraser"
-        title="Erase (right-click a cell too)"
+        :title="UI.eraseTitle"
       >✕</div>
       <div
         v-for="color in level.colors" :key="color"
@@ -293,19 +298,65 @@ h1 {
         :class="{ active: selectedColor === color }"
         :style="{ background: COLOR_HEX[color] }"
         @click="selectColor(color)"
-        :title="color"
+        :title="colorLabel(color)"
       ></div>
     </div>
 
     <div class="action-bar">
-      <button class="btn" @click="undo" :disabled="history.length === 0">↩ Undo</button>
-      <button class="btn" @click="resetLevel">↺ Reset</button>
+      <button class="btn" @click="undo" :disabled="history.length === 0">↩ {{ UI.undo }}</button>
+      <button class="btn" @click="resetLevel">↺ {{ UI.resetLevelBtn }}</button>
     </div>
   </div>
 
 </div>
 <script>
-const { createApp, ref, computed, watch, onMounted, onUnmounted } = Vue;
+const { createApp, ref, computed, watch, watchEffect, onMounted, onUnmounted } = Vue;
+
+const STRINGS = {
+  back:          { en: 'All Games',      he: 'כל המשחקים',      es: 'Todos los juegos' },
+  taglineSimple: { en: 'Fill each row and column with every color exactly once', he: 'מלאו כל שורה ועמודה בכל צבע בדיוק פעם אחת', es: 'Rellena cada fila y columna con cada color exactamente una vez' },
+  taglineBox:    { en: 'Fill each row, column and box with every color exactly once', he: 'מלאו כל שורה, עמודה ותיבה בכל צבע בדיוק פעם אחת', es: 'Rellena cada fila, columna y caja con cada color exactamente una vez' },
+  level:         { en: 'Level',          he: 'שלב',              es: 'Nivel' },
+  random:        { en: 'Random',         he: 'אקראי',            es: 'Aleatorio' },
+  moves:         { en: 'Moves',          he: 'מהלכים',           es: 'Movimientos' },
+  empty:         { en: 'Empty',          he: 'ריקות',            es: 'Vacías' },
+  reset:         { en: 'reset',          he: 'איפוס',            es: 'reiniciar' },
+  solved:        { en: 'Puzzle Solved!', he: 'הפאזל נפתר!',      es: '¡Puzzle resuelto!' },
+  playAgain:     { en: 'Play Again',     he: 'שחקו שוב',         es: 'Jugar de nuevo' },
+  nextLevel:     { en: 'Next Level →',   he: 'שלב הבא ←',        es: 'Siguiente nivel →' },
+  expertPuzzle:  { en: 'Expert Puzzle →', he: 'חידת מומחה ←',    es: 'Puzzle experto →' },
+  eraseTitle:    { en: 'Erase (right-click a cell too)', he: 'מחקו (או קליק ימני על תא)', es: 'Borrar (o clic derecho en una celda)' },
+  undo:          { en: 'Undo',           he: 'בטל',              es: 'Deshacer' },
+  resetLevelBtn: { en: 'Reset',          he: 'איפוס',            es: 'Reiniciar' },
+  confirmClear:  { en: 'Clear all saved progress?', he: 'לאפס את כל ההתקדמות השמורה?', es: '¿Borrar todo el progreso guardado?' },
+};
+
+const COLOR_LABELS = {
+  red:    { en: 'red',    he: 'אדום',   es: 'rojo' },
+  blue:   { en: 'blue',   he: 'כחול',   es: 'azul' },
+  green:  { en: 'green',  he: 'ירוק',   es: 'verde' },
+  yellow: { en: 'yellow', he: 'צהוב',   es: 'amarillo' },
+  orange: { en: 'orange', he: 'כתום',   es: 'naranja' },
+  purple: { en: 'purple', he: 'סגול',   es: 'morado' },
+  cyan:   { en: 'cyan',   he: 'טורקיז', es: 'cian' },
+  pink:   { en: 'pink',   he: 'ורוד',   es: 'rosa' },
+};
+
+const LEVEL_NAMES = {
+  'First Steps':    { he: 'צעדים ראשונים', es: 'Primeros pasos' },
+  'Three by Three': { he: 'שלוש על שלוש',  es: 'Tres por tres' },
+  'Four Colors':    { he: 'ארבעה צבעים',   es: 'Cuatro colores' },
+  'Four Squared':   { he: 'ארבעה בריבוע',  es: 'Cuatro al cuadrado' },
+  'Six Hues':       { he: 'שישה גוונים',   es: 'Seis tonos' },
+  'Spectrum':       { he: 'ספקטרום',       es: 'Espectro' },
+};
+
+const DIFFICULTY_NAMES = {
+  easy:   { en: 'easy',   he: 'קל',    es: 'fácil' },
+  medium: { en: 'medium', he: 'בינוני', es: 'medio' },
+  hard:   { en: 'hard',   he: 'קשה',   es: 'difícil' },
+  expert: { en: 'expert', he: 'מומחה', es: 'experto' },
+};
 
 // ── Shuffle ──────────────────────────────────────────────────────────
 function shuffle(arr) {
@@ -657,19 +708,47 @@ createApp({
     const randomLevel     = ref(null);
     const difficulty      = ref('medium');
 
+    const lang  = ref('en');
+    const isRTL = computed(() => lang.value === 'he');
+    const UI    = computed(() => {
+      const l = lang.value;
+      return Object.fromEntries(Object.entries(STRINGS).map(([k, v]) => [k, v[l] ?? v.en]));
+    });
+    function colorLabel(c) { return (COLOR_LABELS[c] && (COLOR_LABELS[c][lang.value] ?? COLOR_LABELS[c].en)) || c; }
+    function levelName(lv) {
+      if (lang.value === 'en') return lv.name;
+      const tr = LEVEL_NAMES[lv.name];
+      return (tr && tr[lang.value]) || lv.name;
+    }
+    function difficultyLabel(d) { return (DIFFICULTY_NAMES[d] && (DIFFICULTY_NAMES[d][lang.value] ?? DIFFICULTY_NAMES[d].en)) || d; }
+    function completedMsg(lv, moves) {
+      const name = levelName(lv);
+      if (lang.value === 'he') return `${name} הושלם ב-${moves} מהלכים!`;
+      if (lang.value === 'es') return `¡${name} completado en ${moves} movimientos!`;
+      return `${name} completed in ${moves} moves!`;
+    }
+    function setLang(l) { lang.value = l; saveState(); }
+
+    watchEffect(() => {
+      document.documentElement.lang = lang.value;
+      document.documentElement.dir  = isRTL.value ? 'rtl' : 'ltr';
+    });
+
     // ── Persistence ──────────────────────────────────────────────────
     const SAVE_KEY = 'colorku-v1';
     let saveTimer  = null;
 
     function saveState() {
-      if (mode.value === 'random') return;
       try {
-        localStorage.setItem(SAVE_KEY, JSON.stringify({
-          currentLevelIdx: currentLevelIdx.value,
-          completedLevels: [...completedLevels.value],
-          userGrid: userGrid.value,
-          history: history.value,
-        }));
+        const existing = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}');
+        const data = { ...existing, lang: lang.value };
+        if (mode.value !== 'random') {
+          data.currentLevelIdx = currentLevelIdx.value;
+          data.completedLevels = [...completedLevels.value];
+          data.userGrid = userGrid.value;
+          data.history = history.value;
+        }
+        localStorage.setItem(SAVE_KEY, JSON.stringify(data));
       } catch {}
     }
 
@@ -677,16 +756,19 @@ createApp({
       try {
         const s = JSON.parse(localStorage.getItem(SAVE_KEY));
         if (!s) return;
+        if (s.lang) lang.value = s.lang;
         if (typeof s.currentLevelIdx === 'number' && s.currentLevelIdx < LEVELS.length)
           currentLevelIdx.value = s.currentLevelIdx;
         if (Array.isArray(s.completedLevels)) completedLevels.value = s.completedLevels;
         if (Array.isArray(s.userGrid)) userGrid.value = s.userGrid;
         if (Array.isArray(s.history)) history.value = s.history;
       } catch {}
+      const urlLang = new URLSearchParams(location.search).get('lang');
+      if (urlLang && ['en','he','es'].includes(urlLang)) lang.value = urlLang;
     }
 
     function resetAllProgress() {
-      if (!confirm('Clear all saved progress?')) return;
+      if (!confirm(UI.value.confirmClear)) return;
       localStorage.removeItem(SAVE_KEY);
       completedLevels.value = [];
       currentLevelIdx.value = 0;
@@ -910,6 +992,7 @@ createApp({
       currentLevelIdx, selectedColor, eraserMode,
       history, completedLevels, showWin, errorMsg,
       mode, randomLevel, difficulty,
+      lang, isRTL, UI, setLang, colorLabel, levelName, difficultyLabel, completedMsg,
       boardRef,
       level, cellSize, userGrid, fullGrid, conflictSet,
       emptyCells, isSolved,
