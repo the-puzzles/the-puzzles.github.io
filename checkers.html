@@ -81,6 +81,7 @@ h1 {
 
 /* ── Board ───────────────────────────────────────────────────────── */
 .board {
+  position: relative;
   display: grid;
   grid-template-columns: repeat(8, var(--cell));
   grid-template-rows:    repeat(8, var(--cell));
@@ -120,7 +121,17 @@ h1 {
   background: rgba(240,185,143,0.12); pointer-events: none;
 }
 
-/* pieces */
+/* pieces — a persistent, absolutely-positioned overlay so a piece is one
+   continuous element that glides (and captured pieces fade in place)
+   instead of disappearing from one square and popping in at another. */
+.piece-layer { position: absolute; inset: 2px; pointer-events: none; }
+.piece-slot {
+  position: absolute;
+  width: var(--cell); height: var(--cell);
+  display: flex; align-items: center; justify-content: center;
+  transition: left 0.26s ease, top 0.26s ease;
+}
+.piece-move { transition: none !important; }
 .piece {
   width: calc(var(--cell) * 0.76);
   height: calc(var(--cell) * 0.76);
@@ -156,13 +167,13 @@ h1 {
   65%  { transform: scale(1.2); }
   100% { transform: scale(1);   opacity: 1; }
 }
-.pop-enter-active { animation: popIn 0.22s cubic-bezier(0.34,1.56,0.64,1); }
+.piece-enter-active { animation: popIn 0.22s cubic-bezier(0.34,1.56,0.64,1); }
 
 @keyframes captureFade {
   0%   { transform: scale(1);   opacity: 1; }
   100% { transform: scale(0.2); opacity: 0; }
 }
-.piece.captured { animation: captureFade 0.28s ease forwards; }
+.piece-leave-active { animation: captureFade 0.28s ease forwards; }
 
 .won-p1 .piece.p1 { box-shadow: 0 0 0 2px #e2e8f0, 0 0 12px 3px rgba(226,232,240,0.7); }
 .won-p2 .piece.p2 { box-shadow: 0 0 0 2px #c99a52, 0 0 12px 3px rgba(201,154,82,0.7); }
@@ -300,19 +311,20 @@ h1 {
         'last-to': lastMove && lastMove.to === i,
       }]"
       @click="clickCell(i)"
-    >
-      <transition name="pop">
-        <div
-          v-if="cell"
-          :key="cell + '-' + i"
-          class="piece"
-          :class="[owner(cell) === 1 ? 'p1' : 'p2', {
-            'must-jump': mustCapture && forcedIdxSet.has(i),
-            captured: flashCaptured.has(i),
-          }]"
-        ><span v-if="isKing(cell)" class="crown">♛</span></div>
-      </transition>
-    </div>
+    ></div>
+
+    <transition-group tag="div" class="piece-layer" name="piece">
+      <div
+        v-for="p in livePieces"
+        :key="p.id"
+        class="piece-slot"
+        :style="pieceStyle(p.idx)"
+      >
+        <div class="piece" :class="[p.owner === 1 ? 'p1' : 'p2', { 'must-jump': mustCapture && forcedIdxSet.has(p.idx) }]">
+          <span v-if="p.king" class="crown">♛</span>
+        </div>
+      </div>
+    </transition-group>
   </div>
 
   <div class="count-bar" dir="ltr">
@@ -379,6 +391,7 @@ function owner(v)        { return v === 0 ? 0 : (v === 1 || v === 3) ? 1 : 2; }
 function isKing(v)       { return v === 3 || v === 4; }
 function isDark(i)       { const [r,c] = rc(i); return (r+c) % 2 === 1; }
 function promote(v, r)   { if (v === 1 && r === 0) return 3; if (v === 2 && r === 7) return 4; return v; }
+function willCrown(pl, r) { return (pl === 1 && r === 0) || (pl === 2 && r === 7); }
 
 function initialBoard() {
   const b = Array(64).fill(0);
@@ -464,12 +477,15 @@ function capturePieces(board, player, ruleset) {
 
 // All maximal capture sequences from one piece. A man that crowns mid-chain
 // stops immediately (standard rule) — it can't keep jumping as a king.
+// `path` records each intermediate landing square in order, so the UI can
+// animate the piece hopping through them instead of teleporting straight
+// to the final square.
 function capturingChains(board, idx, ruleset) {
   const results = [];
-  (function dfs(cur, pos, captured) {
+  (function dfs(cur, pos, captured, path) {
     const jumps = jumpTargets(cur, pos, ruleset, captured.length > 0);
     if (!jumps.length) {
-      if (captured.length) results.push({ board: cur, captured, landing: pos });
+      if (captured.length) results.push({ board: cur, captured, landing: pos, path });
       return;
     }
     for (const { mid, land } of jumps) {
@@ -479,12 +495,12 @@ function capturingChains(board, idx, ruleset) {
       const promoted = promote(nb[land], lr);
       if (promoted !== nb[land]) {
         nb[land] = promoted;
-        results.push({ board: nb, captured: [...captured, mid], landing: land });
+        results.push({ board: nb, captured: [...captured, mid], landing: land, path: [...path, land] });
       } else {
-        dfs(nb, land, [...captured, mid]);
+        dfs(nb, land, [...captured, mid], [...path, land]);
       }
     }
-  })(board, idx, []);
+  })(board, idx, [], []);
   return results;
 }
 
@@ -598,14 +614,39 @@ createApp({
     const lang    = ref('en');
     const mode    = ref('2p');
     const ruleset = ref('forward');
-    const board   = ref(initialBoard());
+    const livePieces = ref([]);
+    const board   = computed(() => {
+      const b = Array(64).fill(0);
+      for (const p of livePieces.value) b[p.idx] = p.king ? (p.owner === 1 ? 3 : 4) : p.owner;
+      return b;
+    });
     const turn    = ref(1);
     const phase   = ref('playing');
     const winner  = ref(null);
     const selected = ref(null);
     const aiThink = ref(false);
+    const animating = ref(false);
     const lastMove = ref(null);
-    const flashCaptured = ref(new Set());
+
+    let nextPieceId = 0;
+    function resetLivePieces() {
+      const b = initialBoard();
+      const pieces = [];
+      for (let i = 0; i < 64; i++) if (b[i]) pieces.push({ id: nextPieceId++, idx: i, owner: owner(b[i]), king: false });
+      livePieces.value = pieces;
+    }
+    function pieceAt(idx) { return livePieces.value.find(p => p.idx === idx); }
+    function movePieceTo(fromIdx, toIdx, crown) {
+      livePieces.value = livePieces.value.map(p => p.idx === fromIdx ? { ...p, idx: toIdx, king: p.king || !!crown } : p);
+    }
+    function removePieceAt(idx) {
+      livePieces.value = livePieces.value.filter(p => p.idx !== idx);
+    }
+    function pieceStyle(idx) {
+      const [r, c] = rc(idx);
+      return { left: `calc((var(--cell) + 1px) * ${c})`, top: `calc((var(--cell) + 1px) * ${r})` };
+    }
+    resetLivePieces();
 
     const humanScores = ref([0, 0]);
     const aiScores    = ref([0, 0]);
@@ -636,7 +677,7 @@ createApp({
     const countP2 = computed(() => board.value.filter(v => owner(v) === 2).length);
 
     const canAct = computed(() => {
-      if (phase.value !== 'playing' || aiThink.value) return false;
+      if (phase.value !== 'playing' || aiThink.value || animating.value) return false;
       if (mode.value === 'net') return netCtrl.netStatus === 'connected' && netCtrl.isMyTurn(turn.value);
       return mode.value === '2p' || turn.value === 1;
     });
@@ -658,18 +699,9 @@ createApp({
       save();
     }
 
-    function applyMove(mv, remote = false) {
-      if (!remote && mode.value === 'net') netCtrl.send({ type: 'move', mv });
+    const HOP_MS = 280;
 
-      board.value = mv.board;
-      selected.value = null;
-      lastMove.value = mv.type === 'slide' ? { from: mv.from, to: mv.to } : { from: mv.from, to: mv.landing };
-
-      if (mv.type === 'capture') {
-        flashCaptured.value = new Set(mv.captured);
-        setTimeout(() => { flashCaptured.value = new Set(); }, 280);
-      }
-
+    function finishTurn() {
       const mover = turn.value;
       const next = 3 - mover;
       if (legalMoves(board.value, next, ruleset.value).length === 0) {
@@ -680,6 +712,47 @@ createApp({
       save();
 
       if (mode.value !== '2p' && mode.value !== 'net' && turn.value === 2 && phase.value === 'playing') triggerAI();
+    }
+
+    function applyMove(mv, remote = false) {
+      if (!remote && mode.value === 'net') netCtrl.send({ type: 'move', mv });
+      selected.value = null;
+
+      if (mv.type === 'slide') {
+        const [tr] = rc(mv.to);
+        const piece = pieceAt(mv.from);
+        const crown = !piece.king && willCrown(piece.owner, tr);
+        movePieceTo(mv.from, mv.to, crown);
+        lastMove.value = { from: mv.from, to: mv.to };
+        finishTurn();
+        return;
+      }
+
+      // Capture: hop through each intermediate landing square in turn so
+      // the piece visibly travels over (and removes) each captured piece,
+      // rather than jumping straight to the final square.
+      animating.value = true;
+      let cur = mv.from;
+      let step = 0;
+      const hop = () => {
+        const land = mv.path[step];
+        const eaten = mv.captured[step];
+        const piece = pieceAt(cur);
+        const [lr] = rc(land);
+        const crown = !piece.king && willCrown(piece.owner, lr);
+        movePieceTo(cur, land, crown);
+        removePieceAt(eaten);
+        cur = land;
+        step++;
+        if (step < mv.path.length) {
+          setTimeout(hop, HOP_MS);
+        } else {
+          animating.value = false;
+          lastMove.value = { from: mv.from, to: mv.landing };
+          finishTurn();
+        }
+      };
+      hop();
     }
 
     function triggerAI() {
@@ -706,14 +779,14 @@ createApp({
     }
 
     function resetBoard() {
-      board.value = initialBoard();
+      resetLivePieces();
       turn.value = 1;
       phase.value = 'playing';
       winner.value = null;
       selected.value = null;
       aiThink.value = false;
+      animating.value = false;
       lastMove.value = null;
-      flashCaptured.value = new Set();
     }
 
     function newGame() {
@@ -759,9 +832,9 @@ createApp({
     });
 
     return {
-      lang, mode, ruleset, board, turn, phase, winner, selected, aiThink, lastMove, flashCaptured, netCtrl,
+      lang, mode, ruleset, board, livePieces, turn, phase, winner, selected, aiThink, animating, lastMove, netCtrl,
       scores, countP1, countP2, canAct, mustCapture, forcedIdxSet, slideTargetSet, captureTargetSet,
-      isRTL, UI, statusClass, owner, isKing, isDark,
+      isRTL, UI, statusClass, isDark, pieceStyle,
       clickCell, newGame, setMode, setRuleset, setLang, resetScores,
     };
   }
