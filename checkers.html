@@ -790,14 +790,19 @@ createApp({
 
     function clickCell(i) {
       if (!canAct.value) return;
+      // Check for a completable move BEFORE the select/deselect branch below —
+      // a capture chain can legally loop back and land on its own starting
+      // square, in which case the "target" and "selected piece" squares are
+      // the same, and confirming the move must take priority over toggling
+      // the selection off.
+      if (selected.value !== null) {
+        const mv = currentMoves.value.find(m => m.from === selected.value && (m.type === 'slide' ? m.to === i : m.landing === i));
+        if (mv) { applyMove(mv); return; }
+      }
       const v = board.value[i];
       if (owner(v) === turn.value && forcedIdxSet.value.has(i)) {
         selected.value = selected.value === i ? null : i;
         return;
-      }
-      if (selected.value !== null) {
-        const mv = currentMoves.value.find(m => m.from === selected.value && (m.type === 'slide' ? m.to === i : m.landing === i));
-        if (mv) { applyMove(mv); return; }
       }
       selected.value = null;
     }
