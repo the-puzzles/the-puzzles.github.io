@@ -503,11 +503,20 @@ function aiCandidates(state, playerIdx, includeWalls) {
     // Restrict to a padded box around both pawns — keeps AI search fast.
     const rows = state.positions.map(p => p.r), cols = state.positions.map(p => p.c);
     const pad = 1;
+    const opp = 1 - playerIdx;
+    const oppDist = bfsDist(state.positions[opp], GOAL_ROWS[opp], blockedH, blockedV);
+    // Only walls that lengthen the opponent's path. Otherwise a wall costs just 1 eval
+    // point and the shallow search uses it as a "pass" whenever every pawn move invites
+    // a nasty reply — dropping pointless walls in dead corners of the board.
     walls = legalWallsInBox(
       state.wallGrid, state.positions,
       Math.min(...rows) - pad, Math.max(...rows) + pad,
       Math.min(...cols) - pad, Math.max(...cols) + pad,
-    ).map(w => ({ type: 'wall', r: w.r, c: w.c, orient: w.orient }));
+    ).filter(w => {
+      const ng = cloneGrid(state.wallGrid); ng[w.r][w.c] = w.orient;
+      const b = computeBlocked(ng);
+      return bfsDist(state.positions[opp], GOAL_ROWS[opp], b.blockedH, b.blockedV) > oppDist;
+    }).map(w => ({ type: 'wall', r: w.r, c: w.c, orient: w.orient }));
   }
   return moves.concat(walls);
 }
@@ -559,6 +568,9 @@ function pickAIMove(state, playerIdx, mode) {
     if (score > best) { best = score; bestCands = [cand]; }
     else if (score === best) bestCands.push(cand);
   }
+  // In a lost position everything ties at -1000; advancing looks sane, a random wall doesn't.
+  const moveTies = bestCands.filter(c => c.type === 'move');
+  if (moveTies.length) bestCands = moveTies;
   return bestCands[Math.floor(Math.random() * bestCands.length)];
 }
 
