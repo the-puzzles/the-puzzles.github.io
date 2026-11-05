@@ -25,6 +25,10 @@ icon.svg          — app icon
 2. Add a card in `index.html` — follow the exact card pattern: `.card.<game>` class, hover/icon/title/rule-dot/play-btn styles in the `<style>` block.
 3. Each game needs: back link → `index.html`, lang toggle (en/he minimum), score bar, status line, mode bar (2p / easy / hard as applicable), new-game + reset-scores buttons.
 
+## Hidden Education section
+
+Private educational games live in the `Education` category (`hidden: true` in `CATEGORIES`). It is only shown after tapping the site title 5 times quickly (toggles `index-edu` in localStorage). Hidden categories are excluded from chips and search.
+
 ## Visual conventions
 
 - Dark theme: `background: #0d1117`, text `#c9d1d9`, borders `#30363d / #21262d`.
@@ -58,6 +62,7 @@ icon.svg          — app icon
 | X O        | `xo-save`     |
 | Sprouts    | `sprouts-save`|
 | Morris     | `morris-save` |
+| Mapa Mudo  | `spainmap-save` |
 
 New games: use `<gamename>-save`.
 

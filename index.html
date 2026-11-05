@@ -161,7 +161,7 @@ footer { margin-top: 64px; color: #444c56; font-size: .78rem; text-align: center
   </div>
 
   <header>
-    <div class="site-title">{{ T('siteTitle') }}</div>
+    <div class="site-title" @click="tapTitle">{{ T('siteTitle') }}</div>
     <p class="site-sub">{{ T('siteSub') }}</p>
     <a class="home-btn" href="how-to-play.html">{{ T('howToPlay') }} ↗</a>
   </header>
@@ -244,6 +244,7 @@ const CATEGORIES = [
   { label: 'Pen & Paper',     games: [] },
   { label: 'Shapes & Colors', games: [] },
   { label: 'Words',           games: [] },
+  { label: 'Education',       games: [], hidden: true },
 ];
 </script>
 <script src="card-chromino.js"></script>
@@ -269,6 +270,7 @@ const CATEGORIES = [
 <script src="card-quoridor.js"></script>
 <script src="card-checkers.js"></script>
 <script src="card-sprouts.js"></script>
+<script src="card-spainmap.js"></script>
 <script>
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
 
@@ -296,20 +298,24 @@ const CATEGORY_LABELS = {
   'Codes':           { he: 'קודים', es: 'Códigos' },
   'Classic Games':   { he: 'משחקים קלאסיים', es: 'Juegos Clásicos' },
   'Pen & Paper':     { he: 'עט ונייר', es: 'Lápiz y Papel' },
+  'Education':       { he: 'לימודי', es: 'Educativo' },
 };
 
 const LANG_KEY = 'index-lang';
+const EDU_KEY  = 'index-edu';
 
 Vue.createApp({
   data: () => ({
     CATEGORIES, lang: localStorage.getItem(LANG_KEY) || 'en',
     searchQuery: '', activeCategory: 'All', infoGame: null,
+    showHidden: localStorage.getItem(EDU_KEY) === '1', titleTaps: 0,
   }),
   computed: {
-    availableCategories() { return this.CATEGORIES.filter(cat => cat.games.length); },
+    visibleCategories() { return this.CATEGORIES.filter(cat => !cat.hidden || this.showHidden); },
+    availableCategories() { return this.visibleCategories.filter(cat => cat.games.length); },
     filteredCategories() {
       const q = this.searchQuery.trim().toLowerCase();
-      return this.CATEGORIES
+      return this.visibleCategories
         .filter(cat => this.activeCategory === 'All' || cat.label === this.activeCategory)
         .map(cat => ({
           label: cat.label,
@@ -336,6 +342,17 @@ Vue.createApp({
       this.lang = l;
       localStorage.setItem(LANG_KEY, l);
       this.applyDir();
+    },
+    // Five quick taps on the title toggle the private section; it stays out of search otherwise.
+    tapTitle() {
+      this.titleTaps++;
+      clearTimeout(this.tapTimer);
+      this.tapTimer = setTimeout(() => { this.titleTaps = 0; }, 1500);
+      if (this.titleTaps < 5) return;
+      this.titleTaps = 0;
+      this.showHidden = !this.showHidden;
+      localStorage.setItem(EDU_KEY, this.showHidden ? '1' : '0');
+      if (!this.showHidden && this.CATEGORIES.find(c => c.label === this.activeCategory)?.hidden) this.activeCategory = 'All';
     },
     openInfo(g) { this.infoGame = g; },
     closeInfo() { this.infoGame = null; },
