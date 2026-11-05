@@ -63,6 +63,7 @@ Private educational games live in the `Education` category (`hidden: true` in `C
 | Sprouts    | `sprouts-save`|
 | Morris     | `morris-save` |
 | Mapa Mudo  | `spainmap-save` |
+| Banderas   | `spainflags-save` |
 
 New games: use `<gamename>-save`.
 
