@@ -67,6 +67,7 @@ Private educational games live in the `Education` category (`hidden: true` in `C
 | Capitales  | `spaincapitals-save` |
 | Ríos       | `spainrivers-save` |
 | Relieve    | `spainrelief-save` |
+| World Mountains | `worldpeaks-save` |
 
 New games: use `<gamename>-save`.
 
