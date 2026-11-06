@@ -66,6 +66,7 @@ Private educational games live in the `Education` category (`hidden: true` in `C
 | Banderas   | `spainflags-save` |
 | Capitales  | `spaincapitals-save` |
 | Ríos       | `spainrivers-save` |
+| Relieve    | `spainrelief-save` |
 
 New games: use `<gamename>-save`.
 
