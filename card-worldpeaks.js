@@ -1,4 +1,4 @@
-CATEGORIES.find(c=>c.label==="Education").games.push({
+CATEGORIES.find(c=>c.label==="Geography").games.push({
   "id": "worldpeaks",
   "title": "WORLD MOUNTAINS",
   "title_he": "הרים בעולם",
