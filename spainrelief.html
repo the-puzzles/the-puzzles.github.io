@@ -103,7 +103,6 @@ h1 {
 .result-list .ok   { color: #38bdf8; }
 .result-list .help { color: #fbbf24; }
 .result-list .miss { color: #f87171; }
-.result-num { display: inline-block; min-width: 3.4em; color: #6e7681; font-variant-numeric: tabular-nums; }
 
 .footer-row { display: flex; gap: 8px; }
 .credits { margin-top: 18px; font-size: .68rem; color: #484f58; text-align: center; }
@@ -170,7 +169,7 @@ h1 {
     <div class="summary-sub">Récord: {{ best }} / {{ UNITS.length }} · toca el mapa para repasar</div>
     <div class="result-list">
       <div v-for="u in UNITS" :key="u.id" :class="results[u.id]">
-        <span class="result-num">{{ u.num }}.</span>{{ u.label || u.name }}
+        {{ u.label || u.name }}
       </div>
     </div>
   </div>
@@ -234,24 +233,24 @@ const OUTLINES = {
 };
 
 const UNITS = [
-  { id: 'galaico',      num: 'I',      name: 'Macizo Galaico',       alt: ['Macizo Galaico-Leonés', 'Macizo Gallego'] },
-  { id: 'leon',         num: 'II',     name: 'Montes de León' },
-  { id: 'cantabrica',   num: 'III',    name: 'Cordillera Cantábrica' },
-  { id: 'vascos',       num: 'IV',     name: 'Montes Vascos' },
-  { id: 'pirineos',     num: 'V',      name: 'Pirineos',             alt: ['Pirineo'] },
-  { id: 'catalana',     num: 'VI',     name: 'Cordillera Costero-Catalana',
+  { id: 'galaico',      name: 'Macizo Galaico',       alt: ['Macizo Galaico-Leonés', 'Macizo Gallego'] },
+  { id: 'leon',         name: 'Montes de León' },
+  { id: 'cantabrica',   name: 'Cordillera Cantábrica' },
+  { id: 'vascos',       name: 'Montes Vascos' },
+  { id: 'pirineos',     name: 'Pirineos',             alt: ['Pirineo'] },
+  { id: 'catalana',     name: 'Cordillera Costero-Catalana',
                                                                      alt: ['Cordilleras Costero-Catalanas', 'Sistema Costero-Catalán', 'Cordillera Costera Catalana'] },
-  { id: 'iberico',      num: 'VII',    name: 'Sistema Ibérico',      alt: ['Cordillera Ibérica'] },
-  { id: 'central',      num: 'VIII',   name: 'Sistema Central' },
-  { id: 'toledo',       num: 'IX',     name: 'Montes de Toledo' },
-  { id: 'morena',       num: 'X',      name: 'Sierra Morena' },
-  { id: 'beticos',      num: 'XI',     name: 'Sistemas Béticos',     alt: ['Cordilleras Béticas', 'Cordillera Bética', 'Sistema Bético'],
+  { id: 'iberico',      name: 'Sistema Ibérico',      alt: ['Cordillera Ibérica'] },
+  { id: 'central',      name: 'Sistema Central' },
+  { id: 'toledo',       name: 'Montes de Toledo' },
+  { id: 'morena',       name: 'Sierra Morena' },
+  { id: 'beticos',      name: 'Sistemas Béticos',     alt: ['Cordilleras Béticas', 'Cordillera Bética', 'Sistema Bético'],
                                                                      label: 'Sistemas Béticos (o Cordilleras Béticas)' },
-  { id: 'canario',      num: 'XII',    name: 'Relieve Canario',      alt: ['Relieve de Canarias'] },
-  { id: 'ebro',         num: 'XIII-A', name: 'Depresión del Ebro',   alt: ['Valle del Ebro'] },
-  { id: 'guadalquivir', num: 'XIII-B', name: 'Depresión del Guadalquivir', alt: ['Valle del Guadalquivir'] },
-  { id: 'norte',        num: 'XIII-C', name: 'Submeseta Norte',      alt: ['Meseta Norte'] },
-  { id: 'sur',          num: 'XIII-D', name: 'Submeseta Sur',        alt: ['Meseta Sur'] },
+  { id: 'canario',      name: 'Relieve Canario',      alt: ['Relieve de Canarias'] },
+  { id: 'ebro',         name: 'Depresión del Ebro',   alt: ['Valle del Ebro'] },
+  { id: 'guadalquivir', name: 'Depresión del Guadalquivir', alt: ['Valle del Guadalquivir'] },
+  { id: 'norte',        name: 'Submeseta Norte',      alt: ['Meseta Norte'] },
+  { id: 'sur',          name: 'Submeseta Sur',        alt: ['Meseta Sur'] },
 ];
 
 const SAVE_KEY = 'spainrelief-save';
@@ -330,7 +329,7 @@ createApp({
     const byId = Object.fromEntries(UNITS.map(u => [u.id, u]));
     const finished = computed(() => idx.value >= order.value.length);
     const target = computed(() => finished.value ? null : order.value[idx.value]);
-    const fullName = u => u.num + '. ' + (u.label || u.name);
+    const fullName = u => u.label || u.name;
 
     const counts = computed(() => {
       const c = { ok: 0, help: 0, miss: 0 };
